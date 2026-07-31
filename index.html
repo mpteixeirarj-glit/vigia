@@ -33,6 +33,8 @@ button{font-family:inherit;}
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;}
 #splash img{width:104px;height:104px;border-radius:22px;margin-bottom:22px;
   box-shadow:0 8px 40px rgba(0,229,160,.18);}
+.sp-logo{display:flex;flex-direction:column;align-items:center;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;}
 .sp-nome{font-family:monospace;font-size:2.4rem;font-weight:700;color:var(--green);letter-spacing:.1em;}
 .sp-sub{font-family:monospace;font-size:.68rem;color:var(--muted);letter-spacing:.2em;margin-top:4px;margin-bottom:44px;}
 .sp-btn{width:100%;max-width:320px;border-radius:12px;font-family:monospace;
@@ -363,8 +365,10 @@ button{font-family:inherit;}
 <body>
 
 <div id="splash">
-  <img src="icon-192.png" alt="Vigia">
-  <div class="sp-nome">VIGIA</div>
+  <div class="sp-logo" onclick="instalarApp()">
+    <img src="icon-192.png" alt="Vigia">
+    <div class="sp-nome">VIGIA</div>
+  </div>
   <div class="sp-sub">CONTROLE FINANCEIRO</div>
   <button class="sp-btn p" onclick="spAcao('lancar')">+ Novo lançamento</button>
   <button class="sp-btn s" onclick="spAcao('painel')">→ Abrir painel</button>
@@ -704,10 +708,8 @@ function instalarApp(){
   if(deferredInstall){
     deferredInstall.prompt();
     deferredInstall.userChoice.then(function(){ deferredInstall=null; });
-  } else if(window.matchMedia('(display-mode: standalone)').matches || navigator.standalone){
-    alert('O Vigia já está instalado neste dispositivo.');
   } else {
-    alert('Para instalar: toque no menu (⋮) do navegador e escolha "Adicionar à tela inicial" ou "Instalar app".');
+    alert('Para instalar: toque no menu (⋮) do navegador e escolha "Adicionar à tela inicial" ou "Instalar app".\n\nSe essa opção não aparecer, é porque o app já está instalado neste dispositivo, ou o navegador não oferece instalação nesta página.');
   }
 }
 
