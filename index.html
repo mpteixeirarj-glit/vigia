@@ -47,7 +47,8 @@ button{font-family:inherit;}
   justify-content:space-between;padding:0 14px;z-index:100;}
 .topnav-esq{display:flex;align-items:center;gap:10px;min-width:0;}
 .logo{display:flex;align-items:center;gap:8px;font-family:monospace;font-size:.95rem;
-  font-weight:700;letter-spacing:.08em;color:var(--green);flex-shrink:0;}
+  font-weight:700;letter-spacing:.08em;color:var(--green);flex-shrink:0;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;}
 .logo img{width:26px;height:26px;border-radius:7px;}
 .data-atual{font-family:monospace;font-size:.66rem;color:var(--muted);background:none;
   border:none;cursor:pointer;padding:2px 4px;letter-spacing:.04em;white-space:nowrap;
@@ -371,7 +372,7 @@ button{font-family:inherit;}
 
 <div class="topnav">
   <div class="topnav-esq">
-    <div class="logo"><img src="icon-192.png" alt="">VIGIA</div>
+    <div class="logo" onclick="instalarApp()"><img src="icon-192.png" alt="">VIGIA</div>
     <button class="data-atual" id="dataAtual" onclick="voltarHoje()">—</button>
   </div>
   <div class="mesctrl">
@@ -691,6 +692,25 @@ button{font-family:inherit;}
 
 <script>
 'use strict';
+
+/* ══════ INSTALAÇÃO DO APP (PWA) ══════ */
+var deferredInstall=null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredInstall=e;
+});
+window.addEventListener('appinstalled', function(){ deferredInstall=null; });
+function instalarApp(){
+  if(deferredInstall){
+    deferredInstall.prompt();
+    deferredInstall.userChoice.then(function(){ deferredInstall=null; });
+  } else if(window.matchMedia('(display-mode: standalone)').matches || navigator.standalone){
+    alert('O Vigia já está instalado neste dispositivo.');
+  } else {
+    alert('Para instalar: toque no menu (⋮) do navegador e escolha "Adicionar à tela inicial" ou "Instalar app".');
+  }
+}
+
 var MES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 var MESL=['jan.','fev.','mar.','abr.','mai.','jun.','jul.','ago.','set.','out.','nov.','dez.'];
 var MESF=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
