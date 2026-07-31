@@ -43,6 +43,31 @@ button{font-family:inherit;}
 .sp-btn.p{background:var(--green);color:var(--bg);font-weight:700;}
 .sp-btn.s{background:transparent;color:var(--text);border:1px solid var(--border);}
 
+/* LOGIN */
+#login{position:fixed;inset:0;background:var(--bg);z-index:1000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;
+  overflow-y:auto;}
+#loginCarregando{color:var(--muted);font-family:monospace;font-size:.75rem;letter-spacing:.08em;}
+#loginForm{display:none;width:100%;max-width:320px;flex-direction:column;align-items:center;}
+#loginForm.on{display:flex;}
+.login-erro{width:100%;background:var(--red-d);border:1px solid var(--red);color:var(--red);
+  border-radius:8px;padding:10px 12px;font-size:.76rem;margin-bottom:14px;display:none;}
+.login-google{width:100%;background:#fff;color:#1f1f1f;border:none;border-radius:12px;
+  padding:14px;font-size:.85rem;font-weight:600;cursor:pointer;margin-bottom:16px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  -webkit-tap-highlight-color:transparent;}
+.login-ou{color:var(--muted);font-family:monospace;font-size:.62rem;letter-spacing:.1em;
+  margin-bottom:16px;display:flex;align-items:center;gap:10px;width:100%;}
+.login-ou::before,.login-ou::after{content:'';flex:1;height:1px;background:var(--border);}
+.login-email-form{width:100%;}
+.login-email-form input{width:100%;background:var(--surf2);border:1px solid var(--border);
+  color:var(--text);font-size:.9rem;padding:13px 14px;border-radius:10px;outline:none;
+  margin-bottom:10px;font-family:inherit;}
+.login-email-form input:focus{border-color:var(--green);}
+.login-link{background:none;border:none;color:var(--muted);font-family:monospace;
+  font-size:.72rem;letter-spacing:.05em;text-decoration:underline;cursor:pointer;
+  margin-top:16px;-webkit-tap-highlight-color:transparent;}
+
 /* NAV */
 .topnav{position:fixed;top:0;left:0;right:0;height:var(--NAV);background:var(--bg);
   border-bottom:1px solid var(--border);display:flex;align-items:center;
@@ -61,6 +86,8 @@ button{font-family:inherit;}
   border:1px solid var(--border);color:var(--text);font-size:.85rem;cursor:pointer;
   display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
 .mesctrl .lbl{font-family:monospace;font-size:.72rem;color:var(--text);min-width:78px;text-align:center;}
+.btn-sair{margin-left:6px;color:var(--muted)!important;font-size:.95rem!important;}
+.btn-sair:active{color:var(--red)!important;border-color:var(--red)!important;}
 
 .botnav{position:fixed;bottom:0;left:0;right:0;height:var(--BOT);background:var(--surf);
   border-top:1px solid var(--border);display:flex;justify-content:space-around;
@@ -348,8 +375,135 @@ button{font-family:inherit;}
 .pop-s{font-size:.68rem;color:var(--muted);margin-top:2px;}
 .pop-v{font-family:monospace;font-size:.84rem;font-weight:700;white-space:nowrap;}
 </style>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import {
+  getAuth, onAuthStateChanged, signOut, GoogleAuthProvider,
+  signInWithPopup, signInWithRedirect, getRedirectResult,
+  signInWithEmailAndPassword, createUserWithEmailAndPassword
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {
+  getFirestore, doc, setDoc, getDoc, onSnapshot
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+var firebaseConfig = {
+  apiKey: "AIzaSyCFCQaU8a96kos470rGh-0yLIQgAv4AiIM",
+  authDomain: "vigia-56137.firebaseapp.com",
+  projectId: "vigia-56137",
+  storageBucket: "vigia-56137.firebasestorage.app",
+  messagingSenderId: "112371837401",
+  appId: "1:112371837401:web:0dc5905e9217de6a4651c8"
+};
+
+var app = initializeApp(firebaseConfig);
+var auth = getAuth(app);
+var db = getFirestore(app);
+var googleProvider = new GoogleAuthProvider();
+var unsubSnapshot = null;
+
+function docPrincipal(uid){ return doc(db,'usuarios',uid,'dados','principal'); }
+
+function mensagemErroAuth(e){
+  var c = (e && e.code) || '';
+  var mapa = {
+    'auth/invalid-email':'E-mail inválido.',
+    'auth/user-not-found':'Usuário não encontrado.',
+    'auth/wrong-password':'Senha incorreta.',
+    'auth/invalid-credential':'E-mail ou senha incorretos.',
+    'auth/email-already-in-use':'Este e-mail já tem uma conta. Tente entrar.',
+    'auth/weak-password':'A senha precisa ter pelo menos 6 caracteres.',
+    'auth/popup-closed-by-user':'Login cancelado.',
+    'auth/network-request-failed':'Falha de conexão. Verifique sua internet.',
+    'auth/missing-email':'Informe o e-mail.',
+    'auth/missing-password':'Informe a senha.'
+  };
+  return mapa[c] || ('Não foi possível entrar (' + (c || 'erro desconhecido') + ').');
+}
+
+window.Vigia = {
+  async loginGoogle(){
+    try{
+      await signInWithPopup(auth, googleProvider);
+    }catch(e){
+      if(e && (e.code==='auth/popup-blocked' || e.code==='auth/cancelled-popup-request' || e.code==='auth/operation-not-supported-in-this-environment')){
+        try{ await signInWithRedirect(auth, googleProvider); }
+        catch(e2){ window.onLoginErro(mensagemErroAuth(e2)); }
+      } else if(e && e.code!=='auth/popup-closed-by-user'){
+        window.onLoginErro(mensagemErroAuth(e));
+      }
+    }
+  },
+  async loginEmail(email,senha){
+    try{ await signInWithEmailAndPassword(auth, email, senha); }
+    catch(e){ window.onLoginErro(mensagemErroAuth(e)); }
+  },
+  async criarConta(email,senha){
+    try{ await createUserWithEmailAndPassword(auth, email, senha); }
+    catch(e){ window.onLoginErro(mensagemErroAuth(e)); }
+  },
+  async sair(){
+    if(unsubSnapshot){ unsubSnapshot(); unsubSnapshot=null; }
+    try{ await signOut(auth); }catch(e){}
+  },
+  /* Retorna: objeto de dados (existe), null (uid sem doc ainda) ou undefined (falha de leitura/offline) */
+  async carregarNuvem(uid){
+    try{
+      var snap = await getDoc(docPrincipal(uid));
+      return snap.exists() ? snap.data() : null;
+    }catch(e){ console.warn('[Vigia] Falha ao ler o Firestore, seguindo com o cache local.', e); return undefined; }
+  },
+  async salvarNuvem(uid,dados){
+    try{ await setDoc(docPrincipal(uid), dados, {merge:false}); }
+    catch(e){ console.warn('[Vigia] Falha ao salvar no Firestore (fica só local por enquanto).', e); }
+  },
+  assinarNuvem(uid,callback){
+    if(unsubSnapshot) unsubSnapshot();
+    unsubSnapshot = onSnapshot(docPrincipal(uid), function(snap){
+      if(snap.exists() && !snap.metadata.hasPendingWrites) callback(snap.data());
+    }, function(e){ console.warn('[Vigia] onSnapshot erro', e); });
+  },
+  pararAssinatura(){
+    if(unsubSnapshot){ unsubSnapshot(); unsubSnapshot=null; }
+  }
+};
+
+getRedirectResult(auth).catch(function(e){
+  if(window.onLoginErro) window.onLoginErro(mensagemErroAuth(e));
+});
+
+onAuthStateChanged(auth, function(user){
+  window.onVigiaAuthChange(user);
+});
+</script>
 </head>
 <body>
+
+<div id="login">
+  <img src="icon-192.png" alt="Vigia" style="width:88px;height:88px;border-radius:20px;margin-bottom:18px;box-shadow:0 8px 40px rgba(0,229,160,.18);">
+  <div class="sp-nome" style="font-size:1.9rem;">VIGIA</div>
+  <div class="sp-sub" style="margin-bottom:30px;">CONTROLE FINANCEIRO</div>
+
+  <div id="loginCarregando">Carregando…</div>
+
+  <div id="loginForm">
+    <div class="login-erro" id="loginErro"></div>
+
+    <button class="login-google" onclick="Vigia.loginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.8 2.73v2.27h2.92c1.7-1.57 2.68-3.88 2.68-6.64z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.17l-2.92-2.27c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.34C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.97 10.71A5.4 5.4 0 0 1 3.68 9c0-.59.1-1.17.29-1.71V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.95l3.01 2.34C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+      Entrar com Google
+    </button>
+
+    <div class="login-ou">ou</div>
+
+    <div class="login-email-form">
+      <input type="email" id="loginEmail" placeholder="E-mail" autocomplete="email" inputmode="email">
+      <input type="password" id="loginSenha" placeholder="Senha" autocomplete="current-password">
+      <button class="sp-btn p" id="btnLoginEmail" onclick="acaoLoginEmail()">Entrar com e-mail</button>
+    </div>
+
+    <button class="login-link" id="btnCriarConta" onclick="alternarCriarConta()">Criar conta</button>
+  </div>
+</div>
 
 <div id="splash">
   <div class="sp-logo" onclick="instalarApp()">
@@ -370,6 +524,7 @@ button{font-family:inherit;}
     <button onclick="navMes(-1)">‹</button>
     <div class="lbl" id="mesLbl">—</div>
     <button onclick="navMes(1)">›</button>
+    <button class="btn-sair" onclick="confirmarSair()" title="Sair">⏻</button>
   </div>
 </div>
 
@@ -705,6 +860,81 @@ button{font-family:inherit;}
   </div>
 </div>
 
+<!-- ONBOARDING -->
+<div class="ov" id="ovOnb">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-t">Configuração inicial</div>
+
+    <div class="stp on" id="onb0">
+      <p style="font-size:.85rem;color:var(--text);line-height:1.65;margin-bottom:20px;">
+        Bem-vindo(a) ao Vigia! Vamos configurar seus dados em poucos passos.
+      </p>
+      <button class="bok gr" onclick="onbIr(1)">Começar</button>
+      <button class="login-link" style="width:100%;margin-top:16px;" onclick="onbPular()">Pular e usar meus dados atuais</button>
+    </div>
+
+    <div class="stp" id="onb1">
+      <div class="fd"><label>Como posso te chamar?</label><input type="text" id="onbNome" placeholder="Seu nome"></div>
+      <button class="bok gr" onclick="onbSalvarNome()">Continuar</button>
+    </div>
+
+    <div class="stp" id="onb2">
+      <div class="fd"><label>Qual é a sua renda mensal principal?</label></div>
+      <div class="fd2">
+        <div class="fd"><label>Valor (R$)</label><input type="number" id="onbRendaValor" step="0.01" inputmode="decimal"></div>
+        <div class="fd"><label>Dia de entrada</label><input type="number" id="onbRendaDia" min="1" max="31" inputmode="numeric"></div>
+      </div>
+      <button class="bok gr" onclick="onbSalvarRendaPrincipal()">Continuar</button>
+    </div>
+
+    <div class="stp" id="onb3">
+      <div class="fd"><label>Tem outras fontes de renda?</label></div>
+      <div id="onbListaRendas"></div>
+      <div class="fd2">
+        <div class="fd"><input type="text" id="onbRendaNome" placeholder="Nome"></div>
+        <div class="fd"><input type="number" id="onbRendaExtraValor" placeholder="Valor" step="0.01" inputmode="decimal"></div>
+      </div>
+      <button class="ba" style="width:100%;margin-bottom:14px;" onclick="onbAdicionarRenda()">+ Adicionar</button>
+      <button class="bok gr" onclick="onbIr(4)">Continuar</button>
+    </div>
+
+    <div class="stp" id="onb4">
+      <div class="fd"><label>Tem despesas fixas todo mês?</label></div>
+      <div id="onbListaDespesas"></div>
+      <div class="fd2">
+        <div class="fd"><input type="text" id="onbDespNome" placeholder="Ex: Aluguel, escola..."></div>
+        <div class="fd"><input type="number" id="onbDespValor" placeholder="Valor" step="0.01" inputmode="decimal"></div>
+      </div>
+      <button class="ba" style="width:100%;margin-bottom:14px;" onclick="onbAdicionarDespesa()">+ Adicionar</button>
+      <button class="bok gr" onclick="onbIr(5)">Continuar</button>
+    </div>
+
+    <div class="stp" id="onb5">
+      <div class="fd"><label>Tem parcelamentos em andamento?</label></div>
+      <div id="onbListaParcelas"></div>
+      <div class="fd"><input type="text" id="onbParcNome" placeholder="Nome da compra"></div>
+      <div class="fd2">
+        <div class="fd"><input type="number" id="onbParcValor" placeholder="Valor da parcela" step="0.01" inputmode="decimal"></div>
+        <div class="fd"><input type="number" id="onbParcTotal" placeholder="Total de parcelas" inputmode="numeric"></div>
+      </div>
+      <div class="fd2">
+        <div class="fd"><input type="number" id="onbParcAtual" placeholder="Parcela atual" inputmode="numeric"></div>
+        <div class="fd"><select id="onbParcCartao">
+          <option value="santander">Santander</option><option value="nubank">Nubank</option>
+        </select></div>
+      </div>
+      <button class="ba" style="width:100%;margin-bottom:14px;" onclick="onbAdicionarParcela()">+ Adicionar</button>
+      <button class="bok gr" onclick="onbIr(6)">Continuar</button>
+    </div>
+
+    <div class="stp" id="onb6">
+      <div class="fd"><label>Resumo</label></div>
+      <div id="onbResumo" class="cbx"></div>
+      <button class="bok gr" onclick="onbConfirmar()">✓ Confirmar e entrar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 'use strict';
 
@@ -747,37 +977,34 @@ var CATEGORIAS=[
 ];
 var TIPOS_REC=['Salário','Plantão extra','Férias','13º Salário','Reembolso','Outros'];
 
+/* Dados de exemplo genéricos — usados só até o usuário logar e ter dados
+   próprios no Firestore (ou como fallback offline). Nenhum dado real. */
 var INIT={
   schemaVersion:2,
   receitasFixas:[
-    {id:'rf1',dia:5, nome:'Rede Dor', valor:4049.37},
-    {id:'rf2',dia:10,nome:'Dimesp',   valor:1200.00},
-    {id:'rf3',dia:15,nome:'Fleury',   valor:1296.80},
-    {id:'rf4',dia:30,nome:'Fleury',   valor:2605.44}
+    {id:'rf1',dia:5, nome:'Salário', valor:5000.00},
+    {id:'rf2',dia:15,nome:'Renda extra', valor:800.00}
   ],
   despesasFixas:[
-    {id:'df1',dia:5, nome:'Palmieri',       valor:758.48},
-    {id:'df2',dia:15,nome:'Celular',        valor:67.88},
-    {id:'df4',dia:30,nome:'Ração da Íris',  valor:230.00}
+    {id:'df1',dia:5, nome:'Aluguel',    valor:1200.00},
+    {id:'df2',dia:15,nome:'Internet',   valor:120.00},
+    {id:'df4',dia:30,nome:'Streaming',  valor:60.00}
   ],
   variaveis:[
-    {id:'vc1',dia:15,nome:'Conta de Luz',           valor:350.00},
-    {id:'vc2',dia:28,nome:'Conta de Água',          valor:170.00},
-    {id:'vc3',dia:20,nome:'Fatura Santander',       valor:800.00},
-    {id:'vc4',dia:30,nome:'Luz-Light (reserva)',    valor:400.00}
+    {id:'vc1',dia:15,nome:'Conta de Luz',        valor:250.00},
+    {id:'vc2',dia:28,nome:'Conta de Água',       valor:100.00},
+    {id:'vc3',dia:20,nome:'Fatura do cartão',    valor:500.00},
+    {id:'vc4',dia:30,nome:'Reserva mensal',      valor:300.00}
   ],
-  planoSaude:{nome:'Plano de Saúde', valor:450.00, dia:30},
-  obra:{parcela:2185.00,dia:20,mesIni:2,anoIni:2025,total:84},
+  planoSaude:{nome:'Plano de Saúde', valor:300.00, dia:30},
+  obra:{parcela:1200.00,dia:20,mesIni:2,anoIni:2025,total:60},
   parcelas:[
-    {id:'p1',nome:'Romulo Couto Racca',valor:108.64,total:10,mesIni:5,anoIni:2026,cartao:'santander'},
-    {id:'p2',nome:'ML*Gabylu (1)',     valor:25.76, total:5, mesIni:3,anoIni:2026,cartao:'santander'},
-    {id:'p3',nome:'ML*Gabylu (2)',     valor:24.99, total:4, mesIni:4,anoIni:2026,cartao:'santander'},
-    {id:'p4',nome:'Amazon Prime BR',   valor:13.90, total:12,mesIni:4,anoIni:2026,cartao:'santander'},
-    {id:'p5',nome:'Kiwify*Dominando I',valor:16.49, total:12,mesIni:5,anoIni:2026,cartao:'santander'},
-    {id:'p6',nome:'Shopee*Amigaodolar',valor:65.38, total:4, mesIni:5,anoIni:2026,cartao:'santander'},
-    {id:'p7',nome:'Geladeira',         valor:364.57,total:12,mesIni:2,anoIni:2026,cartao:'nubank',dia:20,destaqueInicio:true}
+    {id:'p1',nome:'Compra parcelada 1',valor:100.00,total:10,mesIni:5,anoIni:2026,cartao:'santander'},
+    {id:'p2',nome:'Assinatura anual',  valor:25.00, total:12,mesIni:4,anoIni:2026,cartao:'santander'},
+    {id:'p3',nome:'Compra parcelada 2',valor:60.00, total:4, mesIni:5,anoIni:2026,cartao:'santander'},
+    {id:'p4',nome:'Geladeira',         valor:300.00,total:12,mesIni:2,anoIni:2026,cartao:'nubank',dia:20,destaqueInicio:true}
   ],
-  tetos:{santander:1000,nubank:364.57,investimento:250},
+  tetos:{santander:1000,nubank:300,investimento:250},
   meses:{},
   historico:[],
   ultimoMesReal:null
@@ -798,7 +1025,11 @@ function getD(){
   }
   catch(e){ var d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
 }
-function salvar(d){ try{ localStorage.setItem('vigia_v3',JSON.stringify(d)); }catch(e){} }
+function salvarLocal(d){ try{ localStorage.setItem('vigia_v3',JSON.stringify(d)); }catch(e){} }
+function salvar(d){
+  salvarLocal(d);
+  if(uidAtual && window.Vigia) window.Vigia.salvarNuvem(uidAtual,d);
+}
 
 function chaveM(m,a){ return a+'-'+String(m+1).padStart(2,'0'); }
 function getMes(d,m,a){
@@ -864,6 +1095,7 @@ var HOJE=new Date();
 var curM=HOJE.getMonth(), curA=HOJE.getFullYear();
 var telaAtual='inicio', tabAtual='santander', anoHist=HOJE.getFullYear();
 var secFechadas={};
+var uidAtual=null;
 
 /* ══════ NAVEGAÇÃO ══════ */
 function ir(t,btn){
@@ -1691,14 +1923,209 @@ function atualizarDataAtual(){
   document.getElementById('dataAtual').textContent=agora.getDate()+' - '+DOWF[agora.getDay()];
 }
 
-/* ══════ INIT ══════ */
-(function(){
+/* ══════ AUTENTICAÇÃO ══════ */
+var modoCriarConta=false;
+
+function alternarCriarConta(){
+  modoCriarConta=!modoCriarConta;
+  document.getElementById('btnLoginEmail').textContent=modoCriarConta?'Criar conta':'Entrar com e-mail';
+  document.getElementById('btnCriarConta').textContent=modoCriarConta?'Já tenho conta':'Criar conta';
+  document.getElementById('loginErro').style.display='none';
+}
+function acaoLoginEmail(){
+  var email=document.getElementById('loginEmail').value.trim();
+  var senha=document.getElementById('loginSenha').value;
+  document.getElementById('loginErro').style.display='none';
+  if(!email||!senha){ onLoginErro('Preencha e-mail e senha.'); return; }
+  if(modoCriarConta) window.Vigia.criarConta(email,senha);
+  else window.Vigia.loginEmail(email,senha);
+}
+function confirmarSair(){
+  if(!confirm('Sair da sua conta?')) return;
+  window.Vigia.pararAssinatura();
+  window.Vigia.sair();
+}
+function onLoginErro(msg){
+  var el=document.getElementById('loginErro');
+  el.textContent=msg;
+  el.style.display='block';
+}
+window.onLoginErro=onLoginErro;
+
+function iniciarApp(){
   getD();
   verificarResetMensal();
   document.getElementById('fab').style.display='flex';
   atualizarDataAtual();
-  setInterval(atualizarDataAtual, 60000);
   renderTudo();
+}
+
+function finalizarEntrada(user){
+  iniciarApp();
+  window.Vigia.assinarNuvem(user.uid, function(dadosRemotos){
+    salvarLocal(dadosRemotos);
+    renderTudo();
+  });
+}
+async function iniciarComNuvem(user){
+  var remoto=await window.Vigia.carregarNuvem(user.uid);
+  if(remoto===null){ abrirOnboarding(user); return; }
+  if(remoto) salvarLocal(remoto);
+  finalizarEntrada(user);
+}
+
+var authResolvido=false;
+function onVigiaAuthChange(user){
+  authResolvido=true;
+  document.getElementById('loginCarregando').style.display='none';
+  if(user){
+    uidAtual=user.uid;
+    document.getElementById('login').style.display='none';
+    document.getElementById('splash').style.display='';
+    iniciarComNuvem(user);
+  } else {
+    uidAtual=null;
+    document.getElementById('loginForm').classList.add('on');
+    document.getElementById('login').style.display='flex';
+  }
+}
+window.onVigiaAuthChange=onVigiaAuthChange;
+
+/* Se o Firebase não responder (sem internet, CDN bloqueado etc.), depois de
+   alguns segundos oferece continuar com os dados já salvos neste aparelho —
+   sem isso, o app ficaria travado em "Carregando…" para sempre quando offline. */
+function entrarOffline(){
+  uidAtual=null;
+  document.getElementById('login').style.display='none';
+  document.getElementById('splash').style.display='';
+  iniciarApp();
+}
+setTimeout(function(){
+  if(authResolvido) return;
+  var carregando=document.getElementById('loginCarregando');
+  if(localStorage.getItem('vigia_v3')){
+    carregando.innerHTML='Sem conexão com o login.<br><br>'+
+      '<button class="sp-btn s" onclick="entrarOffline()">Continuar offline com dados salvos</button>';
+  } else {
+    carregando.textContent='Sem conexão. Conecte-se à internet para entrar.';
+  }
+},6000);
+
+/* ══════ ONBOARDING (primeiro acesso, sem doc no Firestore) ══════ */
+var onbState=null, onbUser=null;
+
+function abrirOnboarding(user){
+  onbUser=user;
+  onbState={nome:'',rendaPrincipal:null,outrasRendas:[],despesas:[],parcelas:[]};
+  document.querySelectorAll('#ovOnb .stp').forEach(function(s){ s.classList.remove('on'); });
+  document.getElementById('onb0').classList.add('on');
+  document.getElementById('splash').style.display='none';
+  document.getElementById('ovOnb').classList.add('on');
+}
+function onbIr(passo){
+  document.querySelectorAll('#ovOnb .stp').forEach(function(s){ s.classList.remove('on'); });
+  document.getElementById('onb'+passo).classList.add('on');
+  if(passo===6) onbMontarResumo();
+}
+function onbSalvarNome(){
+  onbState.nome=document.getElementById('onbNome').value.trim()||'Você';
+  onbIr(2);
+}
+function onbSalvarRendaPrincipal(){
+  var v=parseFloat(document.getElementById('onbRendaValor').value)||0;
+  var d=Math.min(31,Math.max(1,parseInt(document.getElementById('onbRendaDia').value)||1));
+  onbState.rendaPrincipal={nome:'Renda principal',valor:v,dia:d};
+  onbIr(3);
+}
+function onbRenderLista(elId,arr,campo){
+  document.getElementById(elId).innerHTML=arr.map(function(x,i){
+    return '<div class="it" style="padding:9px 12px;margin-bottom:6px;"><div class="it-t">'+
+      '<div class="it-n" style="font-size:.8rem;">'+x.nome+(x.total?' · '+x.total+'x':'')+'</div>'+
+      '<div class="it-v" style="font-size:.8rem;">'+fmt(x.valor)+'</div></div>'+
+      '<button class="ba del" style="margin-top:6px;" onclick="onbRemover(\''+campo+'\','+i+')">✕ Remover</button></div>';
+  }).join('');
+}
+function onbRemover(campo,i){
+  onbState[campo].splice(i,1);
+  var mapa={outrasRendas:'onbListaRendas',despesas:'onbListaDespesas',parcelas:'onbListaParcelas'};
+  onbRenderLista(mapa[campo],onbState[campo],campo);
+}
+function onbAdicionarRenda(){
+  var nome=document.getElementById('onbRendaNome').value.trim();
+  var valor=parseFloat(document.getElementById('onbRendaExtraValor').value);
+  if(!nome||!valor) return;
+  onbState.outrasRendas.push({nome:nome,valor:valor,dia:1});
+  document.getElementById('onbRendaNome').value='';
+  document.getElementById('onbRendaExtraValor').value='';
+  onbRenderLista('onbListaRendas',onbState.outrasRendas,'outrasRendas');
+}
+function onbAdicionarDespesa(){
+  var nome=document.getElementById('onbDespNome').value.trim();
+  var valor=parseFloat(document.getElementById('onbDespValor').value);
+  if(!nome||!valor) return;
+  onbState.despesas.push({nome:nome,valor:valor,dia:5});
+  document.getElementById('onbDespNome').value='';
+  document.getElementById('onbDespValor').value='';
+  onbRenderLista('onbListaDespesas',onbState.despesas,'despesas');
+}
+function onbAdicionarParcela(){
+  var nome=document.getElementById('onbParcNome').value.trim();
+  var valor=parseFloat(document.getElementById('onbParcValor').value);
+  var total=parseInt(document.getElementById('onbParcTotal').value);
+  var atual=parseInt(document.getElementById('onbParcAtual').value)||1;
+  var cartao=document.getElementById('onbParcCartao').value;
+  if(!nome||!valor||!total) return;
+  if(atual<1)atual=1; if(atual>total)atual=total;
+  var mi=curM-(atual-1), ai=curA;
+  while(mi<0){ mi+=12; ai--; }
+  onbState.parcelas.push({nome:nome,valor:valor,total:total,mesIni:mi,anoIni:ai,cartao:cartao});
+  document.getElementById('onbParcNome').value='';
+  document.getElementById('onbParcValor').value='';
+  document.getElementById('onbParcTotal').value='';
+  document.getElementById('onbParcAtual').value='';
+  onbRenderLista('onbListaParcelas',onbState.parcelas,'parcelas');
+}
+function onbMontarResumo(){
+  var s=onbState;
+  var h='<b>'+s.nome+'</b><br><br>';
+  h+='Renda principal: '+(s.rendaPrincipal?fmt(s.rendaPrincipal.valor)+' (dia '+s.rendaPrincipal.dia+')':'—')+'<br>';
+  h+='Outras rendas: '+(s.outrasRendas.length?s.outrasRendas.map(function(x){return x.nome+' '+fmt(x.valor);}).join(', '):'nenhuma')+'<br>';
+  h+='Despesas fixas: '+(s.despesas.length?s.despesas.map(function(x){return x.nome+' '+fmt(x.valor);}).join(', '):'nenhuma')+'<br>';
+  h+='Parcelamentos: '+(s.parcelas.length?s.parcelas.map(function(x){return x.nome+' '+x.total+'x '+fmt(x.valor);}).join(', '):'nenhum');
+  document.getElementById('onbResumo').innerHTML=h;
+}
+function onbConfirmar(){
+  var s=onbState;
+  var receitasFixas=[{id:idNovo('rf'),dia:s.rendaPrincipal?s.rendaPrincipal.dia:1,
+    nome:s.rendaPrincipal?s.rendaPrincipal.nome:'Renda principal',valor:s.rendaPrincipal?s.rendaPrincipal.valor:0}];
+  s.outrasRendas.forEach(function(r){ receitasFixas.push({id:idNovo('rf'),dia:r.dia,nome:r.nome,valor:r.valor}); });
+  var despesasFixas=s.despesas.map(function(x){ return {id:idNovo('df'),dia:x.dia,nome:x.nome,valor:x.valor}; });
+  var parcelas=s.parcelas.map(function(p){ return {id:idNovo('p'),nome:p.nome,valor:p.valor,total:p.total,
+    mesIni:p.mesIni,anoIni:p.anoIni,cartao:p.cartao}; });
+  var d={
+    schemaVersion:2, nome:s.nome,
+    receitasFixas:receitasFixas, despesasFixas:despesasFixas,
+    variaveis:[], planoSaude:{nome:'Plano de Saúde',valor:0,dia:30},
+    obra:{parcela:0,dia:1,mesIni:curM,anoIni:curA,total:0},
+    parcelas:parcelas, tetos:{santander:0,nubank:0,investimento:0},
+    meses:{}, historico:[], ultimoMesReal:null
+  };
+  salvar(d);
+  document.getElementById('ovOnb').classList.remove('on');
+  document.getElementById('splash').style.display='';
+  finalizarEntrada(onbUser);
+}
+function onbPular(){
+  var d=getD();
+  salvar(d);
+  document.getElementById('ovOnb').classList.remove('on');
+  document.getElementById('splash').style.display='';
+  finalizarEntrada(onbUser);
+}
+
+/* ══════ INIT (independente de login) ══════ */
+(function(){
+  setInterval(atualizarDataAtual, 60000);
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js')['catch'](function(){});
   }

@@ -1,4 +1,4 @@
-const CACHE = 'vigia-v3';
+const CACHE = 'vigia-v4';
 const FILES = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
@@ -15,6 +15,11 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => caches.match('./index.html')))
+    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => {
+      // Só cai pro index.html em navegação de página; requisições de terceiros
+      // (ex: SDK do Firebase) que falharem devem falhar normalmente, não voltar HTML.
+      if (e.request.mode === 'navigate') return caches.match('./index.html');
+      return Response.error();
+    }))
   );
 });
