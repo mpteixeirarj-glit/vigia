@@ -45,16 +45,19 @@ button{font-family:inherit;}
 .topnav{position:fixed;top:0;left:0;right:0;height:var(--NAV);background:var(--bg);
   border-bottom:1px solid var(--border);display:flex;align-items:center;
   justify-content:space-between;padding:0 14px;z-index:100;}
+.topnav-esq{display:flex;align-items:center;gap:10px;min-width:0;}
 .logo{display:flex;align-items:center;gap:8px;font-family:monospace;font-size:.95rem;
-  font-weight:700;letter-spacing:.08em;color:var(--green);}
+  font-weight:700;letter-spacing:.08em;color:var(--green);flex-shrink:0;}
 .logo img{width:26px;height:26px;border-radius:7px;}
-.mesctrl{display:flex;align-items:center;gap:4px;}
+.data-atual{font-family:monospace;font-size:.66rem;color:var(--muted);background:none;
+  border:none;cursor:pointer;padding:2px 4px;letter-spacing:.04em;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;}
+.data-atual:active{color:var(--green);}
+.mesctrl{display:flex;align-items:center;gap:4px;flex-shrink:0;}
 .mesctrl button{width:28px;height:28px;border-radius:7px;background:var(--surf2);
   border:1px solid var(--border);color:var(--text);font-size:.85rem;cursor:pointer;
   display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
-.mesctrl .lbl{font-family:monospace;font-size:.72rem;color:var(--text);min-width:66px;text-align:center;}
-.hojebtn{font-family:monospace;font-size:.58rem;color:var(--muted);background:none;
-  border:none;cursor:pointer;padding:2px 4px;letter-spacing:.06em;}
+.mesctrl .lbl{font-family:monospace;font-size:.72rem;color:var(--text);min-width:78px;text-align:center;}
 
 .botnav{position:fixed;bottom:0;left:0;right:0;height:var(--BOT);background:var(--surf);
   border-top:1px solid var(--border);display:flex;justify-content:space-around;
@@ -367,13 +370,13 @@ button{font-family:inherit;}
 </div>
 
 <div class="topnav">
-  <div class="logo"><img src="icon-192.png" alt="">VIGIA</div>
+  <div class="topnav-esq">
+    <div class="logo"><img src="icon-192.png" alt="">VIGIA</div>
+    <button class="data-atual" id="dataAtual" onclick="voltarHoje()">—</button>
+  </div>
   <div class="mesctrl">
     <button onclick="navMes(-1)">‹</button>
-    <div>
-      <div class="lbl" id="mesLbl">—</div>
-      <button class="hojebtn" onclick="voltarHoje()">hoje</button>
-    </div>
+    <div class="lbl" id="mesLbl">—</div>
     <button onclick="navMes(1)">›</button>
   </div>
 </div>
@@ -690,8 +693,10 @@ button{font-family:inherit;}
 'use strict';
 var MES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 var MESL=['jan.','fev.','mar.','abr.','mai.','jun.','jul.','ago.','set.','out.','nov.','dez.'];
+var MESF=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 var DOW=['DOM.','SEG.','TER.','QUA.','QUI.','SEX.','SÁB.'];
 var DOWL=['dom.','seg.','ter.','qua.','qui.','sex.','sáb.'];
+var DOWF=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
 
 var CATEGORIAS=[
   {id:'luz',      nome:'Luz',          dia:15, sec:'consumo'},
@@ -1491,7 +1496,7 @@ function spAcao(a){
 }
 
 function renderTudo(){
-  document.getElementById('mesLbl').textContent=MES[curM]+'/'+curA;
+  document.getElementById('mesLbl').textContent=MESF[curM]+' '+String(curA).slice(-2);
   if(telaAtual==='inicio') renderInicio();
   else if(telaAtual==='agenda') renderAgenda();
   else if(telaAtual==='cartoes') renderCartoes();
@@ -1503,6 +1508,7 @@ function renderTudo(){
 (function(){
   getD();
   document.getElementById('fab').style.display='flex';
+  document.getElementById('dataAtual').textContent=HOJE.getDate()+' - '+DOWF[HOJE.getDay()];
   renderTudo();
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js')['catch'](function(){});
