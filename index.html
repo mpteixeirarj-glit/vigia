@@ -163,19 +163,6 @@ button{font-family:inherit;}
 
 .vazio{text-align:center;padding:20px 14px;color:var(--muted);font-size:.78rem;line-height:1.6;}
 
-/* OBRA */
-.obra{background:var(--surf);border:1px solid var(--border);border-left:3px solid var(--yellow);
-  border-radius:10px;padding:13px;margin:0 16px 14px;}
-.obra-t{display:flex;justify-content:space-between;margin-bottom:11px;}
-.obra-n{font-size:.84rem;font-weight:500;}
-.obra-s{font-size:.68rem;color:var(--muted);margin-top:2px;}
-.obra-p{font-family:monospace;font-size:.84rem;color:var(--yellow);font-weight:700;text-align:right;}
-.obra-tr{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
-.obra-f{height:100%;border-radius:3px;transition:width .5s;
-  background:linear-gradient(90deg,var(--yellow),#ff9a3c);}
-.obra-i{display:flex;justify-content:space-between;margin-top:6px;
-  font-family:monospace;font-size:.63rem;color:var(--muted);}
-
 /* ALERTA */
 .al{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:8px;
   font-size:.78rem;line-height:1.45;margin-bottom:7px;}
@@ -404,15 +391,6 @@ button{font-family:inherit;}
     <div class="barra-s" id="barS">—</div>
   </div>
 
-  <div class="obra">
-    <div class="obra-t">
-      <div><div class="obra-n">Prestação da Obra</div><div class="obra-s">7 anos · vence dia 20</div></div>
-      <div><div class="obra-p">R$ 2.185,00</div><div class="obra-s" style="text-align:right" id="obP">—</div></div>
-    </div>
-    <div class="obra-tr"><div class="obra-f" id="obF" style="width:0%"></div></div>
-    <div class="obra-i"><span id="obR">—</span><span id="obPc">—</span></div>
-  </div>
-
   <div class="sec">
     <div class="sec-h" onclick="toggleSec('sReceitas',this)">
       <div class="sec-t gr"><span class="chev">▾</span>Receitas</div>
@@ -422,11 +400,34 @@ button{font-family:inherit;}
   </div>
 
   <div class="sec">
+    <div class="sec-h" onclick="toggleSec('sPrestacoes',this)">
+      <div class="sec-t yl"><span class="chev">▾</span>Prestações</div>
+      <div class="sec-tot" id="totPrestacoes">—</div>
+    </div>
+    <div class="sec-body" id="sPrestacoes"></div>
+  </div>
+
+  <div class="sec">
     <div class="sec-h" onclick="toggleSec('sFixas',this)">
       <div class="sec-t rd"><span class="chev">▾</span>Despesas fixas</div>
       <div class="sec-tot" id="totFixas">—</div>
     </div>
     <div class="sec-body" id="sFixas"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h" onclick="toggleSec('sPlano',this)">
+      <div class="sec-t" style="color:var(--muted)"><span class="chev">▾</span>Plano de Saúde</div>
+    </div>
+    <div class="sec-body" id="sPlano"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h" onclick="toggleSec('sVariaveis',this)">
+      <div class="sec-t rd"><span class="chev">▾</span>Variáveis do mês</div>
+      <div class="sec-tot" id="totVariaveis">—</div>
+    </div>
+    <div class="sec-body" id="sVariaveis"></div>
   </div>
 
   <div class="sec">
@@ -648,6 +649,16 @@ button{font-family:inherit;}
   </div>
 </div>
 
+<!-- MODAL CONFIRMAR (Tipo 2) -->
+<div class="ov" id="ovC" onclick="fecharFora(event,'ovC')">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-t">Confirmar<button class="md-x" onclick="fechar('ovC')">✕</button></div>
+    <div class="fd"><label id="cfNome" style="text-transform:none;letter-spacing:0;font-size:.9rem;color:var(--text);"></label>
+      <input type="number" id="cfVal" step="0.01" inputmode="decimal"></div>
+    <button class="bok gr" onclick="salvarConfirmacao()">✓ Confirmar</button>
+  </div>
+</div>
+
 <!-- MODAL EDITAR -->
 <div class="ov" id="ovE" onclick="fecharFora(event,'ovE')">
   <div class="md" onclick="event.stopPropagation()">
@@ -737,6 +748,7 @@ var CATEGORIAS=[
 var TIPOS_REC=['Salário','Plantão extra','Férias','13º Salário','Reembolso','Outros'];
 
 var INIT={
+  schemaVersion:2,
   receitasFixas:[
     {id:'rf1',dia:5, nome:'Rede Dor', valor:4049.37},
     {id:'rf2',dia:10,nome:'Dimesp',   valor:1200.00},
@@ -746,10 +758,16 @@ var INIT={
   despesasFixas:[
     {id:'df1',dia:5, nome:'Palmieri',       valor:758.48},
     {id:'df2',dia:15,nome:'Celular',        valor:67.88},
-    {id:'df3',dia:30,nome:'Plano de Saúde', valor:450.00},
     {id:'df4',dia:30,nome:'Ração da Íris',  valor:230.00}
   ],
-  obra:{parcela:2185.00,dia:20,mesIni:7,anoIni:2024,total:84},
+  variaveis:[
+    {id:'vc1',dia:15,nome:'Conta de Luz',           valor:350.00},
+    {id:'vc2',dia:28,nome:'Conta de Água',          valor:170.00},
+    {id:'vc3',dia:20,nome:'Fatura Santander',       valor:800.00},
+    {id:'vc4',dia:30,nome:'Luz-Light (reserva)',    valor:400.00}
+  ],
+  planoSaude:{nome:'Plano de Saúde', valor:450.00, dia:30},
+  obra:{parcela:2185.00,dia:20,mesIni:2,anoIni:2025,total:84},
   parcelas:[
     {id:'p1',nome:'Romulo Couto Racca',valor:108.64,total:10,mesIni:5,anoIni:2026,cartao:'santander'},
     {id:'p2',nome:'ML*Gabylu (1)',     valor:25.76, total:5, mesIni:3,anoIni:2026,cartao:'santander'},
@@ -757,17 +775,27 @@ var INIT={
     {id:'p4',nome:'Amazon Prime BR',   valor:13.90, total:12,mesIni:4,anoIni:2026,cartao:'santander'},
     {id:'p5',nome:'Kiwify*Dominando I',valor:16.49, total:12,mesIni:5,anoIni:2026,cartao:'santander'},
     {id:'p6',nome:'Shopee*Amigaodolar',valor:65.38, total:4, mesIni:5,anoIni:2026,cartao:'santander'},
-    {id:'p7',nome:'Geladeira',         valor:364.57,total:12,mesIni:5,anoIni:2026,cartao:'nubank'}
+    {id:'p7',nome:'Geladeira',         valor:364.57,total:12,mesIni:2,anoIni:2026,cartao:'nubank',dia:20,destaqueInicio:true}
   ],
   tetos:{santander:1000,nubank:364.57,investimento:250},
   meses:{},
-  historico:[]
+  historico:[],
+  ultimoMesReal:null
 };
 
 function getD(){
   var raw=localStorage.getItem('vigia_v3');
   if(!raw){ var d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
-  try{ var d=JSON.parse(raw); if(!d.meses)d.meses={}; if(!d.historico)d.historico=[]; return d; }
+  try{
+    var d=JSON.parse(raw);
+    if(!d.schemaVersion || d.schemaVersion<2){ d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
+    if(!d.meses)d.meses={};
+    if(!d.historico)d.historico=[];
+    if(!d.variaveis)d.variaveis=JSON.parse(JSON.stringify(INIT.variaveis));
+    if(!d.planoSaude)d.planoSaude=JSON.parse(JSON.stringify(INIT.planoSaude));
+    if(d.ultimoMesReal===undefined)d.ultimoMesReal=null;
+    return d;
+  }
   catch(e){ var d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
 }
 function salvar(d){ try{ localStorage.setItem('vigia_v3',JSON.stringify(d)); }catch(e){} }
@@ -775,11 +803,34 @@ function salvar(d){ try{ localStorage.setItem('vigia_v3',JSON.stringify(d)); }ca
 function chaveM(m,a){ return a+'-'+String(m+1).padStart(2,'0'); }
 function getMes(d,m,a){
   var k=chaveM(m,a);
-  if(!d.meses[k]) d.meses[k]={consumo:[],reserva:[],cofres:[],receitas:[]};
+  if(!d.meses[k]) d.meses[k]={consumo:[],reserva:[],cofres:[],receitas:[],confirmacoes:{}};
   var x=d.meses[k];
   if(!x.consumo)x.consumo=[]; if(!x.reserva)x.reserva=[];
   if(!x.cofres)x.cofres=[]; if(!x.receitas)x.receitas=[];
+  if(!x.confirmacoes)x.confirmacoes={};
   return x;
+}
+function cap(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):s; }
+
+/* ══════ RESET MENSAL ══════
+   Quando o mês/ano real muda desde a última abertura do app, arquiva
+   automaticamente o mês anterior no histórico. O mês novo já nasce com
+   as confirmações (Tipo 2) zeradas e o consumo (Tipo 3) vazio, pois
+   getMes() cria um bucket em branco para toda chave nova. */
+function verificarResetMensal(){
+  var d=getD();
+  var hj={mes:HOJE.getMonth(),ano:HOJE.getFullYear()};
+  if(!d.ultimoMesReal){ d.ultimoMesReal=hj; salvar(d); return; }
+  var um=d.ultimoMesReal;
+  if(um.mes===hj.mes && um.ano===hj.ano) return;
+  var c=calcMes(um.mes,um.ano);
+  var idx=-1;
+  for(var i=0;i<d.historico.length;i++)
+    if(d.historico[i].mes===um.mes && d.historico[i].ano===um.ano){ idx=i; break; }
+  if(idx>=0){ d.historico[idx].rec=c.receitas; d.historico[idx].desp=c.despesas; }
+  else d.historico.push({id:idNovo('h'),mes:um.mes,ano:um.ano,rec:c.receitas,desp:c.despesas});
+  d.ultimoMesReal=hj;
+  salvar(d);
 }
 
 function fmt(v){
@@ -858,32 +909,66 @@ function aplicarFechadas(){
 }
 
 /* ══════ CÁLCULO DO MÊS ══════ */
+function valorConfirmado(conf,item){
+  var c=conf[item.id];
+  return (c&&c.confirmado) ? (c.valor!=null?c.valor:item.valor) : 0;
+}
 function calcMes(m,a){
-  var d=getD(), mm=getMes(d,m,a);
-  var recFix=d.receitasFixas.reduce(function(s,x){return s+x.valor;},0);
-  var recExt=mm.receitas.reduce(function(s,x){return s+x.valor;},0);
-  var receitas=recFix+recExt;
-  var fixas=d.despesasFixas.reduce(function(s,x){return s+x.valor;},0);
+  var d=getD(), mm=getMes(d,m,a), conf=mm.confirmacoes;
+
+  /* Tipo 1 — sempre ativos (Obra + parcelas em destaque, ex: Geladeira Nubank) */
   var ob=obraNoMes(d.obra,m,a);
   var obraV=ob.ativa?d.obra.parcela:0;
+  var destaque=d.parcelas.filter(function(p){return p.destaqueInicio;})
+    .map(function(p){return {p:p,st:parcelaNoMes(p,m,a)};});
+  var destaqueAtivo=destaque.filter(function(x){return x.st.ativa;});
+  var tipo1=obraV+destaqueAtivo.reduce(function(s,x){return s+x.p.valor;},0);
+
+  /* Tipo 2 — confirmação pendente (só entra no saldo depois de confirmado) */
+  var recFixConf=d.receitasFixas.reduce(function(s,x){return s+valorConfirmado(conf,x);},0);
+  var despFixConf=d.despesasFixas.reduce(function(s,x){return s+valorConfirmado(conf,x);},0);
+  var variaveisConf=d.variaveis.reduce(function(s,x){return s+valorConfirmado(conf,x);},0);
+
+  var recExt=mm.receitas.reduce(function(s,x){return s+x.valor;},0);
+  var receitas=recFixConf+recExt;
+
+  /* Tipo 3 — consumo livre + reserva/cofrinhos (lançados pelo usuário) */
   var consumo=mm.consumo.filter(function(x){return !x.cartao;}).reduce(function(s,x){return s+x.valor;},0);
-  var parcTot=0;
-  d.parcelas.forEach(function(p){
-    var st=parcelaNoMes(p,m,a);
-    if(st.ativa) parcTot+=p.valor;
-  });
   var cartAvulso=mm.consumo.filter(function(x){return x.cartao;}).reduce(function(s,x){return s+x.valor;},0);
   var reserva=mm.reserva.reduce(function(s,x){return s+x.valor;},0);
   var cofres=mm.cofres.reduce(function(s,x){return s+x.valor;},0);
-  var despesas=fixas+obraV+consumo+parcTot+cartAvulso+reserva+cofres;
-  return {receitas:receitas,recFix:recFix,recExt:recExt,fixas:fixas,obra:obraV,obraSt:ob,
-    consumo:consumo,parcTot:parcTot,cartAvulso:cartAvulso,reserva:reserva,cofres:cofres,
-    despesas:despesas,saldo:receitas-despesas,d:d,mm:mm};
+
+  var despesas=tipo1+despFixConf+variaveisConf+consumo+cartAvulso+reserva+cofres;
+  return {receitas:receitas,recFixConf:recFixConf,recExt:recExt,despFixConf:despFixConf,
+    variaveisConf:variaveisConf,tipo1:tipo1,obra:obraV,obraSt:ob,destaque:destaque,destaqueAtivo:destaqueAtivo,
+    consumo:consumo,cartAvulso:cartAvulso,reserva:reserva,cofres:cofres,
+    despesas:despesas,saldo:receitas-despesas,d:d,mm:mm,conf:conf};
 }
 
 /* ══════ RENDER INÍCIO ══════ */
+/* Renderiza um item Tipo 2 (confirmação pendente): cinza até confirmar, verde/vermelho depois */
+function itemTipo2(kind,item,cor,conf){
+  var cf=conf[item.id];
+  var confirmado=!!(cf&&cf.confirmado);
+  var valor=confirmado?(cf.valor!=null?cf.valor:item.valor):item.valor;
+  if(!confirmado){
+    return '<div class="it '+cor+'" style="opacity:.42"><div class="it-t"><div class="it-n"><span class="dia">'+
+      String(item.dia).padStart(2,'0')+'</span>'+item.nome+'<span class="tg cat">PENDENTE</span></div>'+
+      '<div class="it-v dim">'+fmt(item.valor)+'</div></div>'+
+      '<div class="it-a"><button class="ba" style="flex:2;color:var(--text)" onclick="abrirConfirmacao(\''+kind+'\',\''+item.id+'\')">✓ Confirmar</button>'+
+      '<button class="ba" onclick="edit(\''+kind+'\',\''+item.id+'\')">✎</button>'+
+      '<button class="ba del" onclick="del(\''+kind+'\',\''+item.id+'\')">✕</button></div></div>';
+  }
+  return '<div class="it '+cor+'"><div class="it-t"><div class="it-n"><span class="dia">'+
+    String(item.dia).padStart(2,'0')+'</span>'+item.nome+'<span class="tg ok">CONFIRMADO</span></div>'+
+    '<div class="it-v '+cor+'">'+fmt(valor)+'</div></div>'+
+    '<div class="it-a"><button class="ba" onclick="abrirConfirmacao(\''+kind+'\',\''+item.id+'\')">✎ Ajustar</button>'+
+    '<button class="ba" onclick="desfazerConfirmacao(\''+item.id+'\')">↺ Desfazer</button>'+
+    '<button class="ba del" onclick="del(\''+kind+'\',\''+item.id+'\')">✕</button></div></div>';
+}
+
 function renderInicio(){
-  var c=calcMes(curM,curA), d=c.d, mm=c.mm;
+  var c=calcMes(curM,curA), d=c.d, mm=c.mm, conf=c.conf;
 
   document.getElementById('hSaldo').textContent=(c.saldo>=0?'+':'')+fmt(c.saldo);
   document.getElementById('hSaldo').className='hero-v '+(c.saldo>=0?'pos':'neg');
@@ -897,23 +982,9 @@ function renderInicio(){
   document.getElementById('barF').style.width=Math.min(pct,100)+'%';
   document.getElementById('barS').textContent=fmt(c.despesas)+' de '+fmt(c.receitas);
 
-  /* obra */
-  var ob=c.obraSt;
-  document.getElementById('obP').textContent=ob.num+'/'+d.obra.total;
-  document.getElementById('obF').style.width=(ob.num/d.obra.total*100).toFixed(1)+'%';
-  document.getElementById('obPc').textContent=(ob.num/d.obra.total*100).toFixed(1)+'%';
-  document.getElementById('obR').textContent= ob.quitada?'Quitada':
-    (ob.ativa? ob.restam+' restantes · '+fmt(ob.restam*d.obra.parcela) : 'Ainda não iniciada');
-
-  /* receitas */
+  /* receitas (Tipo 2 — confirmação) */
   var h='';
-  d.receitasFixas.forEach(function(r){
-    h+='<div class="it gr"><div class="it-t"><div class="it-n"><span class="dia">'+
-      String(r.dia).padStart(2,'0')+'</span>'+r.nome+'<span class="tg ok">FIXA</span></div>'+
-      '<div class="it-v gr">'+fmt(r.valor)+'</div></div>'+
-      '<div class="it-a"><button class="ba" onclick="edit(\'receitasFixas\',\''+r.id+'\')">✎ Editar</button>'+
-      '<button class="ba del" onclick="del(\'receitasFixas\',\''+r.id+'\')">✕ Remover</button></div></div>';
-  });
+  d.receitasFixas.forEach(function(r){ h+=itemTipo2('receitasFixas',r,'gr',conf); });
   mm.receitas.forEach(function(r){
     h+='<div class="it gr"><div class="it-t"><div class="it-n"><span class="dia">'+
       (r.dia?String(r.dia).padStart(2,'0'):'—')+'</span>'+r.nome+'</div>'+
@@ -925,17 +996,50 @@ function renderInicio(){
   document.getElementById('sReceitas').innerHTML=h||'<div class="vazio">Nenhuma receita.</div>';
   document.getElementById('totReceitas').textContent=fmt(c.receitas);
 
-  /* fixas */
+  /* prestações (Tipo 1 — sempre ativos, sem confirmação) */
   h='';
-  d.despesasFixas.forEach(function(f){
-    h+='<div class="it rd"><div class="it-t"><div class="it-n"><span class="dia">'+
-      String(f.dia).padStart(2,'0')+'</span>'+f.nome+'<span class="tg ok">FIXA</span></div>'+
-      '<div class="it-v rd">'+fmt(f.valor)+'</div></div>'+
-      '<div class="it-a"><button class="ba" onclick="edit(\'despesasFixas\',\''+f.id+'\')">✎ Editar</button>'+
-      '<button class="ba del" onclick="del(\'despesasFixas\',\''+f.id+'\')">✕ Remover</button></div></div>';
+  var ob=c.obraSt;
+  if(ob.ativa){
+    var pctObra=(ob.num/d.obra.total*100);
+    h+='<div class="it yl"><div class="it-t"><div class="it-n">Prestação da Obra</div>'+
+      '<div class="it-v yl">'+fmt(d.obra.parcela)+'</div></div>'+
+      '<div class="pp"><div class="pp-l"><span>'+ob.num+'/'+d.obra.total+'</span><span>'+pctObra.toFixed(0)+'% pago</span></div>'+
+      '<div class="pp-tr"><div class="pp-f" style="width:'+pctObra+'%;background:var(--yellow)"></div></div></div>'+
+      '<div class="it-m">'+ob.restam+' restantes · dia '+d.obra.dia+' · '+fmt(ob.restam*d.obra.parcela)+' remanescente</div></div>';
+  }
+  c.destaqueAtivo.forEach(function(x){
+    var p=x.p, st=x.st, pct2=(st.num/p.total*100);
+    h+='<div class="it yl"><div class="it-t"><div class="it-n">'+p.nome+
+      (st.ultima?'<span class="tg ult">ÚLTIMA</span>':'')+'</div>'+
+      '<div class="it-v yl">'+fmt(p.valor)+'</div></div>'+
+      '<div class="pp"><div class="pp-l"><span>'+st.num+'/'+p.total+'</span><span>'+pct2.toFixed(0)+'% pago</span></div>'+
+      '<div class="pp-tr"><div class="pp-f" style="width:'+pct2+'%;background:var(--yellow)"></div></div></div>'+
+      '<div class="it-m">'+st.restam+' restantes · dia '+(p.dia||20)+' · '+cap(p.cartao)+'</div></div>';
   });
+  document.getElementById('sPrestacoes').innerHTML=h||'<div class="vazio">Nenhuma prestação ativa.</div>';
+  document.getElementById('totPrestacoes').textContent=fmt(c.tipo1);
+
+  /* fixas (Tipo 2 — confirmação) */
+  h='';
+  d.despesasFixas.forEach(function(f){ h+=itemTipo2('despesasFixas',f,'rd',conf); });
   document.getElementById('sFixas').innerHTML=h||'<div class="vazio">Nenhuma despesa fixa.</div>';
-  document.getElementById('totFixas').textContent=fmt(c.fixas);
+  document.getElementById('totFixas').textContent=fmt(c.despFixConf);
+
+  /* plano de saúde — informativo, não entra no saldo */
+  var psCiente=!!(conf['planoSaude']&&conf['planoSaude'].confirmado);
+  document.getElementById('sPlano').innerHTML=
+    '<div class="it" style="border-left-color:var(--muted);opacity:'+(psCiente?1:.65)+'">'+
+    '<div class="it-t"><div class="it-n"><span class="dia">'+String(d.planoSaude.dia).padStart(2,'0')+'</span>'+
+    d.planoSaude.nome+'<span class="tg cat">FONTE</span></div><div class="it-v dim">'+fmt(d.planoSaude.valor)+'</div></div>'+
+    '<div class="it-m">Descontado na fonte — não afeta o saldo.</div>'+
+    '<div class="it-a"><button class="ba" onclick="togglePlanoSaude()">'+
+    (psCiente?'✓ Ciente (desmarcar)':'Marcar como ciente')+'</button></div></div>';
+
+  /* variáveis do mês (Tipo 2 — confirmação) */
+  h='';
+  d.variaveis.forEach(function(v){ h+=itemTipo2('variaveis',v,'rd',conf); });
+  document.getElementById('sVariaveis').innerHTML=h||'<div class="vazio">Nenhuma variável cadastrada.</div>';
+  document.getElementById('totVariaveis').textContent=fmt(c.variaveisConf);
 
   /* consumo */
   h='';
@@ -1017,10 +1121,17 @@ function renderInicio(){
     var pi=(c.reserva+c.cofres)/c.receitas*100;
     if(pi<5) al.push({t:'w',i:'📉',x:'Reserva em <b>'+pi.toFixed(1)+'%</b> da renda. Meta saudável: ≥ 10%.'});
     else al.push({t:'ok',i:'📈',x:'Reserva em <b>'+pi.toFixed(1)+'%</b> da renda.'});
-    if(c.obra>0) al.push({t:'w',i:'🏗️',x:'Obra consome <b>'+(c.obra/c.receitas*100).toFixed(1)+
-      '%</b> da renda · '+c.obraSt.restam+' parcelas restantes.'});
+    if(c.tipo1>0) al.push({t:'w',i:'🏗️',x:'Prestações consomem <b>'+(c.tipo1/c.receitas*100).toFixed(1)+
+      '%</b> da renda · '+c.obraSt.restam+' parcelas restantes da obra.'});
   }
   if(mm.consumo.length===0) al.push({t:'w',i:'📝',x:'Você ainda não lançou nenhum consumo em '+MES[curM]+'.'});
+
+  var pendentes=0;
+  d.receitasFixas.concat(d.despesasFixas,d.variaveis).forEach(function(item){
+    if(!(conf[item.id]&&conf[item.id].confirmado)) pendentes++;
+  });
+  if(pendentes>0) al.push({t:'w',i:'⏳',x:pendentes+' ite'+(pendentes===1?'m':'ns')+
+    ' aguardando confirmação em <b>'+MES[curM]+'/'+curA+'</b>.'});
 
   document.getElementById('sAlertas').innerHTML=al.map(function(a){
     return '<div class="al '+a.t+'"><span class="al-i">'+a.i+'</span><span>'+a.x+'</span></div>';
@@ -1039,24 +1150,40 @@ function faturaMes(cartao,m,a){
 
 /* ══════ AGENDA ══════ */
 function eventosMes(m,a){
-  var d=getD(), mm=getMes(d,m,a), ev={};
+  var d=getD(), mm=getMes(d,m,a), ev={}, conf=mm.confirmacoes;
   function add(dia,o){ if(!dia)dia=30; if(!ev[dia])ev[dia]=[]; ev[dia].push(o); }
-  d.receitasFixas.forEach(function(r){ add(r.dia,{n:r.nome,v:r.valor,t:'rec',s:'Receita fixa'}); });
+  function addTipo2(lista,tipo){
+    lista.forEach(function(item){
+      var c=conf[item.id], confirmado=!!(c&&c.confirmado);
+      var valor=confirmado?(c.valor!=null?c.valor:item.valor):item.valor;
+      add(item.dia,{n:item.nome,v:valor,t:tipo,s:confirmado?'Confirmado':'Pendente de confirmação',pend:!confirmado});
+    });
+  }
+  addTipo2(d.receitasFixas,'rec');
   mm.receitas.forEach(function(r){ add(r.dia,{n:r.nome,v:r.valor,t:'rec',s:'Receita '+(r.cat||'')}); });
-  d.despesasFixas.forEach(function(f){ add(f.dia,{n:f.nome,v:f.valor,t:'desp',s:'Despesa fixa'}); });
+  addTipo2(d.despesasFixas,'desp');
+  addTipo2(d.variaveis,'desp');
+  var psC=conf['planoSaude'];
+  add(d.planoSaude.dia,{n:d.planoSaude.nome,v:d.planoSaude.valor,t:'fonte',
+    s:(psC&&psC.confirmado?'Ciente · descontado na fonte':'Descontado na fonte'),semSaldo:true});
+
   var ob=obraNoMes(d.obra,m,a);
   if(ob.ativa) add(d.obra.dia,{n:'Prestação da Obra',v:d.obra.parcela,t:'prest',s:'Parcela '+ob.num+'/'+d.obra.total});
+  d.parcelas.filter(function(p){return p.destaqueInicio;}).forEach(function(p){
+    var st=parcelaNoMes(p,m,a);
+    if(st.ativa) add(p.dia||20,{n:p.nome,v:p.valor,t:'prest',s:'Parcela '+st.num+'/'+p.total+' · '+cap(p.cartao)});
+  });
   var fs=faturaMes('santander',m,a), fn=faturaMes('nubank',m,a);
-  if(fs>0) add(20,{n:'Fatura Santander',v:fs,t:'prest',s:'Cartão de crédito'});
-  if(fn>0) add(20,{n:'Fatura Nubank',v:fn,t:'prest',s:'Cartão de crédito'});
+  if(fs>0) add(20,{n:'Fatura Santander (cartão)',v:fs,t:'prest',s:'Compras avulsas + parcelas do cartão'});
+  if(fn>0) add(20,{n:'Fatura Nubank (cartão)',v:fn,t:'prest',s:'Compras avulsas + parcelas do cartão'});
   mm.consumo.forEach(function(x){ if(!x.cartao) add(x.dia,{n:x.nome||x.cat,v:x.valor,t:'desp',s:x.cat}); });
   mm.reserva.forEach(function(x){ add(x.dia,{n:x.nome||'Investimento',v:x.valor,t:'res',s:'Reserva'}); });
   mm.cofres.forEach(function(x){ add(x.dia,{n:x.nome||'Cofrinho',v:x.valor,t:'cof',s:'Cofrinho'}); });
   return ev;
 }
-var COR={rec:'var(--green)',desp:'var(--red)',prest:'var(--yellow)',res:'var(--blue)',cof:'var(--purple)'};
-var CLS={rec:'gr',desp:'rd',prest:'yl',res:'bl',cof:'pp'};
-var LBL={rec:'RECEITA',desp:'DESPESA',prest:'PRESTAÇÃO',res:'RESERVA',cof:'COFRINHO'};
+var COR={rec:'var(--green)',desp:'var(--red)',prest:'var(--yellow)',res:'var(--blue)',cof:'var(--purple)',fonte:'var(--muted)'};
+var CLS={rec:'gr',desp:'rd',prest:'yl',res:'bl',cof:'pp',fonte:''};
+var LBL={rec:'RECEITA',desp:'DESPESA',prest:'PRESTAÇÃO',res:'RESERVA',cof:'COFRINHO',fonte:'FONTE'};
 
 function renderAgenda(){
   var ev=eventosMes(curM,curA);
@@ -1072,10 +1199,10 @@ function renderAgenda(){
   for(var dd=1;dd<=tot;dd++){
     var isH=ehHoje&&dd===HOJE.getDate();
     var lista=ev[dd]||[];
-    var tipos=[];
-    lista.forEach(function(x){ if(tipos.indexOf(x.t)<0) tipos.push(x.t); });
-    var dots=tipos.slice(0,4).map(function(t){
-      return '<i style="background:'+COR[t]+'"></i>';}).join('');
+    var cores=[];
+    lista.forEach(function(x){ var c=x.pend?'var(--muted)':COR[x.t]; if(cores.indexOf(c)<0) cores.push(c); });
+    var dots=cores.slice(0,4).map(function(c){
+      return '<i style="background:'+c+'"></i>';}).join('');
     h+='<div class="cal-d'+(isH?' hj':'')+'" onclick="abrirDia('+dd+')">'+
       '<div class="dn">'+dd+'</div><div class="dd">'+dots+'</div></div>';
   }
@@ -1086,9 +1213,9 @@ function renderAgenda(){
   dias.forEach(function(dd){
     tl+='<div class="tl-g"><div class="tl-d">DIA '+String(dd).padStart(2,'0')+'</div>';
     ev[dd].forEach(function(x){
-      tl+='<div class="it '+CLS[x.t]+'"><div class="it-t"><div class="it-n">'+
-        '<span class="tg cat">'+LBL[x.t]+'</span>'+x.n+'</div>'+
-        '<div class="it-v '+CLS[x.t]+'">'+fmt(x.v)+'</div></div>'+
+      tl+='<div class="it '+CLS[x.t]+'" style="opacity:'+(x.pend?.5:1)+'"><div class="it-t"><div class="it-n">'+
+        '<span class="tg cat">'+LBL[x.t]+'</span>'+x.n+(x.pend?'<span class="tg cat">PENDENTE</span>':'')+'</div>'+
+        '<div class="it-v '+CLS[x.t]+'" style="color:'+(x.pend?'var(--muted)':'')+'">'+fmt(x.v)+'</div></div>'+
         '<div class="it-m">'+x.s+'</div></div>';
     });
     tl+='</div>';
@@ -1104,10 +1231,11 @@ function abrirDia(dd){
   else {
     var tRec=0,tDesp=0;
     lista.forEach(function(x){
-      if(x.t==='rec') tRec+=x.v; else tDesp+=x.v;
-      h+='<div class="pop-i"><div><div class="pop-n"><span class="tg cat">'+LBL[x.t]+
-        '</span>'+x.n+'</div><div class="pop-s">'+x.s+'</div></div>'+
-        '<div class="pop-v '+CLS[x.t]+'" style="color:'+COR[x.t]+'">'+fmt(x.v)+'</div></div>';
+      if(!x.pend && !x.semSaldo){ if(x.t==='rec') tRec+=x.v; else tDesp+=x.v; }
+      var tagExtra=x.pend?'<span class="tg cat" style="color:var(--muted)">PENDENTE</span>':'';
+      h+='<div class="pop-i" style="opacity:'+(x.pend?.5:1)+'"><div><div class="pop-n"><span class="tg cat">'+LBL[x.t]+
+        '</span>'+x.n+tagExtra+'</div><div class="pop-s">'+x.s+'</div></div>'+
+        '<div class="pop-v '+CLS[x.t]+'" style="color:'+(x.pend?'var(--muted)':COR[x.t])+'">'+fmt(x.v)+'</div></div>';
     });
     h+='<div class="cbx" style="margin-top:14px">'+
       (tRec>0?'Entra: <b>'+fmt(tRec)+'</b><br>':'')+
@@ -1476,6 +1604,38 @@ function delM(lista,id){
   mm[lista]=mm[lista].filter(function(x){return x.id!==id;});
   salvar(d); renderTudo();
 }
+
+/* ══════ CONFIRMAÇÃO (Tipo 2) ══════ */
+var confCtx=null;
+function abrirConfirmacao(kind,id){
+  var d=getD(), mm=getMes(d,curM,curA), def=null;
+  d[kind].forEach(function(x){ if(x.id===id) def=x; });
+  if(!def) return;
+  var c=mm.confirmacoes[id];
+  confCtx={kind:kind,id:id};
+  document.getElementById('cfNome').textContent=def.nome+' · dia '+def.dia;
+  document.getElementById('cfVal').value=(c&&c.valor!=null)?c.valor:def.valor;
+  document.getElementById('ovC').classList.add('on');
+}
+function salvarConfirmacao(){
+  if(!confCtx) return;
+  var v=parseFloat(document.getElementById('cfVal').value);
+  if(isNaN(v)||v<0){ alert('Informe um valor válido.'); return; }
+  var d=getD(), mm=getMes(d,curM,curA);
+  mm.confirmacoes[confCtx.id]={confirmado:true,valor:v};
+  salvar(d); fechar('ovC'); confCtx=null; renderTudo();
+}
+function desfazerConfirmacao(id){
+  var d=getD(), mm=getMes(d,curM,curA);
+  if(mm.confirmacoes[id]) mm.confirmacoes[id].confirmado=false;
+  salvar(d); renderTudo();
+}
+function togglePlanoSaude(){
+  var d=getD(), mm=getMes(d,curM,curA);
+  if(!mm.confirmacoes['planoSaude']) mm.confirmacoes['planoSaude']={confirmado:false};
+  mm.confirmacoes['planoSaude'].confirmado=!mm.confirmacoes['planoSaude'].confirmado;
+  salvar(d); renderTudo();
+}
 function editParc(id){
   var d=getD(), p=null;
   d.parcelas.forEach(function(x){ if(x.id===id) p=x; });
@@ -1534,6 +1694,7 @@ function atualizarDataAtual(){
 /* ══════ INIT ══════ */
 (function(){
   getD();
+  verificarResetMensal();
   document.getElementById('fab').style.display='flex';
   atualizarDataAtual();
   setInterval(atualizarDataAtual, 60000);
