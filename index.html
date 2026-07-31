@@ -547,6 +547,14 @@ onAuthStateChanged(auth, function(user){
   </div>
 
   <div class="sec">
+    <div class="sec-h" onclick="toggleSec('sPrestacoes',this)">
+      <div class="sec-t yl"><span class="chev">▾</span>Parcelamentos</div>
+      <div class="sec-tot" id="totPrestacoes">—</div>
+    </div>
+    <div class="sec-body" id="sPrestacoes"></div>
+  </div>
+
+  <div class="sec">
     <div class="sec-h" onclick="toggleSec('sReceitas',this)">
       <div class="sec-t gr"><span class="chev">▾</span>Receitas</div>
       <div class="sec-tot" id="totReceitas">—</div>
@@ -555,34 +563,11 @@ onAuthStateChanged(auth, function(user){
   </div>
 
   <div class="sec">
-    <div class="sec-h" onclick="toggleSec('sPrestacoes',this)">
-      <div class="sec-t yl"><span class="chev">▾</span>Prestações</div>
-      <div class="sec-tot" id="totPrestacoes">—</div>
-    </div>
-    <div class="sec-body" id="sPrestacoes"></div>
-  </div>
-
-  <div class="sec">
     <div class="sec-h" onclick="toggleSec('sFixas',this)">
       <div class="sec-t rd"><span class="chev">▾</span>Despesas fixas</div>
       <div class="sec-tot" id="totFixas">—</div>
     </div>
     <div class="sec-body" id="sFixas"></div>
-  </div>
-
-  <div class="sec">
-    <div class="sec-h" onclick="toggleSec('sPlano',this)">
-      <div class="sec-t" style="color:var(--muted)"><span class="chev">▾</span>Plano de Saúde</div>
-    </div>
-    <div class="sec-body" id="sPlano"></div>
-  </div>
-
-  <div class="sec">
-    <div class="sec-h" onclick="toggleSec('sVariaveis',this)">
-      <div class="sec-t rd"><span class="chev">▾</span>Variáveis do mês</div>
-      <div class="sec-tot" id="totVariaveis">—</div>
-    </div>
-    <div class="sec-body" id="sVariaveis"></div>
   </div>
 
   <div class="sec">
@@ -629,7 +614,7 @@ onAuthStateChanged(auth, function(user){
   <div class="leg">
     <div class="leg-i"><div class="leg-d" style="background:var(--green)"></div>Receita</div>
     <div class="leg-i"><div class="leg-d" style="background:var(--red)"></div>Despesa</div>
-    <div class="leg-i"><div class="leg-d" style="background:var(--yellow)"></div>Prestação</div>
+    <div class="leg-i"><div class="leg-d" style="background:var(--yellow)"></div>Parcelamento</div>
     <div class="leg-i"><div class="leg-d" style="background:var(--blue)"></div>Reserva</div>
     <div class="leg-i"><div class="leg-d" style="background:var(--purple)"></div>Cofrinho</div>
   </div>
@@ -738,8 +723,19 @@ onAuthStateChanged(auth, function(user){
       <button class="gr" id="btR" onclick="setTipo('receita')">+ RECEITA</button>
     </div>
 
-    <!-- DESPESA step 1 -->
-    <div class="stp on" id="dp1">
+    <!-- DESPESA step 0: tipo -->
+    <div class="stp on" id="dp0">
+      <div class="fd"><label>Tipo de despesa</label>
+        <div class="chips">
+          <div class="chip" onclick="setSubtipoDespesa('gasto')">Gasto do mês</div>
+          <div class="chip" onclick="setSubtipoDespesa('fixa')">Despesa fixa</div>
+          <div class="chip" onclick="setSubtipoDespesa('parcelamento')">Parcelamento</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESPESA step 1 (gasto do mês) -->
+    <div class="stp" id="dp1">
       <div class="fd"><label>Categoria</label><div class="chips" id="catChips"></div></div>
       <div class="fd"><label>Descrição (opcional)</label><input type="text" id="dDesc" placeholder="Ex: pão, feira da semana..."></div>
       <div class="fd2">
@@ -775,6 +771,47 @@ onAuthStateChanged(auth, function(user){
       </div>
       <div class="fd" id="fdAtual" style="display:none"><label>Qual parcela é a atual?</label><input type="number" id="pAt" placeholder="Ex: 3" min="1" inputmode="numeric"></div>
       <button class="bok rd" onclick="dp2ok()">Revisar →</button>
+    </div>
+
+    <!-- DESPESA FIXA -->
+    <div class="stp" id="dpFixa">
+      <div class="fd"><label>Nome da despesa</label><input type="text" id="dfNome" placeholder="Ex: Aluguel, plano de saúde..."></div>
+      <div class="fd2">
+        <div class="fd"><label>Valor padrão (R$)</label><input type="number" id="dfVal" step="0.01" inputmode="decimal"></div>
+        <div class="fd"><label>Dia de vencimento</label><input type="number" id="dfDia" min="1" max="31" inputmode="numeric"></div>
+      </div>
+      <div class="fd"><label>É descontado na fonte?</label>
+        <div class="chips">
+          <div class="chip" onclick="pick(this,'descontadoNaFonte',false)">Não</div>
+          <div class="chip" onclick="pick(this,'descontadoNaFonte',true)">Sim</div>
+        </div>
+      </div>
+      <button class="bok rd" onclick="dfOk()">Revisar →</button>
+    </div>
+
+    <!-- PARCELAMENTO -->
+    <div class="stp" id="dpParc">
+      <div class="fd"><label>Nome</label><input type="text" id="pcNome" placeholder="Ex: Prestação da obra, Geladeira, Carro..."></div>
+      <div class="fd2">
+        <div class="fd"><label>Valor da parcela (R$)</label><input type="number" id="pcVal" step="0.01" inputmode="decimal"></div>
+        <div class="fd"><label>Total de parcelas</label><input type="number" id="pcTot" min="1" inputmode="numeric"></div>
+      </div>
+      <div class="fd"><label>É a primeira parcela?</label>
+        <div class="chips">
+          <div class="chip" onclick="pick(this,'pcPrim',true)">Sim, 1ª parcela</div>
+          <div class="chip" onclick="pick(this,'pcPrim',false)">Não</div>
+        </div>
+      </div>
+      <div class="fd" id="pcFdAtual" style="display:none"><label>Qual parcela é a atual?</label><input type="number" id="pcAt" min="1" inputmode="numeric"></div>
+      <div class="fd"><label>Cartão ou banco (opcional)</label>
+        <div class="chips" style="margin-bottom:8px;">
+          <div class="chip" onclick="setCartaoParc('Santander')">Santander</div>
+          <div class="chip" onclick="setCartaoParc('Nubank')">Nubank</div>
+        </div>
+        <input type="text" id="pcCartao" placeholder="Ou digite outro banco...">
+      </div>
+      <div class="fd"><label>Dia de vencimento</label><input type="number" id="pcDia" min="1" max="31" inputmode="numeric" value="20"></div>
+      <button class="bok rd" onclick="pcOk()">Revisar →</button>
     </div>
 
     <!-- RECEITA -->
@@ -836,7 +873,11 @@ onAuthStateChanged(auth, function(user){
       <div class="fd"><label>Valor da parcela (R$)</label><input type="number" id="epV" step="0.01" inputmode="decimal"></div>
       <div class="fd"><label>Total de parcelas</label><input type="number" id="epT" min="1" inputmode="numeric"></div>
     </div>
-    <div class="fd"><label>Parcela atual (neste mês)</label><input type="number" id="epA" min="1" inputmode="numeric"></div>
+    <div class="fd2">
+      <div class="fd"><label>Parcela atual (neste mês)</label><input type="number" id="epA" min="1" inputmode="numeric"></div>
+      <div class="fd"><label>Dia de vencimento</label><input type="number" id="epDia" min="1" max="31" inputmode="numeric"></div>
+    </div>
+    <div class="fd"><label>Cartão ou banco (opcional)</label><input type="text" id="epCartao" placeholder="Ex: Nubank, Santander, Caixa..."></div>
     <button class="bok" onclick="salvarParc()">✓ Salvar</button>
   </div>
 </div>
@@ -905,6 +946,10 @@ onAuthStateChanged(auth, function(user){
         <div class="fd"><input type="text" id="onbDespNome" placeholder="Ex: Aluguel, escola..."></div>
         <div class="fd"><input type="number" id="onbDespValor" placeholder="Valor" step="0.01" inputmode="decimal"></div>
       </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);margin-bottom:14px;">
+        <input type="checkbox" id="onbDespFonte" style="width:16px;height:16px;">
+        Descontado na fonte (não afeta o saldo)
+      </label>
       <button class="ba" style="width:100%;margin-bottom:14px;" onclick="onbAdicionarDespesa()">+ Adicionar</button>
       <button class="bok gr" onclick="onbIr(5)">Continuar</button>
     </div>
@@ -980,29 +1025,23 @@ var TIPOS_REC=['Salário','Plantão extra','Férias','13º Salário','Reembolso'
 /* Dados de exemplo genéricos — usados só até o usuário logar e ter dados
    próprios no Firestore (ou como fallback offline). Nenhum dado real. */
 var INIT={
-  schemaVersion:2,
+  schemaVersion:3,
   receitasFixas:[
     {id:'rf1',dia:5, nome:'Salário', valor:5000.00},
     {id:'rf2',dia:15,nome:'Renda extra', valor:800.00}
   ],
   despesasFixas:[
-    {id:'df1',dia:5, nome:'Aluguel',    valor:1200.00},
-    {id:'df2',dia:15,nome:'Internet',   valor:120.00},
-    {id:'df4',dia:30,nome:'Streaming',  valor:60.00}
+    {id:'df1',dia:5, nome:'Aluguel',        valor:1200.00, descontadoNaFonte:false},
+    {id:'df2',dia:15,nome:'Internet',       valor:120.00,  descontadoNaFonte:false},
+    {id:'df3',dia:30,nome:'Streaming',      valor:60.00,   descontadoNaFonte:false},
+    {id:'df4',dia:15,nome:'Conta de Luz',   valor:250.00,  descontadoNaFonte:false},
+    {id:'df5',dia:28,nome:'Conta de Água',  valor:100.00,  descontadoNaFonte:false},
+    {id:'df6',dia:30,nome:'Plano de Saúde', valor:300.00,  descontadoNaFonte:true}
   ],
-  variaveis:[
-    {id:'vc1',dia:15,nome:'Conta de Luz',        valor:250.00},
-    {id:'vc2',dia:28,nome:'Conta de Água',       valor:100.00},
-    {id:'vc3',dia:20,nome:'Fatura do cartão',    valor:500.00},
-    {id:'vc4',dia:30,nome:'Reserva mensal',      valor:300.00}
-  ],
-  planoSaude:{nome:'Plano de Saúde', valor:300.00, dia:30},
-  obra:{parcela:1200.00,dia:20,mesIni:2,anoIni:2025,total:60},
-  parcelas:[
-    {id:'p1',nome:'Compra parcelada 1',valor:100.00,total:10,mesIni:5,anoIni:2026,cartao:'santander'},
-    {id:'p2',nome:'Assinatura anual',  valor:25.00, total:12,mesIni:4,anoIni:2026,cartao:'santander'},
-    {id:'p3',nome:'Compra parcelada 2',valor:60.00, total:4, mesIni:5,anoIni:2026,cartao:'santander'},
-    {id:'p4',nome:'Geladeira',         valor:300.00,total:12,mesIni:2,anoIni:2026,cartao:'nubank',dia:20,destaqueInicio:true}
+  parcelamentos:[
+    {id:'pc1',nome:'Compra parcelada 1',valor:100.00,total:10,mesIni:5,anoIni:2026,cartao:'santander',dia:20},
+    {id:'pc2',nome:'Assinatura anual',  valor:25.00, total:12,mesIni:4,anoIni:2026,cartao:'santander',dia:20},
+    {id:'pc3',nome:'Geladeira',         valor:300.00,total:12,mesIni:2,anoIni:2026,cartao:'nubank',   dia:20}
   ],
   tetos:{santander:1000,nubank:300,investimento:250},
   meses:{},
@@ -1015,16 +1054,46 @@ var INIT={
    no mesmo aparelho. */
 function chaveLocal(uid){ return 'vigia_v3_'+(uid||'semlogin'); }
 
+/* v2 → v3: unifica d.obra + d.parcelas (só as "destaque") em d.parcelamentos
+   (agora TODO parcelamento aparece automaticamente, sem precisar confirmar);
+   e dobra d.variaveis + d.planoSaude para dentro de d.despesasFixas com a
+   flag descontadoNaFonte. Preserva ids (e portanto as confirmações do mês
+   já feitas) — não é um reset, é uma migração de verdade. */
+function migrarV2paraV3(d){
+  d.parcelamentos=(d.parcelas||[]).map(function(p){
+    return {id:p.id,nome:p.nome,valor:p.valor,total:p.total,mesIni:p.mesIni,anoIni:p.anoIni,
+      cartao:p.cartao||null,dia:p.dia||20};
+  });
+  if(d.obra){
+    d.parcelamentos.push({id:idNovo('pc'),nome:'Prestação da Obra',valor:d.obra.parcela,total:d.obra.total,
+      mesIni:d.obra.mesIni,anoIni:d.obra.anoIni,cartao:null,dia:d.obra.dia});
+  }
+  d.despesasFixas=(d.despesasFixas||[]).map(function(f){
+    return {id:f.id,dia:f.dia,nome:f.nome,valor:f.valor,descontadoNaFonte:false};
+  });
+  (d.variaveis||[]).forEach(function(v){
+    d.despesasFixas.push({id:v.id,dia:v.dia,nome:v.nome,valor:v.valor,descontadoNaFonte:false});
+  });
+  if(d.planoSaude){
+    d.despesasFixas.push({id:idNovo('df'),dia:d.planoSaude.dia,nome:d.planoSaude.nome,
+      valor:d.planoSaude.valor,descontadoNaFonte:true});
+  }
+  delete d.parcelas; delete d.obra; delete d.variaveis; delete d.planoSaude;
+  d.schemaVersion=3;
+  return d;
+}
+
 function getD(){
   var raw=localStorage.getItem(chaveLocal(uidAtual));
   if(!raw){ var d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
   try{
     var d=JSON.parse(raw);
     if(!d.schemaVersion || d.schemaVersion<2){ d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
+    if(d.schemaVersion===2){ d=migrarV2paraV3(d); salvar(d); }
     if(!d.meses)d.meses={};
     if(!d.historico)d.historico=[];
-    if(!d.variaveis)d.variaveis=JSON.parse(JSON.stringify(INIT.variaveis));
-    if(!d.planoSaude)d.planoSaude=JSON.parse(JSON.stringify(INIT.planoSaude));
+    if(!d.parcelamentos)d.parcelamentos=[];
+    if(!d.despesasFixas)d.despesasFixas=[];
     if(d.ultimoMesReal===undefined)d.ultimoMesReal=null;
     return d;
   }
@@ -1088,12 +1157,6 @@ function parcelaNoMes(p,m,a){
   if(n>p.total) return {ativa:false,encerrada:true,num:p.total};
   return {ativa:true,num:n,ultima:n===p.total,restam:p.total-n};
 }
-function obraNoMes(o,m,a){
-  var n=difMeses(o.mesIni,o.anoIni,m,a)+1;
-  if(n<1) return {ativa:false,num:0};
-  if(n>o.total) return {ativa:false,num:o.total,quitada:true};
-  return {ativa:true,num:n,restam:o.total-n};
-}
 
 /* ══════ ESTADO ══════ */
 var HOJE=new Date();
@@ -1153,31 +1216,32 @@ function valorConfirmado(conf,item){
 function calcMes(m,a){
   var d=getD(), mm=getMes(d,m,a), conf=mm.confirmacoes;
 
-  /* Tipo 1 — sempre ativos (Obra + parcelas em destaque, ex: Geladeira Nubank) */
-  var ob=obraNoMes(d.obra,m,a);
-  var obraV=ob.ativa?d.obra.parcela:0;
-  var destaque=d.parcelas.filter(function(p){return p.destaqueInicio;})
-    .map(function(p){return {p:p,st:parcelaNoMes(p,m,a)};});
-  var destaqueAtivo=destaque.filter(function(x){return x.st.ativa;});
-  var tipo1=obraV+destaqueAtivo.reduce(function(s,x){return s+x.p.valor;},0);
+  /* Parcelamentos — sempre ativos, sem confirmação, avançam sozinhos e
+     desaparecem automaticamente ao ultrapassar o total de parcelas. */
+  var parcelamentos=d.parcelamentos.map(function(p){return {p:p,st:parcelaNoMes(p,m,a)};});
+  var parcelamentosAtivos=parcelamentos.filter(function(x){return x.st.ativa;});
+  var totalParcelamentos=parcelamentosAtivos.reduce(function(s,x){return s+x.p.valor;},0);
 
-  /* Tipo 2 — confirmação pendente (só entra no saldo depois de confirmado) */
+  /* Receitas e despesas fixas — confirmação pendente todo mês. Despesas
+     marcadas "descontado na fonte" são só informativas, nunca entram no saldo. */
   var recFixConf=d.receitasFixas.reduce(function(s,x){return s+valorConfirmado(conf,x);},0);
-  var despFixConf=d.despesasFixas.reduce(function(s,x){return s+valorConfirmado(conf,x);},0);
-  var variaveisConf=d.variaveis.reduce(function(s,x){return s+valorConfirmado(conf,x);},0);
+  var despesasConfirmaveis=d.despesasFixas.filter(function(x){return !x.descontadoNaFonte;});
+  var despesasFonte=d.despesasFixas.filter(function(x){return x.descontadoNaFonte;});
+  var despFixConf=despesasConfirmaveis.reduce(function(s,x){return s+valorConfirmado(conf,x);},0);
 
   var recExt=mm.receitas.reduce(function(s,x){return s+x.valor;},0);
   var receitas=recFixConf+recExt;
 
-  /* Tipo 3 — consumo livre + reserva/cofrinhos (lançados pelo usuário) */
+  /* Consumo livre + reserva/cofrinhos (lançados pelo usuário) */
   var consumo=mm.consumo.filter(function(x){return !x.cartao;}).reduce(function(s,x){return s+x.valor;},0);
   var cartAvulso=mm.consumo.filter(function(x){return x.cartao;}).reduce(function(s,x){return s+x.valor;},0);
   var reserva=mm.reserva.reduce(function(s,x){return s+x.valor;},0);
   var cofres=mm.cofres.reduce(function(s,x){return s+x.valor;},0);
 
-  var despesas=tipo1+despFixConf+variaveisConf+consumo+cartAvulso+reserva+cofres;
+  var despesas=totalParcelamentos+despFixConf+consumo+cartAvulso+reserva+cofres;
   return {receitas:receitas,recFixConf:recFixConf,recExt:recExt,despFixConf:despFixConf,
-    variaveisConf:variaveisConf,tipo1:tipo1,obra:obraV,obraSt:ob,destaque:destaque,destaqueAtivo:destaqueAtivo,
+    despesasConfirmaveis:despesasConfirmaveis,despesasFonte:despesasFonte,
+    totalParcelamentos:totalParcelamentos,parcelamentos:parcelamentos,parcelamentosAtivos:parcelamentosAtivos,
     consumo:consumo,cartAvulso:cartAvulso,reserva:reserva,cofres:cofres,
     despesas:despesas,saldo:receitas-despesas,d:d,mm:mm,conf:conf};
 }
@@ -1233,50 +1297,36 @@ function renderInicio(){
   document.getElementById('sReceitas').innerHTML=h||'<div class="vazio">Nenhuma receita.</div>';
   document.getElementById('totReceitas').textContent=fmt(c.receitas);
 
-  /* prestações (Tipo 1 — sempre ativos, sem confirmação) */
+  /* parcelamentos — sempre ativos, sem confirmação, avançam sozinhos */
   h='';
-  var ob=c.obraSt;
-  if(ob.ativa){
-    var pctObra=(ob.num/d.obra.total*100);
-    h+='<div class="it yl"><div class="it-t"><div class="it-n">Prestação da Obra</div>'+
-      '<div class="it-v yl">'+fmt(d.obra.parcela)+'</div></div>'+
-      '<div class="pp"><div class="pp-l"><span>'+ob.num+'/'+d.obra.total+'</span><span>'+pctObra.toFixed(0)+'% pago</span></div>'+
-      '<div class="pp-tr"><div class="pp-f" style="width:'+pctObra+'%;background:var(--yellow)"></div></div></div>'+
-      '<div class="it-m">'+ob.restam+' restantes · dia '+d.obra.dia+' · '+fmt(ob.restam*d.obra.parcela)+' remanescente</div></div>';
-  }
-  c.destaqueAtivo.forEach(function(x){
+  c.parcelamentosAtivos.forEach(function(x){
     var p=x.p, st=x.st, pct2=(st.num/p.total*100);
     h+='<div class="it yl"><div class="it-t"><div class="it-n">'+p.nome+
       (st.ultima?'<span class="tg ult">ÚLTIMA</span>':'')+'</div>'+
       '<div class="it-v yl">'+fmt(p.valor)+'</div></div>'+
       '<div class="pp"><div class="pp-l"><span>'+st.num+'/'+p.total+'</span><span>'+pct2.toFixed(0)+'% pago</span></div>'+
       '<div class="pp-tr"><div class="pp-f" style="width:'+pct2+'%;background:var(--yellow)"></div></div></div>'+
-      '<div class="it-m">'+st.restam+' restantes · dia '+(p.dia||20)+' · '+cap(p.cartao)+'</div></div>';
+      '<div class="it-m">'+st.restam+' restantes · dia '+p.dia+(p.cartao?' · '+cap(p.cartao):'')+
+      ' · '+fmt(st.restam*p.valor)+' remanescente</div>'+
+      '<div class="it-a"><button class="ba" onclick="editParc(\''+p.id+'\')">✎ Editar</button>'+
+      '<button class="ba del" onclick="delParc(\''+p.id+'\')">✕ Excluir</button></div></div>';
   });
-  document.getElementById('sPrestacoes').innerHTML=h||'<div class="vazio">Nenhuma prestação ativa.</div>';
-  document.getElementById('totPrestacoes').textContent=fmt(c.tipo1);
+  document.getElementById('sPrestacoes').innerHTML=h||'<div class="vazio">Nenhum parcelamento ativo.</div>';
+  document.getElementById('totPrestacoes').textContent=fmt(c.totalParcelamentos);
 
-  /* fixas (Tipo 2 — confirmação) */
+  /* despesas fixas: confirmáveis (Tipo 2) + informativas "descontado na fonte" */
   h='';
-  d.despesasFixas.forEach(function(f){ h+=itemTipo2('despesasFixas',f,'rd',conf); });
+  c.despesasConfirmaveis.forEach(function(f){ h+=itemTipo2('despesasFixas',f,'rd',conf); });
+  c.despesasFonte.forEach(function(f){
+    h+='<div class="it" style="border-left-color:var(--muted);opacity:.75;"><div class="it-t">'+
+      '<div class="it-n"><span class="dia">'+String(f.dia).padStart(2,'0')+'</span>'+f.nome+
+      '<span class="tg cat">FONTE</span></div><div class="it-v dim">'+fmt(f.valor)+'</div></div>'+
+      '<div class="it-m">Descontado na fonte — não afeta o saldo.</div>'+
+      '<div class="it-a"><button class="ba" onclick="edit(\'despesasFixas\',\''+f.id+'\')">✎ Editar</button>'+
+      '<button class="ba del" onclick="del(\'despesasFixas\',\''+f.id+'\')">✕ Remover</button></div></div>';
+  });
   document.getElementById('sFixas').innerHTML=h||'<div class="vazio">Nenhuma despesa fixa.</div>';
   document.getElementById('totFixas').textContent=fmt(c.despFixConf);
-
-  /* plano de saúde — informativo, não entra no saldo */
-  var psCiente=!!(conf['planoSaude']&&conf['planoSaude'].confirmado);
-  document.getElementById('sPlano').innerHTML=
-    '<div class="it" style="border-left-color:var(--muted);opacity:'+(psCiente?1:.65)+'">'+
-    '<div class="it-t"><div class="it-n"><span class="dia">'+String(d.planoSaude.dia).padStart(2,'0')+'</span>'+
-    d.planoSaude.nome+'<span class="tg cat">FONTE</span></div><div class="it-v dim">'+fmt(d.planoSaude.valor)+'</div></div>'+
-    '<div class="it-m">Descontado na fonte — não afeta o saldo.</div>'+
-    '<div class="it-a"><button class="ba" onclick="togglePlanoSaude()">'+
-    (psCiente?'✓ Ciente (desmarcar)':'Marcar como ciente')+'</button></div></div>';
-
-  /* variáveis do mês (Tipo 2 — confirmação) */
-  h='';
-  d.variaveis.forEach(function(v){ h+=itemTipo2('variaveis',v,'rd',conf); });
-  document.getElementById('sVariaveis').innerHTML=h||'<div class="vazio">Nenhuma variável cadastrada.</div>';
-  document.getElementById('totVariaveis').textContent=fmt(c.variaveisConf);
 
   /* consumo */
   h='';
@@ -1358,13 +1408,13 @@ function renderInicio(){
     var pi=(c.reserva+c.cofres)/c.receitas*100;
     if(pi<5) al.push({t:'w',i:'📉',x:'Reserva em <b>'+pi.toFixed(1)+'%</b> da renda. Meta saudável: ≥ 10%.'});
     else al.push({t:'ok',i:'📈',x:'Reserva em <b>'+pi.toFixed(1)+'%</b> da renda.'});
-    if(c.tipo1>0) al.push({t:'w',i:'🏗️',x:'Prestações consomem <b>'+(c.tipo1/c.receitas*100).toFixed(1)+
-      '%</b> da renda · '+c.obraSt.restam+' parcelas restantes da obra.'});
+    if(c.totalParcelamentos>0) al.push({t:'w',i:'🏗️',x:'Parcelamentos consomem <b>'+(c.totalParcelamentos/c.receitas*100).toFixed(1)+
+      '%</b> da renda · '+c.parcelamentosAtivos.length+' ativo'+(c.parcelamentosAtivos.length===1?'':'s')+'.'});
   }
   if(mm.consumo.length===0) al.push({t:'w',i:'📝',x:'Você ainda não lançou nenhum consumo em '+MES[curM]+'.'});
 
   var pendentes=0;
-  d.receitasFixas.concat(d.despesasFixas,d.variaveis).forEach(function(item){
+  d.receitasFixas.concat(c.despesasConfirmaveis).forEach(function(item){
     if(!(conf[item.id]&&conf[item.id].confirmado)) pendentes++;
   });
   if(pendentes>0) al.push({t:'w',i:'⏳',x:pendentes+' ite'+(pendentes===1?'m':'ns')+
@@ -1377,7 +1427,7 @@ function renderInicio(){
 
 function faturaMes(cartao,m,a){
   var d=getD(), mm=getMes(d,m,a), tot=0;
-  d.parcelas.forEach(function(p){
+  d.parcelamentos.forEach(function(p){
     if(p.cartao!==cartao) return;
     if(parcelaNoMes(p,m,a).ativa) tot+=p.valor;
   });
@@ -1398,21 +1448,22 @@ function eventosMes(m,a){
   }
   addTipo2(d.receitasFixas,'rec');
   mm.receitas.forEach(function(r){ add(r.dia,{n:r.nome,v:r.valor,t:'rec',s:'Receita '+(r.cat||'')}); });
-  addTipo2(d.despesasFixas,'desp');
-  addTipo2(d.variaveis,'desp');
-  var psC=conf['planoSaude'];
-  add(d.planoSaude.dia,{n:d.planoSaude.nome,v:d.planoSaude.valor,t:'fonte',
-    s:(psC&&psC.confirmado?'Ciente · descontado na fonte':'Descontado na fonte'),semSaldo:true});
-
-  var ob=obraNoMes(d.obra,m,a);
-  if(ob.ativa) add(d.obra.dia,{n:'Prestação da Obra',v:d.obra.parcela,t:'prest',s:'Parcela '+ob.num+'/'+d.obra.total});
-  d.parcelas.filter(function(p){return p.destaqueInicio;}).forEach(function(p){
-    var st=parcelaNoMes(p,m,a);
-    if(st.ativa) add(p.dia||20,{n:p.nome,v:p.valor,t:'prest',s:'Parcela '+st.num+'/'+p.total+' · '+cap(p.cartao)});
+  addTipo2(d.despesasFixas.filter(function(f){return !f.descontadoNaFonte;}),'desp');
+  d.despesasFixas.filter(function(f){return f.descontadoNaFonte;}).forEach(function(f){
+    add(f.dia,{n:f.nome,v:f.valor,t:'fonte',s:'Descontado na fonte',semSaldo:true});
   });
-  var fs=faturaMes('santander',m,a), fn=faturaMes('nubank',m,a);
-  if(fs>0) add(20,{n:'Fatura Santander (cartão)',v:fs,t:'prest',s:'Compras avulsas + parcelas do cartão'});
-  if(fn>0) add(20,{n:'Fatura Nubank (cartão)',v:fn,t:'prest',s:'Compras avulsas + parcelas do cartão'});
+
+  d.parcelamentos.forEach(function(p){
+    var st=parcelaNoMes(p,m,a);
+    if(st.ativa) add(p.dia,{n:p.nome,v:p.valor,t:'prest',s:'Parcela '+st.num+'/'+p.total+(p.cartao?' · '+cap(p.cartao):'')});
+  });
+  /* compras avulsas no cartão (não parceladas) só aparecem agregadas no dia
+     da fatura — os parcelamentos já aparecem individuais acima, então não
+     entram nessa soma pra não duplicar. */
+  ['santander','nubank'].forEach(function(cart){
+    var av=mm.consumo.filter(function(x){return x.cartao===cart;}).reduce(function(s,x){return s+x.valor;},0);
+    if(av>0) add(20,{n:'Compras avulsas '+cap(cart),v:av,t:'desp',s:'Cartão de crédito'});
+  });
   mm.consumo.forEach(function(x){ if(!x.cartao) add(x.dia,{n:x.nome||x.cat,v:x.valor,t:'desp',s:x.cat}); });
   mm.reserva.forEach(function(x){ add(x.dia,{n:x.nome||'Investimento',v:x.valor,t:'res',s:'Reserva'}); });
   mm.cofres.forEach(function(x){ add(x.dia,{n:x.nome||'Cofrinho',v:x.valor,t:'cof',s:'Cofrinho'}); });
@@ -1420,7 +1471,7 @@ function eventosMes(m,a){
 }
 var COR={rec:'var(--green)',desp:'var(--red)',prest:'var(--yellow)',res:'var(--blue)',cof:'var(--purple)',fonte:'var(--muted)'};
 var CLS={rec:'gr',desp:'rd',prest:'yl',res:'bl',cof:'pp',fonte:''};
-var LBL={rec:'RECEITA',desp:'DESPESA',prest:'PRESTAÇÃO',res:'RESERVA',cof:'COFRINHO',fonte:'FONTE'};
+var LBL={rec:'RECEITA',desp:'DESPESA',prest:'PARCELAMENTO',res:'RESERVA',cof:'COFRINHO',fonte:'FONTE'};
 
 function renderAgenda(){
   var ev=eventosMes(curM,curA);
@@ -1491,7 +1542,7 @@ function renderCartoes(){
   var avulsas=mm.consumo.filter(function(x){return x.cartao===tabAtual;});
   var avTot=avulsas.reduce(function(s,x){return s+x.valor;},0);
   var ativas=[],encerradas=[],futuras=[];
-  d.parcelas.forEach(function(p){
+  d.parcelamentos.forEach(function(p){
     if(p.cartao!==tabAtual) return;
     var st=parcelaNoMes(p,curM,curA);
     if(st.ativa) ativas.push({p:p,st:st});
@@ -1646,20 +1697,25 @@ function delHist(id){
 }
 
 /* ══════ MODAL LANÇAMENTO ══════ */
-var L={tipo:'despesa',cat:null,catObj:null,forma:null,cartao:null,prim:null,fixa:false,recTipo:null};
+var L={tipo:'despesa',subtipoDespesa:null,cat:null,catObj:null,forma:null,cartao:null,prim:null,fixa:false,recTipo:null,
+  despFixa:null,parcelamento:null,descontadoNaFonte:null,pcPrim:null};
 
 function abrirLanc(){
-  L={tipo:'despesa',cat:null,catObj:null,forma:null,cartao:null,prim:null,fixa:false,recTipo:null};
+  L={tipo:'despesa',subtipoDespesa:null,cat:null,catObj:null,forma:null,cartao:null,prim:null,fixa:false,recTipo:null,
+    despFixa:null,parcelamento:null,descontadoNaFonte:null,pcPrim:null};
   /* montar chips de categoria */
   document.getElementById('catChips').innerHTML=CATEGORIAS.map(function(c){
     return '<div class="chip" onclick="pickCat(this,\''+c.id+'\')">'+c.nome+'</div>';}).join('');
   document.getElementById('recChips').innerHTML=TIPOS_REC.map(function(t){
     return '<div class="chip" onclick="pick(this,\'recTipo\',\''+t+'\')">'+t+'</div>';}).join('');
-  ['dDesc','dVal','dDia','pVal','pTot','pAt','rDesc','rVal','rDia'].forEach(function(i){
+  ['dDesc','dVal','dDia','pVal','pTot','pAt','rDesc','rVal','rDia',
+   'dfNome','dfVal','dfDia','pcNome','pcVal','pcTot','pcAt','pcCartao'].forEach(function(i){
     var e=document.getElementById(i); if(e) e.value='';});
   document.getElementById('dDia').value=
     (curM===HOJE.getMonth()&&curA===HOJE.getFullYear())?HOJE.getDate():'';
+  document.getElementById('pcDia').value=20;
   document.getElementById('fdAtual').style.display='none';
+  document.getElementById('pcFdAtual').style.display='none';
   var cs=document.querySelectorAll('#ovL .chip');
   for(var i=0;i<cs.length;i++) cs[i].classList.remove('on');
   setTipo('despesa');
@@ -1671,8 +1727,15 @@ function setTipo(t){
   L.tipo=t;
   document.getElementById('btD').className='rd'+(t==='despesa'?' on':'');
   document.getElementById('btR').className='gr'+(t==='receita'?' on':'');
-  stp(t==='despesa'?'dp1':'rc1');
+  stp(t==='despesa'?'dp0':'rc1');
 }
+function setSubtipoDespesa(tipo){
+  L.subtipoDespesa=tipo;
+  if(tipo==='gasto') stp('dp1');
+  else if(tipo==='fixa') stp('dpFixa');
+  else stp('dpParc');
+}
+function setCartaoParc(nome){ document.getElementById('pcCartao').value=nome; }
 function stp(id){
   var ss=document.querySelectorAll('#ovL .stp');
   for(var i=0;i<ss.length;i++) ss[i].classList.remove('on');
@@ -1684,6 +1747,7 @@ function pick(el,campo,val){
   el.classList.add('on');
   L[campo]=val;
   if(campo==='prim') document.getElementById('fdAtual').style.display=val?'none':'block';
+  if(campo==='pcPrim') document.getElementById('pcFdAtual').style.display=val?'none':'block';
   if(campo==='recTipo'){ var rd=document.getElementById('rDesc'); if(!rd.value) rd.value=val; }
 }
 function pickCat(el,id){
@@ -1755,6 +1819,52 @@ function dp2ok(){
   stp('cf1');
 }
 
+function dfOk(){
+  var nome=document.getElementById('dfNome').value.trim();
+  var val=parseFloat(document.getElementById('dfVal').value);
+  var dia=parseInt(document.getElementById('dfDia').value);
+  if(!nome){ alert('Informe o nome da despesa.'); return; }
+  if(!val||val<=0){ alert('Informe o valor.'); return; }
+  if(!dia||dia<1||dia>31){ alert('Informe o dia de vencimento.'); return; }
+  if(L.descontadoNaFonte===null||L.descontadoNaFonte===undefined){ alert('Informe se é descontado na fonte.'); return; }
+  L.despFixa={nome:nome,valor:val,dia:dia,descontadoNaFonte:!!L.descontadoNaFonte};
+  document.getElementById('cBox').innerHTML='<b>'+nome+'</b><br>'+
+    'Valor padrão: <b>'+fmt(val)+'</b><br>Dia de vencimento: '+dia+'<br>'+
+    (L.despFixa.descontadoNaFonte?'Descontado na fonte — <b>não entra no saldo</b>':
+      'Entra no saldo depois de confirmada todo mês');
+  document.getElementById('btCf').className='bok rd';
+  stp('cf1');
+}
+
+function pcOk(){
+  var nome=document.getElementById('pcNome').value.trim();
+  var val=parseFloat(document.getElementById('pcVal').value);
+  var tot=parseInt(document.getElementById('pcTot').value);
+  var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('pcDia').value)||20));
+  var cartao=document.getElementById('pcCartao').value.trim();
+  if(!nome){ alert('Informe o nome.'); return; }
+  if(!val||val<=0){ alert('Informe o valor da parcela.'); return; }
+  if(!tot||tot<1){ alert('Informe o total de parcelas.'); return; }
+  if(L.pcPrim===null||L.pcPrim===undefined){ alert('Informe se é a primeira parcela.'); return; }
+  var pa=1;
+  if(!L.pcPrim){
+    pa=parseInt(document.getElementById('pcAt').value);
+    if(!pa||pa<1||pa>tot){ alert('Parcela atual inválida.'); return; }
+  }
+  var mi=curM-(pa-1), ai=curA;
+  while(mi<0){ mi+=12; ai--; }
+  var fimM=mi+(tot-1), fimA=ai;
+  while(fimM>11){ fimM-=12; fimA++; }
+  L.parcelamento={nome:nome,valor:val,total:tot,mesIni:mi,anoIni:ai,cartao:cartao?cartao.toLowerCase():null,dia:dia};
+  document.getElementById('cBox').innerHTML='<b>'+nome+'</b><br>'+
+    (cartao?'Cartão/banco: '+cap(cartao)+'<br>':'')+
+    'Parcela '+pa+'/'+tot+' · <b>'+fmt(val)+'/mês</b><br>'+
+    'Valor total: <b style="color:var(--red)">'+fmt(val*tot)+'</b><br>'+
+    'Início: '+MES[mi]+'/'+ai+' · Término: <b>'+MES[fimM]+'/'+fimA+'</b>';
+  document.getElementById('btCf').className='bok rd';
+  stp('cf1');
+}
+
 function rc1ok(){
   var v=parseFloat(document.getElementById('rVal').value);
   if(!v||v<=0){ alert('Informe o valor.'); return; }
@@ -1776,6 +1886,13 @@ function confirmar(){
   if(L.tipo==='receita'){
     if(L.rec.fixa) d.receitasFixas.push({id:idNovo('rf'),dia:L.rec.dia||1,nome:L.rec.nome,valor:L.rec.valor});
     else mm.receitas.push({id:idNovo('r'),nome:L.rec.nome,valor:L.rec.valor,dia:L.rec.dia,cat:L.rec.cat});
+  } else if(L.subtipoDespesa==='fixa'){
+    d.despesasFixas.push({id:idNovo('df'),dia:L.despFixa.dia,nome:L.despFixa.nome,
+      valor:L.despFixa.valor,descontadoNaFonte:L.despFixa.descontadoNaFonte});
+  } else if(L.subtipoDespesa==='parcelamento'){
+    d.parcelamentos.push({id:idNovo('pc'),nome:L.parcelamento.nome,valor:L.parcelamento.valor,
+      total:L.parcelamento.total,mesIni:L.parcelamento.mesIni,anoIni:L.parcelamento.anoIni,
+      cartao:L.parcelamento.cartao,dia:L.parcelamento.dia});
   } else if(L.forma==='pix'){
     var o={id:idNovo('c'),nome:L.pix.nome,valor:L.pix.valor,dia:L.pix.dia,cat:L.pix.cat};
     if(L.pix.sec==='reserva') mm.reserva.push(o);
@@ -1786,8 +1903,8 @@ function confirmar(){
       mm.consumo.push({id:idNovo('c'),nome:L.cart.nome,valor:L.cart.valor,
         dia:20,cat:L.catObj.nome,cartao:L.cart.cartao});
     } else {
-      d.parcelas.push({id:idNovo('p'),nome:L.cart.nome,valor:L.cart.valor,
-        total:L.cart.total,mesIni:L.cart.mesIni,anoIni:L.cart.anoIni,cartao:L.cart.cartao});
+      d.parcelamentos.push({id:idNovo('pc'),nome:L.cart.nome,valor:L.cart.valor,
+        total:L.cart.total,mesIni:L.cart.mesIni,anoIni:L.cart.anoIni,cartao:L.cart.cartao,dia:20});
     }
   }
   salvar(d); fechar('ovL'); renderTudo();
@@ -1867,15 +1984,9 @@ function desfazerConfirmacao(id){
   if(mm.confirmacoes[id]) mm.confirmacoes[id].confirmado=false;
   salvar(d); renderTudo();
 }
-function togglePlanoSaude(){
-  var d=getD(), mm=getMes(d,curM,curA);
-  if(!mm.confirmacoes['planoSaude']) mm.confirmacoes['planoSaude']={confirmado:false};
-  mm.confirmacoes['planoSaude'].confirmado=!mm.confirmacoes['planoSaude'].confirmado;
-  salvar(d); renderTudo();
-}
 function editParc(id){
   var d=getD(), p=null;
-  d.parcelas.forEach(function(x){ if(x.id===id) p=x; });
+  d.parcelamentos.forEach(function(x){ if(x.id===id) p=x; });
   if(!p) return;
   ePid=id;
   var st=parcelaNoMes(p,curM,curA);
@@ -1883,15 +1994,19 @@ function editParc(id){
   document.getElementById('epV').value=p.valor;
   document.getElementById('epT').value=p.total;
   document.getElementById('epA').value=st.num||1;
+  document.getElementById('epDia').value=p.dia||20;
+  document.getElementById('epCartao').value=p.cartao||'';
   document.getElementById('ovP').classList.add('on');
 }
 function salvarParc(){
   var d=getD();
-  d.parcelas.forEach(function(p){
+  d.parcelamentos.forEach(function(p){
     if(p.id!==ePid) return;
     p.nome=document.getElementById('epD').value.trim()||p.nome;
     p.valor=parseFloat(document.getElementById('epV').value)||0;
     p.total=parseInt(document.getElementById('epT').value)||1;
+    p.dia=Math.min(31,Math.max(1,parseInt(document.getElementById('epDia').value)||p.dia||20));
+    p.cartao=document.getElementById('epCartao').value.trim().toLowerCase()||null;
     var pa=parseInt(document.getElementById('epA').value)||1;
     var mi=curM-(pa-1), ai=curA;
     while(mi<0){ mi+=12; ai--; }
@@ -1900,9 +2015,9 @@ function salvarParc(){
   salvar(d); fechar('ovP'); renderTudo();
 }
 function delParc(id){
-  if(!confirm('Remover esta parcela? Afeta todos os meses.')) return;
+  if(!confirm('Remover este parcelamento? Afeta todos os meses.')) return;
   var d=getD();
-  d.parcelas=d.parcelas.filter(function(p){return p.id!==id;});
+  d.parcelamentos=d.parcelamentos.filter(function(p){return p.id!==id;});
   salvar(d); renderTudo();
 }
 
@@ -2057,7 +2172,8 @@ function onbSalvarRendaPrincipal(){
 function onbRenderLista(elId,arr,campo){
   document.getElementById(elId).innerHTML=arr.map(function(x,i){
     return '<div class="it" style="padding:9px 12px;margin-bottom:6px;"><div class="it-t">'+
-      '<div class="it-n" style="font-size:.8rem;">'+x.nome+(x.total?' · '+x.total+'x':'')+'</div>'+
+      '<div class="it-n" style="font-size:.8rem;">'+x.nome+(x.total?' · '+x.total+'x':'')+
+      (x.descontadoNaFonte?' · fonte':'')+'</div>'+
       '<div class="it-v" style="font-size:.8rem;">'+fmt(x.valor)+'</div></div>'+
       '<button class="ba del" style="margin-top:6px;" onclick="onbRemover(\''+campo+'\','+i+')">✕ Remover</button></div>';
   }).join('');
@@ -2079,10 +2195,12 @@ function onbAdicionarRenda(){
 function onbAdicionarDespesa(){
   var nome=document.getElementById('onbDespNome').value.trim();
   var valor=parseFloat(document.getElementById('onbDespValor').value);
+  var fonte=document.getElementById('onbDespFonte').checked;
   if(!nome||!valor) return;
-  onbState.despesas.push({nome:nome,valor:valor,dia:5});
+  onbState.despesas.push({nome:nome,valor:valor,dia:5,descontadoNaFonte:fonte});
   document.getElementById('onbDespNome').value='';
   document.getElementById('onbDespValor').value='';
+  document.getElementById('onbDespFonte').checked=false;
   onbRenderLista('onbListaDespesas',onbState.despesas,'despesas');
 }
 function onbAdicionarParcela(){
@@ -2095,7 +2213,7 @@ function onbAdicionarParcela(){
   if(atual<1)atual=1; if(atual>total)atual=total;
   var mi=curM-(atual-1), ai=curA;
   while(mi<0){ mi+=12; ai--; }
-  onbState.parcelas.push({nome:nome,valor:valor,total:total,mesIni:mi,anoIni:ai,cartao:cartao});
+  onbState.parcelas.push({nome:nome,valor:valor,total:total,mesIni:mi,anoIni:ai,cartao:cartao,dia:20});
   document.getElementById('onbParcNome').value='';
   document.getElementById('onbParcValor').value='';
   document.getElementById('onbParcTotal').value='';
@@ -2116,15 +2234,14 @@ function onbConfirmar(){
   var receitasFixas=[{id:idNovo('rf'),dia:s.rendaPrincipal?s.rendaPrincipal.dia:1,
     nome:s.rendaPrincipal?s.rendaPrincipal.nome:'Renda principal',valor:s.rendaPrincipal?s.rendaPrincipal.valor:0}];
   s.outrasRendas.forEach(function(r){ receitasFixas.push({id:idNovo('rf'),dia:r.dia,nome:r.nome,valor:r.valor}); });
-  var despesasFixas=s.despesas.map(function(x){ return {id:idNovo('df'),dia:x.dia,nome:x.nome,valor:x.valor}; });
-  var parcelas=s.parcelas.map(function(p){ return {id:idNovo('p'),nome:p.nome,valor:p.valor,total:p.total,
-    mesIni:p.mesIni,anoIni:p.anoIni,cartao:p.cartao}; });
+  var despesasFixas=s.despesas.map(function(x){ return {id:idNovo('df'),dia:x.dia,nome:x.nome,valor:x.valor,
+    descontadoNaFonte:!!x.descontadoNaFonte}; });
+  var parcelamentos=s.parcelas.map(function(p){ return {id:idNovo('pc'),nome:p.nome,valor:p.valor,total:p.total,
+    mesIni:p.mesIni,anoIni:p.anoIni,cartao:p.cartao,dia:p.dia||20}; });
   var d={
-    schemaVersion:2, nome:s.nome,
+    schemaVersion:3, nome:s.nome,
     receitasFixas:receitasFixas, despesasFixas:despesasFixas,
-    variaveis:[], planoSaude:{nome:'Plano de Saúde',valor:0,dia:30},
-    obra:{parcela:0,dia:1,mesIni:curM,anoIni:curA,total:0},
-    parcelas:parcelas, tetos:{santander:0,nubank:0,investimento:0},
+    parcelamentos:parcelamentos, tetos:{santander:0,nubank:0,investimento:0},
     meses:{}, historico:[], ultimoMesReal:null
   };
   salvar(d);
