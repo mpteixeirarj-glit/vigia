@@ -1010,8 +1010,13 @@ var INIT={
   ultimoMesReal:null
 };
 
+/* Cache local isolado por usuário: cada uid tem sua própria chave, pra dados
+   de uma conta nunca aparecerem pro cache/fallback offline de outra conta
+   no mesmo aparelho. */
+function chaveLocal(uid){ return 'vigia_v3_'+(uid||'semlogin'); }
+
 function getD(){
-  var raw=localStorage.getItem('vigia_v3');
+  var raw=localStorage.getItem(chaveLocal(uidAtual));
   if(!raw){ var d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
   try{
     var d=JSON.parse(raw);
@@ -1025,7 +1030,7 @@ function getD(){
   }
   catch(e){ var d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
 }
-function salvarLocal(d){ try{ localStorage.setItem('vigia_v3',JSON.stringify(d)); }catch(e){} }
+function salvarLocal(d){ try{ localStorage.setItem(chaveLocal(uidAtual),JSON.stringify(d)); }catch(e){} }
 function salvar(d){
   salvarLocal(d);
   if(uidAtual && window.Vigia) window.Vigia.salvarNuvem(uidAtual,d);
@@ -1942,6 +1947,7 @@ function acaoLoginEmail(){
 }
 function confirmarSair(){
   if(!confirm('Sair da sua conta?')) return;
+  uidAtual=null;
   window.Vigia.pararAssinatura();
   window.Vigia.sair();
 }
@@ -1974,17 +1980,23 @@ async function iniciarComNuvem(user){
   finalizarEntrada(user);
 }
 
+var ULTIMO_UID_KEY='vigia_ultimo_uid';
 var authResolvido=false;
 function onVigiaAuthChange(user){
   authResolvido=true;
   document.getElementById('loginCarregando').style.display='none';
   if(user){
     uidAtual=user.uid;
+    try{ localStorage.setItem(ULTIMO_UID_KEY,user.uid); }catch(e){}
     document.getElementById('login').style.display='none';
     document.getElementById('splash').style.display='';
     iniciarComNuvem(user);
   } else {
     uidAtual=null;
+    if(modoCriarConta) alternarCriarConta();
+    document.getElementById('loginEmail').value='';
+    document.getElementById('loginSenha').value='';
+    document.getElementById('loginErro').style.display='none';
     document.getElementById('loginForm').classList.add('on');
     document.getElementById('login').style.display='flex';
   }
@@ -1993,9 +2005,13 @@ window.onVigiaAuthChange=onVigiaAuthChange;
 
 /* Se o Firebase não responder (sem internet, CDN bloqueado etc.), depois de
    alguns segundos oferece continuar com os dados já salvos neste aparelho —
-   sem isso, o app ficaria travado em "Carregando…" para sempre quando offline. */
+   sem isso, o app ficaria travado em "Carregando…" para sempre quando offline.
+   Só é oferecido para o ÚLTIMO usuário que logou com sucesso neste aparelho
+   (nunca um cache "genérico" compartilhado entre contas). */
 function entrarOffline(){
-  uidAtual=null;
+  var ultimoUid=localStorage.getItem(ULTIMO_UID_KEY);
+  if(!ultimoUid) return;
+  uidAtual=ultimoUid;
   document.getElementById('login').style.display='none';
   document.getElementById('splash').style.display='';
   iniciarApp();
@@ -2003,9 +2019,10 @@ function entrarOffline(){
 setTimeout(function(){
   if(authResolvido) return;
   var carregando=document.getElementById('loginCarregando');
-  if(localStorage.getItem('vigia_v3')){
+  var ultimoUid=localStorage.getItem(ULTIMO_UID_KEY);
+  if(ultimoUid && localStorage.getItem(chaveLocal(ultimoUid))){
     carregando.innerHTML='Sem conexão com o login.<br><br>'+
-      '<button class="sp-btn s" onclick="entrarOffline()">Continuar offline com dados salvos</button>';
+      '<button class="sp-btn s" onclick="entrarOffline()">Continuar offline (última conta usada neste aparelho)</button>';
   } else {
     carregando.textContent='Sem conexão. Conecte-se à internet para entrar.';
   }
