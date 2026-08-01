@@ -730,6 +730,7 @@ onAuthStateChanged(auth, function(user){
           <div class="chip" onclick="setSubtipoDespesa('gasto')">Gasto do mês</div>
           <div class="chip" onclick="setSubtipoDespesa('fixa')">Despesa fixa</div>
           <div class="chip" onclick="setSubtipoDespesa('parcelamento')">Parcelamento</div>
+          <div class="chip" onclick="setSubtipoDespesa('cofrinho')">Cofrinho</div>
         </div>
       </div>
     </div>
@@ -814,6 +815,20 @@ onAuthStateChanged(auth, function(user){
       <button class="bok rd" onclick="pcOk()">Revisar →</button>
     </div>
 
+    <!-- COFRINHO -->
+    <div class="stp" id="dpCofre">
+      <div class="fd"><label>Nome do cofrinho</label>
+        <div class="chips" id="cofreNomeChips" style="margin-bottom:8px;"></div>
+        <input type="text" id="cofreNome" placeholder="Ou digite um nome livre...">
+      </div>
+      <div class="fd2">
+        <div class="fd"><label>Meta / teto (R$)</label><input type="number" id="cofreTeto" step="0.01" inputmode="decimal"></div>
+        <div class="fd"><label>Depósito mensal (R$)</label><input type="number" id="cofreValorMensal" step="0.01" inputmode="decimal"></div>
+      </div>
+      <div class="fd"><label>Dia do depósito</label><input type="number" id="cofreDia" min="1" max="31" inputmode="numeric" value="5"></div>
+      <button class="bok rd" onclick="cofreOk()">Revisar →</button>
+    </div>
+
     <!-- RECEITA -->
     <div class="stp" id="rc1">
       <div class="fd"><label>Tipo de receita</label>
@@ -879,6 +894,29 @@ onAuthStateChanged(auth, function(user){
     </div>
     <div class="fd"><label>Cartão ou banco (opcional)</label><input type="text" id="epCartao" placeholder="Ex: Nubank, Santander, Caixa..."></div>
     <button class="bok" onclick="salvarParc()">✓ Salvar</button>
+  </div>
+</div>
+
+<!-- MODAL EDITAR COFRINHO -->
+<div class="ov" id="ovCofre" onclick="fecharFora(event,'ovCofre')">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-t">Editar cofrinho<button class="md-x" onclick="fechar('ovCofre')">✕</button></div>
+    <div class="fd"><label>Nome</label><input type="text" id="ecNome"></div>
+    <div class="fd2">
+      <div class="fd"><label>Meta / teto (R$)</label><input type="number" id="ecTeto" step="0.01" inputmode="decimal"></div>
+      <div class="fd"><label>Depósito mensal (R$)</label><input type="number" id="ecValorMensal" step="0.01" inputmode="decimal"></div>
+    </div>
+    <div class="fd"><label>Dia do depósito</label><input type="number" id="ecDia" min="1" max="31" inputmode="numeric"></div>
+    <button class="bok" onclick="salvarCofre()">✓ Salvar</button>
+  </div>
+</div>
+
+<!-- QUASE LÁ! -->
+<div class="ov" id="ovParabens" onclick="fecharFora(event,'ovParabens')">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-t">Quase lá!<button class="md-x" onclick="fechar('ovParabens')">✕</button></div>
+    <div id="parabensTexto"></div>
+    <button class="bok gr" style="margin-top:16px;" onclick="fechar('ovParabens')">Continuar</button>
   </div>
 </div>
 
@@ -1017,9 +1055,9 @@ var CATEGORIAS=[
   {id:'pet',      nome:'Pet',          dia:null,sec:'consumo'},
   {id:'lazer',    nome:'Lazer',        dia:null,sec:'consumo'},
   {id:'outros',   nome:'Outros',       dia:null,sec:'consumo'},
-  {id:'invest',   nome:'Investimento', dia:null,sec:'reserva'},
-  {id:'cofre',    nome:'Cofrinho',     dia:null,sec:'cofre'}
+  {id:'invest',   nome:'Investimento', dia:null,sec:'reserva'}
 ];
+var COFRE_PRESETS=['Viagem','Reserva de emergência','Presente','Casa própria','Carro novo','Educação'];
 var TIPOS_REC=['Salário','Plantão extra','Férias','13º Salário','Reembolso','Outros'];
 
 /* Dados de exemplo genéricos — usados só até o usuário logar e ter dados
@@ -1042,6 +1080,9 @@ var INIT={
     {id:'pc1',nome:'Compra parcelada 1',valor:100.00,total:10,mesIni:5,anoIni:2026,cartao:'santander',dia:20},
     {id:'pc2',nome:'Assinatura anual',  valor:25.00, total:12,mesIni:4,anoIni:2026,cartao:'santander',dia:20},
     {id:'pc3',nome:'Geladeira',         valor:300.00,total:12,mesIni:2,anoIni:2026,cartao:'nubank',   dia:20}
+  ],
+  cofrinhos:[
+    {id:'cf1',nome:'Reserva de emergência',teto:5000.00,valorMensal:200.00,dia:5,mesIni:4,anoIni:2026}
   ],
   tetos:{santander:1000,nubank:300,investimento:250},
   meses:{},
@@ -1094,6 +1135,7 @@ function getD(){
     if(!d.historico)d.historico=[];
     if(!d.parcelamentos)d.parcelamentos=[];
     if(!d.despesasFixas)d.despesasFixas=[];
+    if(!d.cofrinhos)d.cofrinhos=[];
     if(d.ultimoMesReal===undefined)d.ultimoMesReal=null;
     return d;
   }
@@ -1156,6 +1198,18 @@ function parcelaNoMes(p,m,a){
   if(n<1) return {ativa:false,futura:true,num:0};
   if(n>p.total) return {ativa:false,encerrada:true,num:p.total};
   return {ativa:true,num:n,ultima:n===p.total,restam:p.total-n};
+}
+/* ── COFRINHO no mês: como parcelaNoMes, mas sem total/fim — o depósito
+   mensal continua contando indefinidamente, mesmo depois de bater a meta. */
+function cofrinhoNoMes(cf,m,a){
+  var n=difMeses(cf.mesIni,cf.anoIni,m,a)+1;
+  if(n<1) return {ativo:false,futuro:true,meses:0};
+  return {ativo:true,meses:n};
+}
+function acumuladoExtraCofrinho(d,cfId){
+  var t=0;
+  for(var k in d.meses){ (d.meses[k].cofres||[]).forEach(function(x){ if(x.cofrinhoId===cfId) t+=x.valor; }); }
+  return t;
 }
 
 /* ══════ ESTADO ══════ */
@@ -1232,17 +1286,31 @@ function calcMes(m,a){
   var recExt=mm.receitas.reduce(function(s,x){return s+x.valor;},0);
   var receitas=recFixConf+recExt;
 
-  /* Consumo livre + reserva/cofrinhos (lançados pelo usuário) */
+  /* Consumo livre + reserva (lançados pelo usuário) */
   var consumo=mm.consumo.filter(function(x){return !x.cartao;}).reduce(function(s,x){return s+x.valor;},0);
   var cartAvulso=mm.consumo.filter(function(x){return x.cartao;}).reduce(function(s,x){return s+x.valor;},0);
   var reserva=mm.reserva.reduce(function(s,x){return s+x.valor;},0);
-  var cofres=mm.cofres.reduce(function(s,x){return s+x.valor;},0);
+
+  /* Cofrinhos — depósito mensal automático (como parcelamento), somado ao
+     acumulado histórico. Depósitos avulsos antigos sem cofrinho vinculado
+     continuam contando à parte, pra não perder dado de antes dessa versão. */
+  var cofrinhos=d.cofrinhos.map(function(cf){
+    var st=cofrinhoNoMes(cf,m,a);
+    var auto=st.ativo?cf.valorMensal*st.meses:0;
+    var acumulado=auto+acumuladoExtraCofrinho(d,cf.id);
+    return {cf:cf,st:st,acumulado:acumulado};
+  });
+  var cofrinhosAtivos=cofrinhos.filter(function(x){return x.st.ativo;});
+  var totalCofrinhosMes=cofrinhosAtivos.reduce(function(s,x){return s+x.cf.valorMensal;},0);
+  var cofresLegado=mm.cofres.filter(function(x){return !x.cofrinhoId;}).reduce(function(s,x){return s+x.valor;},0);
+  var cofres=totalCofrinhosMes+cofresLegado;
 
   var despesas=totalParcelamentos+despFixConf+consumo+cartAvulso+reserva+cofres;
   return {receitas:receitas,recFixConf:recFixConf,recExt:recExt,despFixConf:despFixConf,
     despesasConfirmaveis:despesasConfirmaveis,despesasFonte:despesasFonte,
     totalParcelamentos:totalParcelamentos,parcelamentos:parcelamentos,parcelamentosAtivos:parcelamentosAtivos,
     consumo:consumo,cartAvulso:cartAvulso,reserva:reserva,cofres:cofres,
+    cofrinhos:cofrinhos,cofrinhosAtivos:cofrinhosAtivos,
     despesas:despesas,saldo:receitas-despesas,d:d,mm:mm,conf:conf};
 }
 
@@ -1371,25 +1439,46 @@ function renderInicio(){
 
   /* cofrinhos */
   h='';
-  if(mm.cofres.length===0){
-    h='<div class="vazio">Nenhum cofrinho este mês.<br>Reserva emergencial livre, sem meta.</div>';
-  } else {
-    mm.cofres.forEach(function(x){
-      h+='<div class="it pp"><div class="it-t"><div class="it-n"><span class="dia">'+
-        (x.dia?String(x.dia).padStart(2,'0'):'—')+'</span>'+(x.nome||'Cofrinho')+'</div>'+
-        '<div class="it-v pp">'+fmt(x.valor)+'</div></div>'+
-        '<div class="it-a"><button class="ba" onclick="editM(\'cofres\',\''+x.id+'\')">✎ Editar</button>'+
-        '<button class="ba del" onclick="delM(\'cofres\',\''+x.id+'\')">✕ Remover</button></div></div>';
-    });
-  }
-  /* acumulado de cofrinhos em todos os meses */
+  c.cofrinhos.forEach(function(x){
+    var cf=x.cf, acumulado=x.acumulado;
+    var pct=cf.teto>0?Math.min(acumulado/cf.teto*100,100):0;
+    var atingiu=acumulado>=cf.teto;
+    h+='<div class="it pp"><div class="it-t"><div class="it-n">'+cf.nome+
+      (atingiu?'<span class="tg ult" style="background:var(--purple-d,rgba(181,123,255,.15));color:var(--purple);">META ATINGIDA</span>':'')+
+      '</div><div class="it-v pp">'+fmt(cf.valorMensal)+'/mês</div></div>'+
+      '<div class="pp"><div class="pp-l"><span>'+fmt(acumulado)+' de '+fmt(cf.teto)+'</span><span>'+pct.toFixed(0)+'%</span></div>'+
+      '<div class="pp-tr"><div class="pp-f" style="width:'+pct+'%;background:var(--purple)"></div></div></div>'+
+      '<div class="it-m">'+(atingiu?'Meta atingida! 🎉':'falta '+fmt(Math.max(0,cf.teto-acumulado)))+' · dia '+cf.dia+'</div>'+
+      '<div class="it-a"><button class="ba" onclick="editCofre(\''+cf.id+'\')">✎ Editar</button>'+
+      '<button class="ba del" onclick="delCofre(\''+cf.id+'\')">✕ Excluir</button></div></div>';
+  });
+  var cofresLegadoLista=mm.cofres.filter(function(x){return !x.cofrinhoId;});
+  cofresLegadoLista.forEach(function(x){
+    h+='<div class="it pp"><div class="it-t"><div class="it-n"><span class="dia">'+
+      (x.dia?String(x.dia).padStart(2,'0'):'—')+'</span>'+(x.nome||'Cofrinho')+'</div>'+
+      '<div class="it-v pp">'+fmt(x.valor)+'</div></div>'+
+      '<div class="it-a"><button class="ba" onclick="editM(\'cofres\',\''+x.id+'\')">✎ Editar</button>'+
+      '<button class="ba del" onclick="delM(\'cofres\',\''+x.id+'\')">✕ Remover</button></div></div>';
+  });
+  if(!h) h='<div class="vazio">Nenhum cofrinho ainda.<br>Toque no + para criar um, com meta e depósito mensal.</div>';
+  /* acumulado geral: todos os cofrinhos + depósitos avulsos de todos os meses */
   var acum=0;
-  for(var k in d.meses){ (d.meses[k].cofres||[]).forEach(function(x){acum+=x.valor;}); }
+  c.cofrinhos.forEach(function(x){ acum+=x.acumulado; });
+  for(var k in d.meses){ (d.meses[k].cofres||[]).forEach(function(x){ if(!x.cofrinhoId) acum+=x.valor; }); }
   if(acum>0) h+='<div class="it pp" style="opacity:.8"><div class="it-t">'+
-    '<div class="it-n">Total acumulado (todos os meses)</div>'+
+    '<div class="it-n">Total acumulado (todos os cofrinhos, todos os meses)</div>'+
     '<div class="it-v pp">'+fmt(acum)+'</div></div></div>';
   document.getElementById('sCofres').innerHTML=h;
   document.getElementById('totCofres').textContent=fmt(c.cofres);
+
+  /* popup de incentivo quando um cofrinho está quase batendo a meta */
+  c.cofrinhos.forEach(function(x){
+    var pct2=x.cf.teto>0?(x.acumulado/x.cf.teto*100):0;
+    if(pct2>=90 && pct2<100 && !cofrinhosAvisados.has(x.cf.id)){
+      cofrinhosAvisados.add(x.cf.id);
+      mostrarParabensCofrinho(x.cf,x.acumulado,pct2);
+    }
+  });
 
   /* alertas */
   var al=[];
@@ -1466,7 +1555,13 @@ function eventosMes(m,a){
   });
   mm.consumo.forEach(function(x){ if(!x.cartao) add(x.dia,{n:x.nome||x.cat,v:x.valor,t:'desp',s:x.cat}); });
   mm.reserva.forEach(function(x){ add(x.dia,{n:x.nome||'Investimento',v:x.valor,t:'res',s:'Reserva'}); });
-  mm.cofres.forEach(function(x){ add(x.dia,{n:x.nome||'Cofrinho',v:x.valor,t:'cof',s:'Cofrinho'}); });
+  d.cofrinhos.forEach(function(cf){
+    var st=cofrinhoNoMes(cf,m,a);
+    if(st.ativo) add(cf.dia,{n:cf.nome,v:cf.valorMensal,t:'cof',s:'Depósito mensal do cofrinho'});
+  });
+  mm.cofres.filter(function(x){return !x.cofrinhoId;}).forEach(function(x){
+    add(x.dia,{n:x.nome||'Cofrinho',v:x.valor,t:'cof',s:'Cofrinho'});
+  });
   return ev;
 }
 var COR={rec:'var(--green)',desp:'var(--red)',prest:'var(--yellow)',res:'var(--blue)',cof:'var(--purple)',fonte:'var(--muted)'};
@@ -1698,22 +1793,27 @@ function delHist(id){
 
 /* ══════ MODAL LANÇAMENTO ══════ */
 var L={tipo:'despesa',subtipoDespesa:null,cat:null,catObj:null,forma:null,cartao:null,prim:null,fixa:false,recTipo:null,
-  despFixa:null,parcelamento:null,descontadoNaFonte:null,pcPrim:null};
+  despFixa:null,parcelamento:null,descontadoNaFonte:null,pcPrim:null,cofrinho:null};
 
 function abrirLanc(){
   L={tipo:'despesa',subtipoDespesa:null,cat:null,catObj:null,forma:null,cartao:null,prim:null,fixa:false,recTipo:null,
-    despFixa:null,parcelamento:null,descontadoNaFonte:null,pcPrim:null};
+    despFixa:null,parcelamento:null,descontadoNaFonte:null,pcPrim:null,cofrinho:null};
   /* montar chips de categoria */
   document.getElementById('catChips').innerHTML=CATEGORIAS.map(function(c){
     return '<div class="chip" onclick="pickCat(this,\''+c.id+'\')">'+c.nome+'</div>';}).join('');
   document.getElementById('recChips').innerHTML=TIPOS_REC.map(function(t){
     return '<div class="chip" onclick="pick(this,\'recTipo\',\''+t+'\')">'+t+'</div>';}).join('');
+  document.getElementById('cofreNomeChips').innerHTML=COFRE_PRESETS.map(function(n){
+    return '<div class="chip" onclick="setNomeCofre(this,\''+n+'\')">'+n+'</div>';}).join('')+
+    '<div class="chip" onclick="document.getElementById(\'cofreNome\').focus()">Outro</div>';
   ['dDesc','dVal','dDia','pVal','pTot','pAt','rDesc','rVal','rDia',
-   'dfNome','dfVal','dfDia','pcNome','pcVal','pcTot','pcAt','pcCartao'].forEach(function(i){
+   'dfNome','dfVal','dfDia','pcNome','pcVal','pcTot','pcAt','pcCartao',
+   'cofreNome','cofreTeto','cofreValorMensal'].forEach(function(i){
     var e=document.getElementById(i); if(e) e.value='';});
   document.getElementById('dDia').value=
     (curM===HOJE.getMonth()&&curA===HOJE.getFullYear())?HOJE.getDate():'';
   document.getElementById('pcDia').value=20;
+  document.getElementById('cofreDia').value=5;
   document.getElementById('fdAtual').style.display='none';
   document.getElementById('pcFdAtual').style.display='none';
   var cs=document.querySelectorAll('#ovL .chip');
@@ -1733,9 +1833,16 @@ function setSubtipoDespesa(tipo){
   L.subtipoDespesa=tipo;
   if(tipo==='gasto') stp('dp1');
   else if(tipo==='fixa') stp('dpFixa');
-  else stp('dpParc');
+  else if(tipo==='parcelamento') stp('dpParc');
+  else stp('dpCofre');
 }
 function setCartaoParc(nome){ document.getElementById('pcCartao').value=nome; }
+function setNomeCofre(el,nome){
+  document.getElementById('cofreNome').value=nome;
+  var g=el.parentNode.querySelectorAll('.chip');
+  for(var i=0;i<g.length;i++) g[i].classList.remove('on');
+  el.classList.add('on');
+}
 function stp(id){
   var ss=document.querySelectorAll('#ovL .stp');
   for(var i=0;i<ss.length;i++) ss[i].classList.remove('on');
@@ -1865,6 +1972,23 @@ function pcOk(){
   stp('cf1');
 }
 
+function cofreOk(){
+  var nome=document.getElementById('cofreNome').value.trim();
+  var teto=parseFloat(document.getElementById('cofreTeto').value);
+  var vm=parseFloat(document.getElementById('cofreValorMensal').value);
+  var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('cofreDia').value)||5));
+  if(!nome){ alert('Dê um nome pro cofrinho.'); return; }
+  if(!teto||teto<=0){ alert('Informe a meta (teto).'); return; }
+  if(!vm||vm<=0){ alert('Informe o valor do depósito mensal.'); return; }
+  var meses=Math.ceil(teto/vm);
+  L.cofrinho={nome:nome,teto:teto,valorMensal:vm,dia:dia};
+  document.getElementById('cBox').innerHTML='<b>'+nome+'</b><br>'+
+    'Meta: <b>'+fmt(teto)+'</b><br>Depósito mensal: <b>'+fmt(vm)+'</b><br>'+
+    'Tempo estimado até a meta: <b>'+meses+' '+(meses===1?'mês':'meses')+'</b>';
+  document.getElementById('btCf').className='bok rd';
+  stp('cf1');
+}
+
 function rc1ok(){
   var v=parseFloat(document.getElementById('rVal').value);
   if(!v||v<=0){ alert('Informe o valor.'); return; }
@@ -1893,6 +2017,9 @@ function confirmar(){
     d.parcelamentos.push({id:idNovo('pc'),nome:L.parcelamento.nome,valor:L.parcelamento.valor,
       total:L.parcelamento.total,mesIni:L.parcelamento.mesIni,anoIni:L.parcelamento.anoIni,
       cartao:L.parcelamento.cartao,dia:L.parcelamento.dia});
+  } else if(L.subtipoDespesa==='cofrinho'){
+    d.cofrinhos.push({id:idNovo('cf'),nome:L.cofrinho.nome,teto:L.cofrinho.teto,
+      valorMensal:L.cofrinho.valorMensal,dia:L.cofrinho.dia,mesIni:curM,anoIni:curA});
   } else if(L.forma==='pix'){
     var o={id:idNovo('c'),nome:L.pix.nome,valor:L.pix.valor,dia:L.pix.dia,cat:L.pix.cat};
     if(L.pix.sec==='reserva') mm.reserva.push(o);
@@ -2019,6 +2146,48 @@ function delParc(id){
   var d=getD();
   d.parcelamentos=d.parcelamentos.filter(function(p){return p.id!==id;});
   salvar(d); renderTudo();
+}
+
+/* ══════ COFRINHOS ══════ */
+var eCfId=null;
+var cofrinhosAvisados=new Set();
+function editCofre(id){
+  var d=getD(), cf=null;
+  d.cofrinhos.forEach(function(x){ if(x.id===id) cf=x; });
+  if(!cf) return;
+  eCfId=id;
+  document.getElementById('ecNome').value=cf.nome;
+  document.getElementById('ecTeto').value=cf.teto;
+  document.getElementById('ecValorMensal').value=cf.valorMensal;
+  document.getElementById('ecDia').value=cf.dia;
+  document.getElementById('ovCofre').classList.add('on');
+}
+function salvarCofre(){
+  var d=getD();
+  d.cofrinhos.forEach(function(cf){
+    if(cf.id!==eCfId) return;
+    cf.nome=document.getElementById('ecNome').value.trim()||cf.nome;
+    cf.teto=parseFloat(document.getElementById('ecTeto').value)||cf.teto;
+    cf.valorMensal=parseFloat(document.getElementById('ecValorMensal').value)||cf.valorMensal;
+    cf.dia=Math.min(31,Math.max(1,parseInt(document.getElementById('ecDia').value)||cf.dia));
+  });
+  salvar(d); fechar('ovCofre'); renderTudo();
+}
+function delCofre(id){
+  if(!confirm('Excluir este cofrinho? O valor já acumulado nele fica só no histórico, mas o depósito mensal automático para.')) return;
+  var d=getD();
+  d.cofrinhos=d.cofrinhos.filter(function(cf){return cf.id!==id;});
+  salvar(d); renderTudo();
+}
+function mostrarParabensCofrinho(cf,acumulado,pct){
+  var falta=Math.max(0,cf.teto-acumulado);
+  document.getElementById('parabensTexto').innerHTML=
+    '<div style="font-size:2.2rem;text-align:center;margin-bottom:10px;">🎉</div>'+
+    '<div style="text-align:center;font-size:.9rem;line-height:1.6;">'+
+    'Você está quase lá no cofrinho <b>'+cf.nome+'</b>!<br>'+
+    'Já são <b>'+pct.toFixed(0)+'%</b> da meta — falta só <b>'+fmt(falta)+'</b>.<br><br>'+
+    'Continue assim, você está mandando muito bem! 💪</div>';
+  document.getElementById('ovParabens').classList.add('on');
 }
 
 /* ══════ UTILS ══════ */
