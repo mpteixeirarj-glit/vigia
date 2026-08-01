@@ -538,7 +538,7 @@ onAuthStateChanged(auth, function(user){
   <div class="trio">
     <div class="tc"><div class="tc-v pos" id="tcR">—</div><div class="tc-l">Receitas</div></div>
     <div class="tc"><div class="tc-v neg" id="tcD">—</div><div class="tc-l">Despesas</div></div>
-    <div class="tc"><div class="tc-v blu" id="tcI">—</div><div class="tc-l">Reserva</div></div>
+    <div class="tc"><div class="tc-v blu" id="tcI">—</div><div class="tc-l">Carteira</div></div>
   </div>
   <div class="barra">
     <div class="barra-l"><span>Comprometimento da renda</span><span id="pctL">—</span></div>
@@ -579,11 +579,11 @@ onAuthStateChanged(auth, function(user){
   </div>
 
   <div class="sec">
-    <div class="sec-h" onclick="toggleSec('sReserva',this)">
-      <div class="sec-t bl"><span class="chev">▾</span>Reserva &amp; Investimentos</div>
-      <div class="sec-tot" id="totReserva">—</div>
+    <div class="sec-h" onclick="toggleSec('sCarteira',this)">
+      <div class="sec-t bl"><span class="chev">▾</span>Carteira de Investimentos</div>
+      <div class="sec-tot" id="totCarteira">—</div>
     </div>
-    <div class="sec-body" id="sReserva"></div>
+    <div class="sec-body" id="sCarteira"></div>
   </div>
 
   <div class="sec">
@@ -605,7 +605,7 @@ onAuthStateChanged(auth, function(user){
 <!-- ═══ AGENDA ═══ -->
 <div class="tela" id="t-agenda">
   <div class="cal-h">
-    <div class="cal-m" id="calM">—<span id="calA"></span></div>
+    <div class="cal-m" id="calM">—</div>
     <div class="cal-nav">
       <button onclick="navMes(-1)">‹</button>
       <button onclick="navMes(1)">›</button>
@@ -911,6 +911,24 @@ onAuthStateChanged(auth, function(user){
   </div>
 </div>
 
+<!-- MODAL CRIAR/EDITAR INVESTIMENTO -->
+<div class="ov" id="ovInvest" onclick="fecharFora(event,'ovInvest')">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-t" id="ivTit">Novo investimento<button class="md-x" onclick="fechar('ovInvest')">✕</button></div>
+    <div class="fd"><label>Tipo</label>
+      <div class="chips" id="ivTipoChips" style="margin-bottom:8px;"></div>
+      <input type="text" id="ivTipo" placeholder="Ou digite um tipo livre...">
+    </div>
+    <div class="fd"><label>Nome do ativo</label><input type="text" id="ivNome" placeholder="Ex: Tesouro Selic 2029, PETR4..."></div>
+    <div class="fd2">
+      <div class="fd"><label>Quantidade de cotas</label><input type="number" id="ivCotas" step="0.000001" inputmode="decimal"></div>
+      <div class="fd"><label>Preço da cota (R$)</label><input type="number" id="ivPreco" step="0.01" inputmode="decimal"></div>
+    </div>
+    <div class="fd"><label>Meta na carteira (%) — opcional</label><input type="number" id="ivMeta" step="0.1" min="0" max="100" inputmode="decimal"></div>
+    <button class="bok" onclick="salvarInvest()">✓ Salvar</button>
+  </div>
+</div>
+
 <!-- QUASE LÁ! -->
 <div class="ov" id="ovParabens" onclick="fecharFora(event,'ovParabens')">
   <div class="md" onclick="event.stopPropagation()">
@@ -926,7 +944,6 @@ onAuthStateChanged(auth, function(user){
     <div class="md-t">Editar tetos<button class="md-x" onclick="fechar('ovT')">✕</button></div>
     <div class="fd"><label>Teto Santander (R$)</label><input type="number" id="tS" step="0.01" inputmode="decimal"></div>
     <div class="fd"><label>Teto Nubank (R$)</label><input type="number" id="tN" step="0.01" inputmode="decimal"></div>
-    <div class="fd"><label>Meta de investimento (R$)</label><input type="number" id="tI" step="0.01" inputmode="decimal"></div>
     <button class="bok" onclick="salvarTetos()">✓ Salvar tetos</button>
   </div>
 </div>
@@ -1054,11 +1071,12 @@ var CATEGORIAS=[
   {id:'farmacia', nome:'Farmácia',     dia:null,sec:'consumo'},
   {id:'pet',      nome:'Pet',          dia:null,sec:'consumo'},
   {id:'lazer',    nome:'Lazer',        dia:null,sec:'consumo'},
-  {id:'outros',   nome:'Outros',       dia:null,sec:'consumo'},
-  {id:'invest',   nome:'Investimento', dia:null,sec:'reserva'}
+  {id:'outros',   nome:'Outros',       dia:null,sec:'consumo'}
 ];
 var COFRE_PRESETS=['Viagem','Reserva de emergência','Presente','Casa própria','Carro novo','Educação'];
 var TIPOS_REC=['Salário','Plantão extra','Férias','13º Salário','Reembolso','Outros'];
+var TIPOS_INVEST=['Renda Fixa','Tesouro Direto','Ações','Fundos Imobiliários','Fundos de Investimento','Criptomoeda'];
+var CORES_CARTEIRA=['#4d9fff','#b57bff','#00e5a0','#f5c842','#ff4d6d','#ff9f43','#4dd0e1','#c084fc','#94a3b8','#f472b6'];
 
 /* Dados de exemplo genéricos — usados só até o usuário logar e ter dados
    próprios no Firestore (ou como fallback offline). Nenhum dado real. */
@@ -1084,7 +1102,12 @@ var INIT={
   cofrinhos:[
     {id:'cf1',nome:'Reserva de emergência',teto:5000.00,valorMensal:200.00,dia:5,mesIni:4,anoIni:2026}
   ],
-  tetos:{santander:1000,nubank:300,investimento:250},
+  investimentos:[
+    {id:'iv1',nome:'Tesouro Selic 2029',   tipo:'Tesouro Direto',cotas:12,   precoCota:105.30,metaPercentual:40},
+    {id:'iv2',nome:'Ações XPTO3',          tipo:'Ações',         cotas:50,   precoCota:18.40, metaPercentual:30},
+    {id:'iv3',nome:'Fundo Imobiliário YZR11',tipo:'Fundos Imobiliários',cotas:8,precoCota:98.00,metaPercentual:30}
+  ],
+  tetos:{santander:1000,nubank:300},
   meses:{},
   historico:[],
   ultimoMesReal:null
@@ -1136,6 +1159,7 @@ function getD(){
     if(!d.parcelamentos)d.parcelamentos=[];
     if(!d.despesasFixas)d.despesasFixas=[];
     if(!d.cofrinhos)d.cofrinhos=[];
+    if(!d.investimentos)d.investimentos=[];
     if(d.ultimoMesReal===undefined)d.ultimoMesReal=null;
     return d;
   }
@@ -1345,7 +1369,7 @@ function renderInicio(){
     (curM===HOJE.getMonth()&&curA===HOJE.getFullYear()?' · mês atual':'');
   document.getElementById('tcR').textContent='R$ '+Math.round(c.receitas).toLocaleString('pt-BR');
   document.getElementById('tcD').textContent='R$ '+Math.round(c.despesas).toLocaleString('pt-BR');
-  document.getElementById('tcI').textContent='R$ '+Math.round(c.reserva+c.cofres).toLocaleString('pt-BR');
+  document.getElementById('tcI').textContent='R$ '+Math.round(carteiraCalc(d).total).toLocaleString('pt-BR');
   var pct=c.receitas>0?(c.despesas/c.receitas*100):0;
   document.getElementById('pctL').textContent=pct.toFixed(1)+'%';
   document.getElementById('barF').style.width=Math.min(pct,100)+'%';
@@ -1414,28 +1438,57 @@ function renderInicio(){
   document.getElementById('sConsumo').innerHTML=h;
   document.getElementById('totConsumo').textContent=fmt(c.consumo+c.cartAvulso);
 
-  /* reserva */
+  /* carteira de investimentos — patrimônio, não é fluxo mensal (não afeta saldo) */
   h='';
-  var meta=d.tetos.investimento||0;
-  h+='<div class="it bl" style="border-left-color:var(--blue)"><div class="it-t">'+
-    '<div class="it-n">Meta de investimento</div><div class="it-v bl">'+fmt(meta)+'</div></div>'+
-    '<div class="it-m">Aplicado este mês: '+fmt(c.reserva)+
-    (c.reserva>=meta&&meta>0?' · <span style="color:var(--green)">✓ meta atingida</span>':
-     (meta>0?' · falta '+fmt(meta-c.reserva):''))+'</div>'+
-    '<div class="pp"><div class="pp-l"><span>'+fmt(c.reserva)+'</span><span>'+
-    (meta>0?Math.min(c.reserva/meta*100,100).toFixed(0):'0')+'%</span></div>'+
-    '<div class="pp-tr"><div class="pp-f" style="width:'+
-    (meta>0?Math.min(c.reserva/meta*100,100):0)+'%;background:var(--blue)"></div></div></div>'+
-    '<div class="it-a"><button class="ba" onclick="abrirTeto()">✎ Editar meta</button></div></div>';
-  mm.reserva.forEach(function(x){
-    h+='<div class="it bl"><div class="it-t"><div class="it-n"><span class="dia">'+
-      (x.dia?String(x.dia).padStart(2,'0'):'—')+'</span>'+(x.nome||'Investimento')+'</div>'+
-      '<div class="it-v bl">'+fmt(x.valor)+'</div></div>'+
-      '<div class="it-a"><button class="ba" onclick="editM(\'reserva\',\''+x.id+'\')">✎ Editar</button>'+
-      '<button class="ba del" onclick="delM(\'reserva\',\''+x.id+'\')">✕ Remover</button></div></div>';
+  var carteira=carteiraCalc(d);
+  h+='<div class="it-a"><button class="ba" onclick="abrirInvest()">+ Novo investimento</button></div>';
+  if(carteira.itens.length){
+    var acc=0, stops=[];
+    carteira.itens.forEach(function(x,i){
+      var cor=CORES_CARTEIRA[i%CORES_CARTEIRA.length], ini=acc, fim=acc+x.pct;
+      stops.push(cor+' '+ini.toFixed(2)+'% '+fim.toFixed(2)+'%');
+      acc=fim;
+    });
+    h+='<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:12px 0;">'+
+      '<div style="width:120px;height:120px;border-radius:50%;flex-shrink:0;background:conic-gradient('+stops.join(',')+');"></div>'+
+      '<div class="leg" style="flex:1;min-width:140px;padding:0;">'+
+      carteira.itens.map(function(x,i){
+        var cor=CORES_CARTEIRA[i%CORES_CARTEIRA.length];
+        return '<div class="leg-i"><div class="leg-d" style="background:'+cor+'"></div>'+x.inv.nome+' · '+x.pct.toFixed(0)+'%</div>';
+      }).join('')+
+      '</div></div>';
+  }
+  carteira.itens.forEach(function(x,i){
+    var inv=x.inv, cor=CORES_CARTEIRA[i%CORES_CARTEIRA.length];
+    var temMeta=inv.metaPercentual>0, diff=x.pct-inv.metaPercentual;
+    h+='<div class="it pp" style="border-left-color:'+cor+'"><div class="it-t"><div class="it-n">'+inv.nome+
+      '<span class="tg cat">'+inv.tipo+'</span></div><div class="it-v pp" style="color:'+cor+'">'+fmt(x.valorAtual)+'</div></div>'+
+      '<div class="it-m">'+inv.cotas+' cotas × '+fmt(inv.precoCota)+'</div>'+
+      '<div class="pp"><div class="pp-l"><span>'+x.pct.toFixed(1)+'% da carteira</span>'+
+      (temMeta?'<span>meta '+inv.metaPercentual.toFixed(0)+'%</span>':'')+'</div>'+
+      '<div class="pp-tr"><div class="pp-f" style="width:'+Math.min(x.pct,100)+'%;background:'+cor+'"></div></div></div>'+
+      (temMeta?'<div class="it-m">'+(Math.abs(diff)<1?'✓ na meta':(diff>0?
+        '<span style="color:var(--yellow)">'+diff.toFixed(1)+' pontos acima da meta</span>':
+        '<span style="color:var(--red)">'+Math.abs(diff).toFixed(1)+' pontos abaixo da meta</span>'))+'</div>':'')+
+      '<div class="it-a"><button class="ba" onclick="editInvest(\''+inv.id+'\')">✎ Editar</button>'+
+      '<button class="ba del" onclick="delInvest(\''+inv.id+'\')">✕ Excluir</button></div></div>';
   });
-  document.getElementById('sReserva').innerHTML=h;
-  document.getElementById('totReserva').textContent=fmt(c.reserva);
+  /* aportes avulsos da versão anterior — mantidos só pra não perder histórico de quem já usava */
+  if(mm.reserva.length){
+    h+='<div class="vazio" style="text-align:left;padding:10px 4px;">Aportes antigos deste mês (não entram na carteira):</div>';
+    mm.reserva.forEach(function(x){
+      h+='<div class="it bl"><div class="it-t"><div class="it-n"><span class="dia">'+
+        (x.dia?String(x.dia).padStart(2,'0'):'—')+'</span>'+(x.nome||'Investimento')+'</div>'+
+        '<div class="it-v bl">'+fmt(x.valor)+'</div></div>'+
+        '<div class="it-a"><button class="ba" onclick="editM(\'reserva\',\''+x.id+'\')">✎ Editar</button>'+
+        '<button class="ba del" onclick="delM(\'reserva\',\''+x.id+'\')">✕ Remover</button></div></div>';
+    });
+  }
+  if(!carteira.itens.length && !mm.reserva.length){
+    h+='<div class="vazio">Nenhum investimento cadastrado ainda.<br>Toque em + Novo investimento para montar sua carteira.</div>';
+  }
+  document.getElementById('sCarteira').innerHTML=h;
+  document.getElementById('totCarteira').textContent=fmt(carteira.total);
 
   /* cofrinhos */
   h='';
@@ -1719,14 +1772,12 @@ function abrirTeto(){
   var d=getD();
   document.getElementById('tS').value=d.tetos.santander||'';
   document.getElementById('tN').value=d.tetos.nubank||'';
-  document.getElementById('tI').value=d.tetos.investimento||'';
   document.getElementById('ovT').classList.add('on');
 }
 function salvarTetos(){
   var d=getD();
   d.tetos.santander=parseFloat(document.getElementById('tS').value)||0;
   d.tetos.nubank=parseFloat(document.getElementById('tN').value)||0;
-  d.tetos.investimento=parseFloat(document.getElementById('tI').value)||0;
   salvar(d); fechar('ovT'); renderTudo();
 }
 
@@ -1864,13 +1915,6 @@ function pickCat(el,id){
   L.cat=id;
   for(var j=0;j<CATEGORIAS.length;j++) if(CATEGORIAS[j].id===id) L.catObj=CATEGORIAS[j];
   if(L.catObj && L.catObj.dia) document.getElementById('dDia').value=L.catObj.dia;
-  /* investimento e cofrinho não vão para cartão */
-  if(L.catObj && L.catObj.sec!=='consumo'){
-    L.forma='pix';
-    var fc=document.querySelectorAll('#dp1 .chips')[1].querySelectorAll('.chip');
-    for(var k=0;k<fc.length;k++) fc[k].classList.remove('on');
-    fc[0].classList.add('on');
-  }
 }
 
 function dp1ok(){
@@ -1881,12 +1925,11 @@ function dp1ok(){
     if(!v||v<=0){ alert('Informe o valor.'); return; }
     var desc=document.getElementById('dDesc').value.trim()||L.catObj.nome;
     var dia=parseInt(document.getElementById('dDia').value)||null;
-    L.pix={nome:desc,valor:v,dia:dia,cat:L.catObj.nome,sec:L.catObj.sec};
-    var secN={consumo:'Consumo do mês',reserva:'Reserva & Investimentos',cofre:'Cofrinhos'}[L.catObj.sec];
+    L.pix={nome:desc,valor:v,dia:dia,cat:L.catObj.nome};
     document.getElementById('cBox').innerHTML='<b>'+desc+'</b><br>'+
       'Categoria: '+L.catObj.nome+'<br>Forma: Pix / Dinheiro<br>'+
       'Valor: <b style="color:var(--red)">'+fmt(v)+'</b><br>'+
-      (dia?'Dia: '+dia+'<br>':'')+'Vai para: <b>'+secN+'</b><br>'+
+      (dia?'Dia: '+dia+'<br>':'')+
       'Mês: <b>'+MES[curM]+'/'+curA+'</b>';
     document.getElementById('btCf').className='bok rd';
     stp('cf1');
@@ -2021,10 +2064,7 @@ function confirmar(){
     d.cofrinhos.push({id:idNovo('cf'),nome:L.cofrinho.nome,teto:L.cofrinho.teto,
       valorMensal:L.cofrinho.valorMensal,dia:L.cofrinho.dia,mesIni:curM,anoIni:curA});
   } else if(L.forma==='pix'){
-    var o={id:idNovo('c'),nome:L.pix.nome,valor:L.pix.valor,dia:L.pix.dia,cat:L.pix.cat};
-    if(L.pix.sec==='reserva') mm.reserva.push(o);
-    else if(L.pix.sec==='cofre') mm.cofres.push(o);
-    else mm.consumo.push(o);
+    mm.consumo.push({id:idNovo('c'),nome:L.pix.nome,valor:L.pix.valor,dia:L.pix.dia,cat:L.pix.cat});
   } else {
     if(L.cart.unica){
       mm.consumo.push({id:idNovo('c'),nome:L.cart.nome,valor:L.cart.valor,
@@ -2188,6 +2228,78 @@ function mostrarParabensCofrinho(cf,acumulado,pct){
     'Já são <b>'+pct.toFixed(0)+'%</b> da meta — falta só <b>'+fmt(falta)+'</b>.<br><br>'+
     'Continue assim, você está mandando muito bem! 💪</div>';
   document.getElementById('ovParabens').classList.add('on');
+}
+
+/* ══════ CARTEIRA DE INVESTIMENTOS ══════ */
+/* Ao contrário de cofrinhos/parcelamentos, a carteira não é um fluxo mensal:
+   é o que o usuário já possui (patrimônio), então não entra em despesas/saldo
+   do mês — só documenta e mostra a distribuição percentual dos ativos. */
+function carteiraCalc(d){
+  var itens=d.investimentos.map(function(inv){
+    var valorAtual=inv.cotas*inv.precoCota;
+    return {inv:inv,valorAtual:valorAtual};
+  });
+  var total=itens.reduce(function(s,x){return s+x.valorAtual;},0);
+  itens.forEach(function(x){ x.pct=total>0?(x.valorAtual/total*100):0; });
+  return {itens:itens,total:total};
+}
+var eIvId=null;
+function abrirInvest(){
+  eIvId=null;
+  document.getElementById('ivTit').innerHTML='Novo investimento<button class="md-x" onclick="fechar(\'ovInvest\')">✕</button>';
+  document.getElementById('ivTipoChips').innerHTML=TIPOS_INVEST.map(function(t){
+    return '<div class="chip" onclick="setTipoInvest(this,\''+t+'\')">'+t+'</div>';}).join('');
+  ['ivTipo','ivNome','ivCotas','ivPreco','ivMeta'].forEach(function(i){
+    document.getElementById(i).value='';});
+  document.getElementById('ovInvest').classList.add('on');
+}
+function setTipoInvest(el,tipo){
+  document.getElementById('ivTipo').value=tipo;
+  var g=el.parentNode.querySelectorAll('.chip');
+  for(var i=0;i<g.length;i++) g[i].classList.remove('on');
+  el.classList.add('on');
+}
+function editInvest(id){
+  var d=getD(), inv=null;
+  d.investimentos.forEach(function(x){ if(x.id===id) inv=x; });
+  if(!inv) return;
+  eIvId=id;
+  document.getElementById('ivTit').innerHTML='Editar investimento<button class="md-x" onclick="fechar(\'ovInvest\')">✕</button>';
+  document.getElementById('ivTipoChips').innerHTML=TIPOS_INVEST.map(function(t){
+    return '<div class="chip'+(t===inv.tipo?' on':'')+'" onclick="setTipoInvest(this,\''+t+'\')">'+t+'</div>';}).join('');
+  document.getElementById('ivTipo').value=inv.tipo;
+  document.getElementById('ivNome').value=inv.nome;
+  document.getElementById('ivCotas').value=inv.cotas;
+  document.getElementById('ivPreco').value=inv.precoCota;
+  document.getElementById('ivMeta').value=inv.metaPercentual||'';
+  document.getElementById('ovInvest').classList.add('on');
+}
+function salvarInvest(){
+  var tipo=document.getElementById('ivTipo').value.trim();
+  var nome=document.getElementById('ivNome').value.trim();
+  var cotas=parseFloat(document.getElementById('ivCotas').value);
+  var preco=parseFloat(document.getElementById('ivPreco').value);
+  var meta=parseFloat(document.getElementById('ivMeta').value)||0;
+  if(!tipo){ alert('Informe o tipo do investimento.'); return; }
+  if(!nome){ alert('Informe o nome do ativo.'); return; }
+  if(!cotas||cotas<=0){ alert('Informe a quantidade de cotas.'); return; }
+  if(!preco||preco<=0){ alert('Informe o preço da cota.'); return; }
+  var d=getD();
+  if(eIvId){
+    d.investimentos.forEach(function(inv){
+      if(inv.id!==eIvId) return;
+      inv.tipo=tipo; inv.nome=nome; inv.cotas=cotas; inv.precoCota=preco; inv.metaPercentual=meta;
+    });
+  } else {
+    d.investimentos.push({id:idNovo('iv'),nome:nome,tipo:tipo,cotas:cotas,precoCota:preco,metaPercentual:meta});
+  }
+  salvar(d); fechar('ovInvest'); renderTudo();
+}
+function delInvest(id){
+  if(!confirm('Excluir este investimento da carteira?')) return;
+  var d=getD();
+  d.investimentos=d.investimentos.filter(function(inv){return inv.id!==id;});
+  salvar(d); renderTudo();
 }
 
 /* ══════ UTILS ══════ */
@@ -2410,7 +2522,7 @@ function onbConfirmar(){
   var d={
     schemaVersion:3, nome:s.nome,
     receitasFixas:receitasFixas, despesasFixas:despesasFixas,
-    parcelamentos:parcelamentos, tetos:{santander:0,nubank:0,investimento:0},
+    parcelamentos:parcelamentos, cofrinhos:[], investimentos:[], tetos:{santander:0,nubank:0},
     meses:{}, historico:[], ultimoMesReal:null
   };
   salvar(d);
