@@ -237,6 +237,9 @@ button{font-family:inherit;}
   letter-spacing:.07em;text-transform:uppercase;color:var(--muted);cursor:pointer;
   border-bottom:2px solid transparent;transition:all .2s;-webkit-tap-highlight-color:transparent;}
 .tab.on{color:var(--green);border-bottom-color:var(--green);}
+.cv-wrap{display:flex;justify-content:center;padding:18px 16px 0;}
+#cVisImg{width:calc(100% - 32px);max-width:480px;margin-left:auto;margin-right:auto;
+  border-radius:16px;display:block;box-shadow:0 8px 32px rgba(0,0,0,.4);}
 .cv{margin:18px 16px 0;border-radius:16px;padding:20px 18px;position:relative;
   overflow:hidden;min-height:132px;}
 .cv.santander{background:linear-gradient(135deg,#cc0000 0%,#8b0000 60%,#5a0000 100%);
@@ -632,7 +635,10 @@ onAuthStateChanged(auth, function(user){
     <div class="tab on" id="tbS" onclick="setTab('santander')">Santander</div>
     <div class="tab" id="tbN" onclick="setTab('nubank')">Nubank</div>
   </div>
-  <div class="cv santander" id="cVis">
+  <div class="cv-wrap" id="cVisWrap">
+    <img id="cVisImg" src="cartao-santander.png" alt="Cartão Santander — Marcos Paulo">
+  </div>
+  <div class="cv santander" id="cVis" style="display:none">
     <div class="cv-b" id="cBanco">Santander</div>
     <div class="cv-fl">Total da fatura</div>
     <div class="cv-fv" id="cFat">R$ 0,00</div>
@@ -1701,6 +1707,8 @@ function renderCartoes(){
   var fat=parcTot+avTot;
 
   document.getElementById('cVis').className='cv '+tabAtual;
+  document.getElementById('cVisImg').src=tabAtual==='santander'?'cartao-santander.png':'cartao-nubank.png';
+  document.getElementById('cVisImg').alt=tabAtual==='santander'?'Cartão Santander — Marcos Paulo':'Cartão Nubank — Marcos Paulo';
   document.getElementById('cBanco').textContent=tabAtual==='santander'?'Santander':'Nubank';
   document.getElementById('cFat').textContent=fmt(fat);
   document.getElementById('cVence').textContent='20';
