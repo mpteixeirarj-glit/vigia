@@ -1,7 +1,7 @@
 {
-  "name": "Vigia — Controle Financeiro",
+  "name": "Vigia — Assistente Financeiro",
   "short_name": "Vigia",
-  "description": "Controle financeiro pessoal mensal",
+  "description": "Assistente financeiro pessoal mensal",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b0d14",

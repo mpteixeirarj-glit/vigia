@@ -240,22 +240,38 @@ button{font-family:inherit;}
   border-bottom:2px solid transparent;transition:all .2s;-webkit-tap-highlight-color:transparent;}
 .tab.on{color:var(--green);border-bottom-color:var(--green);}
 .cv-wrap{display:flex;justify-content:center;padding:18px 16px 0;}
-#cVisImg{width:calc(100% - 32px);max-width:480px;margin-left:auto;margin-right:auto;
-  border-radius:16px;display:block;box-shadow:0 8px 32px rgba(0,0,0,.4);}
-.cv{margin:18px 16px 0;border-radius:16px;padding:20px 18px;position:relative;
-  overflow:hidden;min-height:132px;border:1px solid rgba(255,255,255,.12);}
-.cv::after{content:'';position:absolute;inset:0;border-radius:16px;pointer-events:none;
-  background:linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 50%);}
-.cv-chip{font-size:1.5rem;opacity:.85;color:rgba(255,255,255,.85);margin:2px 0 12px;}
-.cv-band{display:flex;align-items:center;}
-.cv-b{font-size:1.25rem;font-weight:800;margin-bottom:4px;color:#fff;
-  text-shadow:0 1px 8px rgba(0,0,0,.4);}
-.cv-fl{font-size:.7rem;color:rgba(255,255,255,.6);margin-bottom:4px;}
-.cv-fv{font-family:monospace;font-size:1.7rem;font-weight:700;line-height:1;color:#fff;
-  text-shadow:0 1px 10px rgba(0,0,0,.3);}
-.cv-bt{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;}
-.cv-vc{font-size:.7rem;color:rgba(255,255,255,.6);}
-.cv-vc span{color:#fff;font-weight:600;}
+.cv-img-container{position:relative;width:100%;max-width:480px;border-radius:16px;
+  overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.cv-img-container img{width:100%;display:block;border-radius:16px;}
+.cv-overlay{position:absolute;inset:0;padding:14px 18px;display:flex;
+  flex-direction:column;justify-content:space-between;pointer-events:none;}
+.cv-top{display:flex;justify-content:flex-start;}
+.cv-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;}
+.cv-nome-banco{font-size:1.2rem;font-weight:800;letter-spacing:-.01em;
+  text-shadow:0 1px 6px rgba(0,0,0,.5);}
+.cv-titular{font-family:monospace;font-size:.82rem;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.5);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cv-bandeira{font-size:.9rem;font-weight:800;font-style:italic;flex:0 0 auto;
+  text-shadow:0 1px 4px rgba(0,0,0,.5);}
+.cv-bandeira.mastercard{font-style:normal;}
+.cv-bandeira.elo{font-style:normal;font-size:.78rem;}
+/* Texto escuro nas bases claras (cinza/platinum): a sombra branca dá o contraste */
+.cv-escuro .cv-nome-banco,.cv-escuro .cv-titular,.cv-escuro .cv-bandeira{
+  text-shadow:0 1px 4px rgba(255,255,255,.55);}
+/* Meio da borda direita: o topo já tem o ícone contactless na arte do PNG. */
+.cv-menu{position:absolute;top:50%;right:12px;transform:translateY(-50%);z-index:10;
+  background:rgba(0,0,0,.35);border:none;color:#fff;border-radius:50%;
+  width:28px;height:28px;cursor:pointer;font-size:1rem;line-height:1;
+  -webkit-tap-highlight-color:transparent;}
+.cv-escuro .cv-menu{background:rgba(255,255,255,.45);color:#222;}
+.cores-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;}
+.cor-item{cursor:pointer;-webkit-tap-highlight-color:transparent;position:relative;
+  border-radius:8px;overflow:hidden;border:2px solid transparent;}
+.cor-item.sel{border-color:var(--green);}
+.cor-item img{width:100%;display:block;border-radius:6px;}
+.cor-item span{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.5);
+  color:#fff;font-size:.6rem;text-align:center;padding:3px;}
 .fb{margin:11px 16px 0;}
 .fb-l{display:flex;justify-content:space-between;font-family:monospace;font-size:.63rem;
   color:var(--muted);margin-bottom:5px;align-items:center;}
@@ -480,7 +496,7 @@ onAuthStateChanged(auth, function(user){
 <div id="login">
   <img src="icon-192.png" alt="Vigia" style="width:88px;height:88px;border-radius:20px;margin-bottom:18px;box-shadow:0 8px 40px rgba(0,229,160,.18);">
   <div class="sp-nome" style="font-size:1.9rem;">VIGIA</div>
-  <div class="sp-sub" style="margin-bottom:30px;">CONTROLE FINANCEIRO</div>
+  <div class="sp-sub" style="margin-bottom:30px;">ASSISTENTE FINANCEIRO</div>
 
   <div id="loginCarregando">Carregando…</div>
 
@@ -509,7 +525,7 @@ onAuthStateChanged(auth, function(user){
     <img src="icon-192.png" alt="Vigia">
     <div class="sp-nome">VIGIA</div>
   </div>
-  <div class="sp-sub">CONTROLE FINANCEIRO</div>
+  <div class="sp-sub">ASSISTENTE FINANCEIRO</div>
   <button class="sp-btn p" onclick="spAcao('lancar')">+ Novo lançamento</button>
   <button class="sp-btn s" onclick="spAcao('painel')">→ Abrir painel</button>
 </div>
@@ -633,17 +649,28 @@ onAuthStateChanged(auth, function(user){
   <div id="cartVazio" class="vazio" style="display:none;margin:18px 16px 0;">
     Nenhum cartão cadastrado ainda.<br>Toque em <b>+ Cartão</b> acima para adicionar o primeiro.
   </div>
-  <div class="cv-wrap" id="cVisWrap" style="display:none">
-    <img id="cVisImg" alt="">
+  <div class="cv-wrap" id="cvWrap" style="display:none">
+    <div class="cv-img-container">
+      <img id="cvImg" alt="">
+      <button class="cv-menu" id="cvMenu" onclick="menuCartao(tabAtual)" title="Opções do cartão">⋯</button>
+      <div class="cv-overlay" id="cvOverlay">
+        <div class="cv-top">
+          <div class="cv-nome-banco" id="cvNomeBanco"></div>
+        </div>
+        <div class="cv-bottom">
+          <div class="cv-titular" id="cvTitular"></div>
+          <div class="cv-bandeira" id="cvBandeira"></div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="cv" id="cVis" style="display:none"></div>
   <div class="fb" id="cartFb">
     <div class="fb-l">
       <span>Uso do teto</span>
       <span style="display:flex;gap:8px;align-items:center">
         <span id="fbP">—</span>
-        <button onclick="abrirEditarCartao(tabAtual)">✎ editar</button>
-        <button onclick="excluirCartaoAtual()">🗑 excluir</button>
+        <button onclick="abrirModalCartao(tabAtual)">✎ editar</button>
+        <button onclick="excluirCartao(tabAtual)">🗑 excluir</button>
       </span>
     </div>
     <div class="fb-tr"><div class="fb-f" id="fbF" style="width:0%"></div></div>
@@ -935,31 +962,35 @@ onAuthStateChanged(auth, function(user){
     <div class="md-t"><span id="cartaoModalTit">Novo cartão</span><button class="md-x" onclick="fechar('ovCartao')">✕</button></div>
     <div class="fd">
       <label>Nome do cartão</label>
-      <input type="text" id="cartNome" placeholder="Ex: Nubank, Inter, C6...">
+      <input type="text" id="cartNome" placeholder="Ex: Nubank, Inter, C6..." oninput="atualizarPreviewCartao()">
+    </div>
+    <div class="fd">
+      <label>Nome do titular</label>
+      <input type="text" id="cartTitular" placeholder="Ex: MARCOS PAULO" oninput="atualizarPreviewCartao()">
     </div>
     <div class="fd">
       <label>Bandeira</label>
-      <div class="chips" id="cartBandeiraChips">
-        <div class="chip" onclick="pickCart(this,'bandeira','visa')">Visa</div>
-        <div class="chip" onclick="pickCart(this,'bandeira','mastercard')">Mastercard</div>
-        <div class="chip" onclick="pickCart(this,'bandeira','elo')">Elo</div>
-        <div class="chip" onclick="pickCart(this,'bandeira','amex')">Amex</div>
-        <div class="chip" onclick="pickCart(this,'bandeira','hipercard')">Hipercard</div>
-      </div>
+      <div class="chips" id="bandChips"></div>
+    </div>
+    <div class="fd">
+      <label>Cor do cartão</label>
+      <div class="cores-grid" id="coresGrid"></div>
     </div>
     <div class="fd2">
       <div class="fd"><label>Teto da fatura (R$)</label><input type="number" id="cartTeto" placeholder="0.00" step="0.01" inputmode="decimal"></div>
       <div class="fd"><label>Dia de vencimento</label><input type="number" id="cartDia" placeholder="20" min="1" max="31" inputmode="numeric"></div>
     </div>
     <div class="fd">
-      <label>Cor do cartão</label>
-      <div class="chips" id="cartCorChips">
-        <div class="chip" onclick="pickCart(this,'cor','#cc0000,#5a0000')" style="background:#cc0000;color:#fff">Vermelho</div>
-        <div class="chip" onclick="pickCart(this,'cor','#3a006f,#7b2fd4')" style="background:#3a006f;color:#fff">Roxo</div>
-        <div class="chip" onclick="pickCart(this,'cor','#0a2540,#1a4a7a')" style="background:#0a2540;color:#fff">Azul</div>
-        <div class="chip" onclick="pickCart(this,'cor','#1a1a1a,#4a4a4a')" style="background:#1a1a1a;color:#fff">Preto</div>
-        <div class="chip" onclick="pickCart(this,'cor','#1a4a1a,#2d7a2d')" style="background:#1a4a1a;color:#fff">Verde</div>
-        <div class="chip" onclick="pickCart(this,'cor','#4a1a00,#8b3a00')" style="background:#4a1a00;color:#fff">Laranja</div>
+      <label>Preview</label>
+      <div class="cv-img-container" id="cartPreview" style="max-width:280px">
+        <img id="previewImg" alt="">
+        <div class="cv-overlay" id="previewOverlay" style="padding:10px 14px">
+          <div class="cv-top"><div class="cv-nome-banco" id="previewNome" style="font-size:1rem">—</div></div>
+          <div class="cv-bottom">
+            <div class="cv-titular" id="previewTitular" style="font-size:.7rem">—</div>
+            <div class="cv-bandeira" id="previewBand" style="font-size:.78rem">—</div>
+          </div>
+        </div>
       </div>
     </div>
     <button class="bok" id="cartSalvarBtn" onclick="salvarCartao()">✓ Adicionar cartão</button>
@@ -1094,10 +1125,29 @@ var TIPOS_REC=['Salário','Plantão extra','Férias','13º Salário','Reembolso'
 var TIPOS_INVEST=['Renda Fixa','Tesouro Direto','Ações','Fundos Imobiliários','Fundos de Investimento','Criptomoeda'];
 var CORES_CARTEIRA=['#4d9fff','#b57bff','#00e5a0','#f5c842','#ff4d6d','#ff9f43','#4dd0e1','#c084fc','#94a3b8','#f472b6'];
 
+/* Bases PNG dos cartões: o texto (banco, titular, bandeira) é sobreposto por
+   CSS em cima da imagem. textColor acompanha o brilho da base — nas claras
+   (cinza/platinum, dourado) o texto branco sumiria. */
+var CORES_CARTAO={
+  'vermelho':          {label:'🔴 Vermelho',          arquivo:'cartao-base-vermelho.png',          textColor:'#fff'},
+  'vermelho-metalico': {label:'🔴 Vermelho Metálico', arquivo:'cartao-base-vermelho-METALICO.png', textColor:'#fff'},
+  'laranja':           {label:'🟠 Laranja',           arquivo:'cartao-base-laranja.png',           textColor:'#fff'},
+  'roxo':              {label:'🟣 Roxo',              arquivo:'cartao-base-roxo.png',              textColor:'#fff'},
+  'azul':              {label:'🔵 Azul',              arquivo:'cartao-base-azul.png',              textColor:'#fff'},
+  'preto':             {label:'⚫ Preto',             arquivo:'cartao-base-preto.png',             textColor:'#fff'},
+  'verde':             {label:'🟢 Verde',             arquivo:'cartao-base-verde.png',             textColor:'#fff'},
+  'dourado':           {label:'🟡 Dourado',           arquivo:'cartao-base-dourado.png',           textColor:'#fff'},
+  'cinza':             {label:'🩶 Cinza/Platinum',    arquivo:'cartao-base-cinza.png',             textColor:'#222'},
+  'vinho':             {label:'🟤 Vinho',             arquivo:'cartao-base-vinho.png',             textColor:'#fff'}
+};
+var BANDEIRAS={visa:'VISA',mastercard:'MASTERCARD',elo:'ELO',amex:'AMEX',hipercard:'HIPER',cabal:'CABAL'};
+function corCartao(k){ return CORES_CARTAO[k]||CORES_CARTAO['azul']; }
+function arquivoCor(k){ return 'cartoes/'+corCartao(k).arquivo; }
+
 /* Dados de exemplo genéricos — usados só até o usuário logar e ter dados
    próprios no Firestore (ou como fallback offline). Nenhum dado real. */
 var INIT={
-  schemaVersion:4,
+  schemaVersion:5,
   receitasFixas:[
     {id:'rf1',dia:5, nome:'Salário', valor:5000.00},
     {id:'rf2',dia:15,nome:'Renda extra', valor:800.00}
@@ -1124,10 +1174,8 @@ var INIT={
     {id:'iv3',nome:'Fundo Imobiliário YZR11',tipo:'Fundos Imobiliários',cotas:8,precoCota:98.00,metaPercentual:30}
   ],
   cartoes:[
-    {id:'santander',nome:'Santander',bandeira:'mastercard',teto:1000,diaVencimento:20,
-      cor:'#cc0000',corGradiente:'#5a0000',imagem:'cartao-santander.png'},
-    {id:'nubank',nome:'Nubank',bandeira:'mastercard',teto:300,diaVencimento:20,
-      cor:'#3a006f',corGradiente:'#7b2fd4',imagem:'cartao-nubank.png'}
+    {id:'santander',nome:'Santander',titular:'',bandeira:'mastercard',corBase:'vermelho',teto:1000,diaVencimento:20},
+    {id:'nubank',nome:'Nubank',titular:'',bandeira:'mastercard',corBase:'roxo',teto:300,diaVencimento:20}
   ],
   meses:{},
   historico:[],
@@ -1174,15 +1222,34 @@ function migrarV2paraV3(d){
    batendo certinho com o cartão migrado, sem precisar reescrever histórico. */
 function migrarV3paraV4(d){
   var legado={
-    santander:{nome:'Santander',bandeira:'mastercard',cor:'#cc0000',corGradiente:'#5a0000',imagem:'cartao-santander.png'},
-    nubank:{nome:'Nubank',bandeira:'mastercard',cor:'#3a006f',corGradiente:'#7b2fd4',imagem:'cartao-nubank.png'}
+    santander:{nome:'Santander',bandeira:'mastercard',corBase:'vermelho'},
+    nubank:{nome:'Nubank',bandeira:'mastercard',corBase:'roxo'}
   };
   d.cartoes=Object.keys(d.tetos||{}).map(function(id){
-    var base=legado[id]||{nome:cap(id),bandeira:'visa',cor:'#0a2540',corGradiente:'#1a4a7a',imagem:null};
-    return {id:id,nome:base.nome,bandeira:base.bandeira,teto:d.tetos[id]||0,diaVencimento:20,
-      cor:base.cor,corGradiente:base.corGradiente,imagem:base.imagem};
+    var base=legado[id]||{nome:cap(id),bandeira:'visa',corBase:'azul'};
+    return {id:id,nome:base.nome,bandeira:base.bandeira,corBase:base.corBase,
+      teto:d.tetos[id]||0,diaVencimento:20};
   });
   d.schemaVersion=4;
+  return d;
+}
+
+/* v4 → v5: cartão passa a ser um PNG base (corBase) + texto sobreposto, em vez
+   de um gradiente CSS (cor/corGradiente) ou foto pronta (imagem). Converte as
+   cores antigas para a base equivalente e estreia o campo titular, herdando o
+   nome da conta pra não nascer em branco. */
+var HEX_PARA_BASE={'#cc0000':'vermelho','#3a006f':'roxo','#0a2540':'azul','#1a1a1a':'preto',
+  '#1a4a1a':'verde','#4a1a00':'laranja'};
+var IMG_PARA_BASE={'cartao-santander.png':'vermelho','cartao-nubank.png':'roxo'};
+function migrarV4paraV5(d){
+  var titularPadrao=(d.nome||'').trim().toUpperCase();
+  d.cartoes=(d.cartoes||[]).map(function(c){
+    var corBase=c.corBase||IMG_PARA_BASE[c.imagem]||HEX_PARA_BASE[(c.cor||'').toLowerCase()]||'azul';
+    return {id:c.id,nome:c.nome,titular:c.titular!=null?c.titular:titularPadrao,
+      bandeira:c.bandeira||'visa',corBase:corBase,
+      teto:c.teto||0,diaVencimento:c.diaVencimento||20};
+  });
+  d.schemaVersion=5;
   return d;
 }
 
@@ -1194,6 +1261,7 @@ function getD(){
     if(!d.schemaVersion || d.schemaVersion<2){ d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
     if(d.schemaVersion===2){ d=migrarV2paraV3(d); salvar(d); }
     if(d.schemaVersion===3){ d=migrarV3paraV4(d); salvar(d); }
+    if(d.schemaVersion===4){ d=migrarV4paraV5(d); salvar(d); }
     if(!d.meses)d.meses={};
     if(!d.historico)d.historico=[];
     if(!d.parcelamentos)d.parcelamentos=[];
@@ -1314,7 +1382,7 @@ function renderAbasCartoes(){
   var h=d.cartoes.map(function(c){
     return '<div class="tab'+(c.id===tabAtual?' on':'')+'" onclick="setTab(\''+c.id+'\')">'+c.nome+'</div>';
   }).join('');
-  h+='<div class="tab" style="flex:0 0 auto;padding:12px 14px;" onclick="abrirNovoCartao()">+ Cartão</div>';
+  h+='<div class="tab" style="flex:0 0 auto;padding:12px 14px;color:var(--green)" onclick="abrirModalCartao()">+ Cartão</div>';
   tabs.innerHTML=h;
 }
 function setTab(t){
@@ -1757,8 +1825,7 @@ function renderCartoes(){
 
   if(!d.cartoes.length){
     document.getElementById('cartVazio').style.display='block';
-    document.getElementById('cVisWrap').style.display='none';
-    document.getElementById('cVis').style.display='none';
+    document.getElementById('cvWrap').style.display='none';
     document.getElementById('cartFb').style.display='none';
     document.getElementById('secResumo').style.display='none';
     document.getElementById('secParc').style.display='none';
@@ -1773,7 +1840,7 @@ function renderCartoes(){
   document.getElementById('secResumo').style.display='block';
   document.getElementById('secParc').style.display='block';
 
-  var teto=cartao.teto, cor=cartao.cor;
+  var teto=cartao.teto, cor=corDestaqueCartao(cartao);
   var avulsas=mm.consumo.filter(function(x){return x.cartao===tabAtual;});
   var avTot=avulsas.reduce(function(s,x){return s+x.valor;},0);
   var ativas=[],encerradas=[],futuras=[];
@@ -1787,7 +1854,7 @@ function renderCartoes(){
   var parcTot=ativas.reduce(function(s,x){return s+x.p.valor;},0);
   var fat=parcTot+avTot;
 
-  renderCardVisual(cartao,fat);
+  renderCardVisual(cartao);
 
   if(teto){
     var pc=Math.min(fat/teto*100,140), ac=fat>teto;
@@ -1849,85 +1916,97 @@ function renderCartoes(){
   } else we.style.display='none';
 }
 
-/* Visual do cartão: se tiver "imagem" cadastrada (ex: foto real do cartão),
-   usa ela; senão gera um cartão genérico via CSS com a cor/bandeira escolhidas. */
-function renderCardVisual(cartao,fat){
-  if(cartao.imagem){
-    document.getElementById('cVis').style.display='none';
-    document.getElementById('cVisWrap').style.display='flex';
-    var img=document.getElementById('cVisImg');
-    img.src=cartao.imagem;
-    img.alt='Cartão '+cartao.nome;
-    return;
-  }
-  document.getElementById('cVisWrap').style.display='none';
-  var el=document.getElementById('cVis');
-  el.style.display='block';
-  el.style.background='linear-gradient(135deg,'+cartao.cor+' 0%,'+cartao.corGradiente+' 100%)';
-  el.innerHTML=
-    '<div class="cv-b">'+cartao.nome+'</div>'+
-    '<div class="cv-chip">▣</div>'+
-    '<div class="cv-fl">Total da fatura</div>'+
-    '<div class="cv-fv">'+fmt(fat)+'</div>'+
-    '<div class="cv-bt">'+
-      '<div class="cv-vc">Vence dia <span>'+(cartao.diaVencimento||20)+'</span></div>'+
-      '<div class="cv-band">'+getBandeiraSVG(cartao.bandeira)+'</div>'+
-    '</div>';
+/* Visual do cartão: PNG base escolhido pelo usuário + nome do banco, titular e
+   bandeira sobrepostos por CSS. */
+function renderCardVisual(cartao){
+  document.getElementById('cvWrap').style.display='flex';
+  var img=document.getElementById('cvImg');
+  img.src=arquivoCor(cartao.corBase);
+  img.alt='Cartão '+cartao.nome;
+  aplicarTextoCartao(cartao,{
+    overlay:'cvOverlay',nome:'cvNomeBanco',titular:'cvTitular',bandeira:'cvBandeira'});
 }
-function getBandeiraSVG(bandeira){
-  var icones={
-    visa:       '<span style="font-style:italic;font-weight:700;font-size:1.1rem;color:#fff">VISA</span>',
-    mastercard: '<span style="font-size:1.2rem">🔴🟠</span>',
-    elo:        '<span style="font-weight:700;color:#fff;font-size:.9rem">elo</span>',
-    amex:       '<span style="font-weight:700;color:#fff;font-size:.9rem">AMEX</span>',
-    hipercard:  '<span style="font-weight:700;color:#ff0000;font-size:.9rem">Hiper</span>'
-  };
-  return icones[bandeira]||'';
+/* Preenche nome/titular/bandeira e ajusta a cor do texto conforme o brilho da
+   base — sem isso o texto branco sumiria na base cinza/platinum. */
+function aplicarTextoCartao(cartao,ids){
+  var cor=corCartao(cartao.corBase);
+  var overlay=document.getElementById(ids.overlay);
+  overlay.style.color=cor.textColor;
+  /* a classe vai no container (ancestral do overlay E do botão ⋯), pra ambos
+     acompanharem a inversão de contraste nas bases claras */
+  if(overlay.parentNode) overlay.parentNode.classList.toggle('cv-escuro',cor.textColor!=='#fff');
+  document.getElementById(ids.nome).textContent=cartao.nome||'';
+  document.getElementById(ids.titular).textContent=(cartao.titular||'').toUpperCase();
+  var band=document.getElementById(ids.bandeira);
+  band.textContent=BANDEIRAS[cartao.bandeira]||'';
+  band.className='cv-bandeira '+(cartao.bandeira||'');
 }
+/* Cor de destaque (barra de uso do teto, valores das listas) derivada da base. */
+var COR_DESTAQUE={vermelho:'#ff4d6d','vermelho-metalico':'#ff4d6d',laranja:'#ff9f43',
+  roxo:'#b57bff',azul:'#4d9fff',preto:'#94a3b8',verde:'#00e5a0',dourado:'#f5c842',
+  cinza:'#94a3b8',vinho:'#f472b6'};
+function corDestaqueCartao(cartao){ return COR_DESTAQUE[cartao.corBase]||'#4d9fff'; }
 
 /* ── Adicionar / editar / excluir cartão ── */
 var cartState={}, cartEditandoId=null;
-function pickCart(el,campo,val){
+function renderBandChips(){
+  document.getElementById('bandChips').innerHTML=Object.keys(BANDEIRAS).map(function(k){
+    return '<div class="chip'+(cartState.bandeira===k?' on':'')+'" onclick="selecionarBandeira(\''+k+'\',this)">'+
+      BANDEIRAS[k]+'</div>';
+  }).join('');
+}
+function selecionarBandeira(k,el){
+  cartState.bandeira=k;
   var g=el.parentNode.querySelectorAll('.chip');
   for(var i=0;i<g.length;i++) g[i].classList.remove('on');
   el.classList.add('on');
-  cartState[campo]=val;
+  atualizarPreviewCartao();
 }
-function abrirNovoCartao(){
-  cartEditandoId=null;
-  cartState={bandeira:'visa',cor:'#0a2540,#1a4a7a'};
-  document.getElementById('cartaoModalTit').textContent='Novo cartão';
-  document.getElementById('cartSalvarBtn').textContent='✓ Adicionar cartão';
-  document.getElementById('cartNome').value='';
-  document.getElementById('cartTeto').value='';
-  document.getElementById('cartDia').value='20';
-  var qs=document.querySelectorAll.bind(document);
-  [].forEach.call(qs('#cartBandeiraChips .chip'),function(c){c.classList.remove('on');});
-  [].forEach.call(qs('#cartCorChips .chip'),function(c){c.classList.remove('on');});
-  document.getElementById('ovCartao').classList.add('on');
+function renderCoresGrid(){
+  document.getElementById('coresGrid').innerHTML=Object.keys(CORES_CARTAO).map(function(k){
+    var cor=CORES_CARTAO[k];
+    return '<div class="cor-item'+(cartState.corBase===k?' sel':'')+'" onclick="selecionarCor(\''+k+'\')">'+
+      '<img src="cartoes/'+cor.arquivo+'" alt="'+cor.label+'">'+
+      '<span>'+cor.label+'</span></div>';
+  }).join('');
 }
-function abrirEditarCartao(id){
-  var d=getD(), cartao=cartaoPorId(d,id);
-  if(!cartao){ abrirNovoCartao(); return; }
-  cartEditandoId=id;
-  cartState={bandeira:cartao.bandeira,cor:cartao.cor+','+cartao.corGradiente};
-  document.getElementById('cartaoModalTit').textContent='Editar cartão';
-  document.getElementById('cartSalvarBtn').textContent='✓ Salvar cartão';
-  document.getElementById('cartNome').value=cartao.nome;
-  document.getElementById('cartTeto').value=cartao.teto||'';
-  document.getElementById('cartDia').value=cartao.diaVencimento||20;
-  [].forEach.call(document.querySelectorAll('#cartBandeiraChips .chip'),function(c){
-    c.classList.toggle('on', c.getAttribute('onclick').indexOf("'"+cartao.bandeira+"'")>-1);
-  });
-  [].forEach.call(document.querySelectorAll('#cartCorChips .chip'),function(c){
-    c.classList.toggle('on', c.getAttribute('onclick').indexOf(cartao.cor+',')>-1);
-  });
+function selecionarCor(k){
+  cartState.corBase=k;
+  renderCoresGrid();
+  atualizarPreviewCartao();
+}
+function atualizarPreviewCartao(){
+  var previa={
+    nome:document.getElementById('cartNome').value.trim()||'—',
+    titular:document.getElementById('cartTitular').value.trim()||'—',
+    bandeira:cartState.bandeira||'visa',
+    corBase:cartState.corBase||'azul'
+  };
+  document.getElementById('previewImg').src=arquivoCor(previa.corBase);
+  aplicarTextoCartao(previa,{
+    overlay:'previewOverlay',nome:'previewNome',titular:'previewTitular',bandeira:'previewBand'});
+}
+function abrirModalCartao(id){
+  var d=getD(), cartao=id?cartaoPorId(d,id):null;
+  cartEditandoId=cartao?cartao.id:null;
+  cartState=cartao
+    ? {bandeira:cartao.bandeira||'visa',corBase:cartao.corBase||'azul'}
+    : {bandeira:'visa',corBase:'azul'};
+  document.getElementById('cartaoModalTit').textContent=cartao?'Editar cartão':'Novo cartão';
+  document.getElementById('cartSalvarBtn').textContent=cartao?'✓ Salvar cartão':'✓ Adicionar cartão';
+  document.getElementById('cartNome').value=cartao?cartao.nome:'';
+  document.getElementById('cartTitular').value=cartao?(cartao.titular||''):((d.nome||'').trim().toUpperCase());
+  document.getElementById('cartTeto').value=cartao?(cartao.teto||''):'';
+  document.getElementById('cartDia').value=cartao?(cartao.diaVencimento||20):20;
+  renderBandChips();
+  renderCoresGrid();
+  atualizarPreviewCartao();
   document.getElementById('ovCartao').classList.add('on');
 }
 function salvarCartao(){
   var nome=document.getElementById('cartNome').value.trim();
   if(!nome){ alert('Informe o nome do cartão.'); return; }
-  var corPar=(cartState.cor||'#0a2540,#1a4a7a').split(',');
+  var titular=document.getElementById('cartTitular').value.trim();
   var teto=parseFloat(document.getElementById('cartTeto').value)||0;
   var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('cartDia').value)||20));
   var d=getD();
@@ -1935,13 +2014,15 @@ function salvarCartao(){
   if(cartEditandoId){
     var cartao=cartaoPorId(d,cartEditandoId);
     if(cartao){
-      cartao.nome=nome; cartao.bandeira=cartState.bandeira||cartao.bandeira||'visa';
+      cartao.nome=nome; cartao.titular=titular;
+      cartao.bandeira=cartState.bandeira||'visa';
+      cartao.corBase=cartState.corBase||'azul';
       cartao.teto=teto; cartao.diaVencimento=dia;
-      cartao.cor=corPar[0]; cartao.corGradiente=corPar[1];
     }
   } else {
-    var novoCartao={id:idNovo('c'),nome:nome,bandeira:cartState.bandeira||'visa',
-      teto:teto,diaVencimento:dia,cor:corPar[0],corGradiente:corPar[1],imagem:null};
+    var novoCartao={id:idNovo('c'),nome:nome,titular:titular,
+      bandeira:cartState.bandeira||'visa',corBase:cartState.corBase||'azul',
+      teto:teto,diaVencimento:dia};
     d.cartoes.push(novoCartao);
     tabAtual=novoCartao.id;
   }
@@ -1950,12 +2031,21 @@ function salvarCartao(){
   renderAbasCartoes();
   renderCartoes();
 }
-function excluirCartaoAtual(){
-  var d=getD(), cartao=cartaoPorId(d,tabAtual);
+function menuCartao(id){
+  var cartao=cartaoPorId(getD(),id);
+  if(!cartao) return;
+  if(confirm('O que deseja fazer com o cartão '+cartao.nome+'?\n\nOK = Editar\nCancelar = Excluir')){
+    abrirModalCartao(id);
+  } else {
+    excluirCartao(id);
+  }
+}
+function excluirCartao(id){
+  var d=getD(), cartao=cartaoPorId(d,id);
   if(!cartao) return;
   if(!confirm('Excluir o cartão "'+cartao.nome+'"?\n\nOs lançamentos e parcelas já feitos nesse cartão são mantidos no histórico — só o cartão em si é removido.')) return;
-  d.cartoes=d.cartoes.filter(function(c){return c.id!==tabAtual;});
-  tabAtual=d.cartoes.length?d.cartoes[0].id:'';
+  d.cartoes=d.cartoes.filter(function(c){return c.id!==id;});
+  if(tabAtual===id) tabAtual=d.cartoes.length?d.cartoes[0].id:'';
   salvar(d);
   renderAbasCartoes();
   renderCartoes();
