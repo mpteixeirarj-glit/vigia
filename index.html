@@ -111,6 +111,7 @@ button{font-family:inherit;}
 
 /* HERO */
 .hero{padding:18px 16px 10px;}
+.hero-saudacao{font-size:.9rem;color:var(--muted);margin-bottom:4px;}
 .hero-l{font-family:monospace;font-size:.6rem;letter-spacing:.14em;
   text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
 .hero-v{font-family:monospace;font-size:2.3rem;font-weight:700;line-height:1;}
@@ -118,13 +119,14 @@ button{font-family:inherit;}
 .hero-v.neg{color:var(--red);}
 .hero-s{font-size:.74rem;color:var(--muted);margin-top:5px;}
 
-.trio{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;padding:0 16px 14px;}
-.tc{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:11px 9px;}
-.tc-v{font-family:monospace;font-size:.86rem;font-weight:700;line-height:1;}
+.trio{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px 14px;}
+.tc{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:10px 6px;}
+.tc-v{font-family:monospace;font-size:.78rem;font-weight:700;line-height:1;}
 .tc-v.pos{color:var(--green);}
 .tc-v.neg{color:var(--red);}
 .tc-v.blu{color:var(--blue);}
-.tc-l{font-size:.6rem;color:var(--muted);margin-top:4px;}
+.tc-v.pp{color:var(--purple);}
+.tc-l{font-size:.55rem;color:var(--muted);margin-top:4px;}
 
 .barra{background:var(--surf);border:1px solid var(--border);border-radius:10px;
   padding:13px;margin:0 16px 14px;}
@@ -241,17 +243,12 @@ button{font-family:inherit;}
 #cVisImg{width:calc(100% - 32px);max-width:480px;margin-left:auto;margin-right:auto;
   border-radius:16px;display:block;box-shadow:0 8px 32px rgba(0,0,0,.4);}
 .cv{margin:18px 16px 0;border-radius:16px;padding:20px 18px;position:relative;
-  overflow:hidden;min-height:132px;}
-.cv.santander{background:linear-gradient(135deg,#cc0000 0%,#8b0000 60%,#5a0000 100%);
-  border:1px solid rgba(255,77,109,.25);}
-.cv.nubank{background:linear-gradient(135deg,#3a006f 0%,#5a1f9e 50%,#7b2fd4 100%);
-  border:1px solid rgba(138,43,226,.35);}
-.cv::before{content:'';position:absolute;top:20px;right:18px;width:36px;height:26px;
-  border-radius:5px;border:1px solid rgba(255,255,255,.15);
-  background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04));}
+  overflow:hidden;min-height:132px;border:1px solid rgba(255,255,255,.12);}
 .cv::after{content:'';position:absolute;inset:0;border-radius:16px;pointer-events:none;
   background:linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 50%);}
-.cv-b{font-size:1.25rem;font-weight:800;margin-bottom:16px;color:#fff;
+.cv-chip{font-size:1.5rem;opacity:.85;color:rgba(255,255,255,.85);margin:2px 0 12px;}
+.cv-band{display:flex;align-items:center;}
+.cv-b{font-size:1.25rem;font-weight:800;margin-bottom:4px;color:#fff;
   text-shadow:0 1px 8px rgba(0,0,0,.4);}
 .cv-fl{font-size:.7rem;color:rgba(255,255,255,.6);margin-bottom:4px;}
 .cv-fv{font-family:monospace;font-size:1.7rem;font-weight:700;line-height:1;color:#fff;
@@ -259,7 +256,6 @@ button{font-family:inherit;}
 .cv-bt{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;}
 .cv-vc{font-size:.7rem;color:rgba(255,255,255,.6);}
 .cv-vc span{color:#fff;font-weight:600;}
-.cv-tt{font-size:.7rem;text-align:right;}
 .fb{margin:11px 16px 0;}
 .fb-l{display:flex;justify-content:space-between;font-family:monospace;font-size:.63rem;
   color:var(--muted);margin-bottom:5px;align-items:center;}
@@ -534,6 +530,7 @@ onAuthStateChanged(auth, function(user){
 <!-- ═══ INÍCIO ═══ -->
 <div class="tela on" id="t-inicio">
   <div class="hero">
+    <div class="hero-saudacao" id="heroSaudacao">—</div>
     <div class="hero-l">Saldo do mês</div>
     <div class="hero-v pos" id="hSaldo">R$ 0,00</div>
     <div class="hero-s" id="hSub">—</div>
@@ -541,6 +538,7 @@ onAuthStateChanged(auth, function(user){
   <div class="trio">
     <div class="tc"><div class="tc-v pos" id="tcR">—</div><div class="tc-l">Receitas</div></div>
     <div class="tc"><div class="tc-v neg" id="tcD">—</div><div class="tc-l">Despesas</div></div>
+    <div class="tc"><div class="tc-v pp" id="tcC">—</div><div class="tc-l">Cofrinhos</div></div>
     <div class="tc"><div class="tc-v blu" id="tcI">—</div><div class="tc-l">Carteira</div></div>
   </div>
   <div class="barra">
@@ -631,39 +629,32 @@ onAuthStateChanged(auth, function(user){
 
 <!-- ═══ CARTÕES ═══ -->
 <div class="tela" id="t-cartoes">
-  <div class="tabs">
-    <div class="tab on" id="tbS" onclick="setTab('santander')">Santander</div>
-    <div class="tab" id="tbN" onclick="setTab('nubank')">Nubank</div>
+  <div class="tabs" id="tabsCartoes"></div>
+  <div id="cartVazio" class="vazio" style="display:none;margin:18px 16px 0;">
+    Nenhum cartão cadastrado ainda.<br>Toque em <b>+ Cartão</b> acima para adicionar o primeiro.
   </div>
-  <div class="cv-wrap" id="cVisWrap">
-    <img id="cVisImg" src="cartao-santander.png" alt="Cartão Santander — Marcos Paulo">
+  <div class="cv-wrap" id="cVisWrap" style="display:none">
+    <img id="cVisImg" alt="">
   </div>
-  <div class="cv santander" id="cVis" style="display:none">
-    <div class="cv-b" id="cBanco">Santander</div>
-    <div class="cv-fl">Total da fatura</div>
-    <div class="cv-fv" id="cFat">R$ 0,00</div>
-    <div class="cv-bt">
-      <div class="cv-vc">Vence dia <span id="cVence">20</span></div>
-      <div class="cv-tt" id="cTeto"></div>
-    </div>
-  </div>
-  <div class="fb">
+  <div class="cv" id="cVis" style="display:none"></div>
+  <div class="fb" id="cartFb">
     <div class="fb-l">
       <span>Uso do teto</span>
       <span style="display:flex;gap:8px;align-items:center">
         <span id="fbP">—</span>
-        <button onclick="abrirTeto()">✎ teto</button>
+        <button onclick="abrirEditarCartao(tabAtual)">✎ editar</button>
+        <button onclick="excluirCartaoAtual()">🗑 excluir</button>
       </span>
     </div>
     <div class="fb-tr"><div class="fb-f" id="fbF" style="width:0%"></div></div>
   </div>
-  <div class="sec">
+  <div class="sec" id="secResumo">
     <div class="sec-h" onclick="toggleSec('sResumo',this)">
       <div class="sec-t gr"><span class="chev">▾</span>Composição da fatura</div>
     </div>
     <div class="sec-body" id="sResumo"></div>
   </div>
-  <div class="sec">
+  <div class="sec" id="secParc">
     <div class="sec-h" onclick="toggleSec('sParc',this)">
       <div class="sec-t yl"><span class="chev">▾</span>Parcelas em andamento</div>
       <div class="sec-tot" id="totParc">—</div>
@@ -761,10 +752,7 @@ onAuthStateChanged(auth, function(user){
     <!-- DESPESA step 2 (cartão) -->
     <div class="stp" id="dp2">
       <div class="fd"><label>Qual cartão?</label>
-        <div class="chips">
-          <div class="chip" onclick="pick(this,'cartao','santander')">Santander</div>
-          <div class="chip" onclick="pick(this,'cartao','nubank')">Nubank</div>
-        </div>
+        <div class="chips" id="dp2CartaoChips"></div>
       </div>
       <div class="fd2">
         <div class="fd"><label>Valor da parcela (R$)</label><input type="number" id="pVal" placeholder="0.00" step="0.01" inputmode="decimal"></div>
@@ -811,10 +799,7 @@ onAuthStateChanged(auth, function(user){
       </div>
       <div class="fd" id="pcFdAtual" style="display:none"><label>Qual parcela é a atual?</label><input type="number" id="pcAt" min="1" inputmode="numeric"></div>
       <div class="fd"><label>Cartão ou banco (opcional)</label>
-        <div class="chips" style="margin-bottom:8px;">
-          <div class="chip" onclick="setCartaoParc('Santander')">Santander</div>
-          <div class="chip" onclick="setCartaoParc('Nubank')">Nubank</div>
-        </div>
+        <div class="chips" id="pcCartaoChips" style="margin-bottom:8px;"></div>
         <input type="text" id="pcCartao" placeholder="Ou digite outro banco...">
       </div>
       <div class="fd"><label>Dia de vencimento</label><input type="number" id="pcDia" min="1" max="31" inputmode="numeric" value="20"></div>
@@ -944,13 +929,40 @@ onAuthStateChanged(auth, function(user){
   </div>
 </div>
 
-<!-- MODAL TETO -->
-<div class="ov" id="ovT" onclick="fecharFora(event,'ovT')">
+<!-- MODAL CARTÃO (adicionar/editar) -->
+<div class="ov" id="ovCartao" onclick="fecharFora(event,'ovCartao')">
   <div class="md" onclick="event.stopPropagation()">
-    <div class="md-t">Editar tetos<button class="md-x" onclick="fechar('ovT')">✕</button></div>
-    <div class="fd"><label>Teto Santander (R$)</label><input type="number" id="tS" step="0.01" inputmode="decimal"></div>
-    <div class="fd"><label>Teto Nubank (R$)</label><input type="number" id="tN" step="0.01" inputmode="decimal"></div>
-    <button class="bok" onclick="salvarTetos()">✓ Salvar tetos</button>
+    <div class="md-t"><span id="cartaoModalTit">Novo cartão</span><button class="md-x" onclick="fechar('ovCartao')">✕</button></div>
+    <div class="fd">
+      <label>Nome do cartão</label>
+      <input type="text" id="cartNome" placeholder="Ex: Nubank, Inter, C6...">
+    </div>
+    <div class="fd">
+      <label>Bandeira</label>
+      <div class="chips" id="cartBandeiraChips">
+        <div class="chip" onclick="pickCart(this,'bandeira','visa')">Visa</div>
+        <div class="chip" onclick="pickCart(this,'bandeira','mastercard')">Mastercard</div>
+        <div class="chip" onclick="pickCart(this,'bandeira','elo')">Elo</div>
+        <div class="chip" onclick="pickCart(this,'bandeira','amex')">Amex</div>
+        <div class="chip" onclick="pickCart(this,'bandeira','hipercard')">Hipercard</div>
+      </div>
+    </div>
+    <div class="fd2">
+      <div class="fd"><label>Teto da fatura (R$)</label><input type="number" id="cartTeto" placeholder="0.00" step="0.01" inputmode="decimal"></div>
+      <div class="fd"><label>Dia de vencimento</label><input type="number" id="cartDia" placeholder="20" min="1" max="31" inputmode="numeric"></div>
+    </div>
+    <div class="fd">
+      <label>Cor do cartão</label>
+      <div class="chips" id="cartCorChips">
+        <div class="chip" onclick="pickCart(this,'cor','#cc0000,#5a0000')" style="background:#cc0000;color:#fff">Vermelho</div>
+        <div class="chip" onclick="pickCart(this,'cor','#3a006f,#7b2fd4')" style="background:#3a006f;color:#fff">Roxo</div>
+        <div class="chip" onclick="pickCart(this,'cor','#0a2540,#1a4a7a')" style="background:#0a2540;color:#fff">Azul</div>
+        <div class="chip" onclick="pickCart(this,'cor','#1a1a1a,#4a4a4a')" style="background:#1a1a1a;color:#fff">Preto</div>
+        <div class="chip" onclick="pickCart(this,'cor','#1a4a1a,#2d7a2d')" style="background:#1a4a1a;color:#fff">Verde</div>
+        <div class="chip" onclick="pickCart(this,'cor','#4a1a00,#8b3a00')" style="background:#4a1a00;color:#fff">Laranja</div>
+      </div>
+    </div>
+    <button class="bok" id="cartSalvarBtn" onclick="salvarCartao()">✓ Adicionar cartão</button>
   </div>
 </div>
 
@@ -1025,9 +1037,7 @@ onAuthStateChanged(auth, function(user){
       </div>
       <div class="fd2">
         <div class="fd"><input type="number" id="onbParcAtual" placeholder="Parcela atual" inputmode="numeric"></div>
-        <div class="fd"><select id="onbParcCartao">
-          <option value="santander">Santander</option><option value="nubank">Nubank</option>
-        </select></div>
+        <div class="fd"><input type="text" id="onbParcCartao" placeholder="Cartão (opcional)"></div>
       </div>
       <button class="ba" style="width:100%;margin-bottom:14px;" onclick="onbAdicionarParcela()">+ Adicionar</button>
       <button class="bok gr" onclick="onbIr(6)">Continuar</button>
@@ -1087,7 +1097,7 @@ var CORES_CARTEIRA=['#4d9fff','#b57bff','#00e5a0','#f5c842','#ff4d6d','#ff9f43',
 /* Dados de exemplo genéricos — usados só até o usuário logar e ter dados
    próprios no Firestore (ou como fallback offline). Nenhum dado real. */
 var INIT={
-  schemaVersion:3,
+  schemaVersion:4,
   receitasFixas:[
     {id:'rf1',dia:5, nome:'Salário', valor:5000.00},
     {id:'rf2',dia:15,nome:'Renda extra', valor:800.00}
@@ -1113,7 +1123,12 @@ var INIT={
     {id:'iv2',nome:'Ações XPTO3',          tipo:'Ações',         cotas:50,   precoCota:18.40, metaPercentual:30},
     {id:'iv3',nome:'Fundo Imobiliário YZR11',tipo:'Fundos Imobiliários',cotas:8,precoCota:98.00,metaPercentual:30}
   ],
-  tetos:{santander:1000,nubank:300},
+  cartoes:[
+    {id:'santander',nome:'Santander',bandeira:'mastercard',teto:1000,diaVencimento:20,
+      cor:'#cc0000',corGradiente:'#5a0000',imagem:'cartao-santander.png'},
+    {id:'nubank',nome:'Nubank',bandeira:'mastercard',teto:300,diaVencimento:20,
+      cor:'#3a006f',corGradiente:'#7b2fd4',imagem:'cartao-nubank.png'}
+  ],
   meses:{},
   historico:[],
   ultimoMesReal:null
@@ -1153,6 +1168,24 @@ function migrarV2paraV3(d){
   return d;
 }
 
+/* v3 → v4: cartões deixam de ser fixos (Santander/Nubank hardcoded) e viram
+   uma lista configurável em d.cartoes. Preserva os IDs 'santander'/'nubank'
+   pra todo lançamento/parcelamento antigo (cartao:'santander' etc.) continuar
+   batendo certinho com o cartão migrado, sem precisar reescrever histórico. */
+function migrarV3paraV4(d){
+  var legado={
+    santander:{nome:'Santander',bandeira:'mastercard',cor:'#cc0000',corGradiente:'#5a0000',imagem:'cartao-santander.png'},
+    nubank:{nome:'Nubank',bandeira:'mastercard',cor:'#3a006f',corGradiente:'#7b2fd4',imagem:'cartao-nubank.png'}
+  };
+  d.cartoes=Object.keys(d.tetos||{}).map(function(id){
+    var base=legado[id]||{nome:cap(id),bandeira:'visa',cor:'#0a2540',corGradiente:'#1a4a7a',imagem:null};
+    return {id:id,nome:base.nome,bandeira:base.bandeira,teto:d.tetos[id]||0,diaVencimento:20,
+      cor:base.cor,corGradiente:base.corGradiente,imagem:base.imagem};
+  });
+  d.schemaVersion=4;
+  return d;
+}
+
 function getD(){
   var raw=localStorage.getItem(chaveLocal(uidAtual));
   if(!raw){ var d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
@@ -1160,12 +1193,14 @@ function getD(){
     var d=JSON.parse(raw);
     if(!d.schemaVersion || d.schemaVersion<2){ d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
     if(d.schemaVersion===2){ d=migrarV2paraV3(d); salvar(d); }
+    if(d.schemaVersion===3){ d=migrarV3paraV4(d); salvar(d); }
     if(!d.meses)d.meses={};
     if(!d.historico)d.historico=[];
     if(!d.parcelamentos)d.parcelamentos=[];
     if(!d.despesasFixas)d.despesasFixas=[];
     if(!d.cofrinhos)d.cofrinhos=[];
     if(!d.investimentos)d.investimentos=[];
+    if(!d.cartoes)d.cartoes=[];
     if(d.ultimoMesReal===undefined)d.ultimoMesReal=null;
     return d;
   }
@@ -1245,8 +1280,8 @@ function acumuladoExtraCofrinho(d,cfId){
 /* ══════ ESTADO ══════ */
 var HOJE=new Date();
 var curM=HOJE.getMonth(), curA=HOJE.getFullYear();
-var telaAtual='inicio', tabAtual='santander', anoHist=HOJE.getFullYear();
-var secFechadas={};
+var telaAtual='inicio', tabAtual='', anoHist=HOJE.getFullYear();
+var secFechadas={sPrestacoes:true,sReceitas:true,sFixas:true,sConsumo:true,sCarteira:true,sCofres:true,sAlertas:true};
 var uidAtual=null;
 
 /* ══════ NAVEGAÇÃO ══════ */
@@ -1270,10 +1305,21 @@ function navMes(d){
 }
 function voltarHoje(){ curM=HOJE.getMonth(); curA=HOJE.getFullYear(); renderTudo(); }
 function navAno(d){ anoHist+=d; renderHist(); }
+function cartaoPorId(d,id){
+  return (d.cartoes||[]).filter(function(c){return c.id===id;})[0]||null;
+}
+function renderAbasCartoes(){
+  var d=getD();
+  var tabs=document.getElementById('tabsCartoes');
+  var h=d.cartoes.map(function(c){
+    return '<div class="tab'+(c.id===tabAtual?' on':'')+'" onclick="setTab(\''+c.id+'\')">'+c.nome+'</div>';
+  }).join('');
+  h+='<div class="tab" style="flex:0 0 auto;padding:12px 14px;" onclick="abrirNovoCartao()">+ Cartão</div>';
+  tabs.innerHTML=h;
+}
 function setTab(t){
   tabAtual=t;
-  document.getElementById('tbS').className='tab'+(t==='santander'?' on':'');
-  document.getElementById('tbN').className='tab'+(t==='nubank'?' on':'');
+  renderAbasCartoes();
   renderCartoes();
 }
 function toggleSec(id,head){
@@ -1288,7 +1334,11 @@ function aplicarFechadas(){
   for(var id in secFechadas){
     if(!secFechadas[id]) continue;
     var el=document.getElementById(id);
-    if(el) el.classList.add('fechado');
+    if(!el) continue;
+    el.classList.add('fechado');
+    var head=el.previousElementSibling;
+    var ch=head&&head.querySelector('.chev');
+    if(ch) ch.classList.add('fechado');
   }
 }
 
@@ -1366,8 +1416,18 @@ function itemTipo2(kind,item,cor,conf){
     '<button class="ba del" onclick="del(\''+kind+'\',\''+item.id+'\')">✕</button></div></div>';
 }
 
+function getSaudacao(){
+  var hora=new Date().getHours();
+  if(hora>=5&&hora<12) return 'Bom dia';
+  if(hora>=12&&hora<18) return 'Boa tarde';
+  return 'Boa noite';
+}
 function renderInicio(){
   var c=calcMes(curM,curA), d=c.d, mm=c.mm, conf=c.conf;
+
+  var primeiroNome=d.nome?d.nome.split(' ')[0]:'';
+  document.getElementById('heroSaudacao').textContent=
+    getSaudacao()+(primeiroNome?', '+primeiroNome:'')+' 👋';
 
   document.getElementById('hSaldo').textContent=(c.saldo>=0?'+':'')+fmt(c.saldo);
   document.getElementById('hSaldo').className='hero-v '+(c.saldo>=0?'pos':'neg');
@@ -1375,6 +1435,7 @@ function renderInicio(){
     (curM===HOJE.getMonth()&&curA===HOJE.getFullYear()?' · mês atual':'');
   document.getElementById('tcR').textContent='R$ '+Math.round(c.receitas).toLocaleString('pt-BR');
   document.getElementById('tcD').textContent='R$ '+Math.round(c.despesas).toLocaleString('pt-BR');
+  document.getElementById('tcC').textContent='R$ '+Math.round(c.cofres).toLocaleString('pt-BR');
   document.getElementById('tcI').textContent='R$ '+Math.round(carteiraCalc(d).total).toLocaleString('pt-BR');
   var pct=c.receitas>0?(c.despesas/c.receitas*100):0;
   document.getElementById('pctL').textContent=pct.toFixed(1)+'%';
@@ -1432,7 +1493,8 @@ function renderInicio(){
     h='<div class="vazio">Nenhum lançamento este mês.<br>Toque no + para registrar um gasto.</div>';
   } else {
     mm.consumo.forEach(function(x){
-      var cart=x.cartao?'<span class="tg cat">'+(x.cartao==='santander'?'SANTANDER':'NUBANK')+'</span>':'';
+      var cartaoTag=x.cartao?cartaoPorId(d,x.cartao):null;
+      var cart=x.cartao?'<span class="tg cat">'+(cartaoTag?cartaoTag.nome.toUpperCase():cap(x.cartao))+'</span>':'';
       h+='<div class="it rd"><div class="it-t"><div class="it-n"><span class="dia">'+
         (x.dia?String(x.dia).padStart(2,'0'):'—')+'</span>'+(x.nome||x.cat)+
         '<span class="tg cat">'+x.cat+'</span>'+cart+'</div>'+
@@ -1545,10 +1607,10 @@ function renderInicio(){
   else if(c.saldo>=0) al.push({t:'w',i:'⚠️',x:'Saldo apertado: <b>'+fmt(c.saldo)+'</b>. Imprevisto compromete.'});
   else al.push({t:'d',i:'🔴',x:'Mês no vermelho: <b>'+fmt(c.saldo)+'</b>.'});
 
-  ['santander','nubank'].forEach(function(cd){
-    var t=d.tetos[cd]; if(!t) return;
-    var fat=faturaMes(cd,curM,curA);
-    if(fat>t) al.push({t:'w',i:'⚠️',x:(cd==='santander'?'Santander':'Nubank')+
+  d.cartoes.forEach(function(cartao){
+    var t=cartao.teto; if(!t) return;
+    var fat=faturaMes(cartao.id,curM,curA);
+    if(fat>t) al.push({t:'w',i:'⚠️',x:cartao.nome+
       ' passou o teto em <b>'+fmt(fat-t)+'</b>.'});
   });
 
@@ -1603,14 +1665,15 @@ function eventosMes(m,a){
 
   d.parcelamentos.forEach(function(p){
     var st=parcelaNoMes(p,m,a);
-    if(st.ativa) add(p.dia,{n:p.nome,v:p.valor,t:'prest',s:'Parcela '+st.num+'/'+p.total+(p.cartao?' · '+cap(p.cartao):'')});
+    var nomeCartao=p.cartao?((cartaoPorId(d,p.cartao)||{}).nome||cap(p.cartao)):null;
+    if(st.ativa) add(p.dia,{n:p.nome,v:p.valor,t:'prest',s:'Parcela '+st.num+'/'+p.total+(nomeCartao?' · '+nomeCartao:'')});
   });
   /* compras avulsas no cartão (não parceladas) só aparecem agregadas no dia
      da fatura — os parcelamentos já aparecem individuais acima, então não
      entram nessa soma pra não duplicar. */
-  ['santander','nubank'].forEach(function(cart){
-    var av=mm.consumo.filter(function(x){return x.cartao===cart;}).reduce(function(s,x){return s+x.valor;},0);
-    if(av>0) add(20,{n:'Compras avulsas '+cap(cart),v:av,t:'desp',s:'Cartão de crédito'});
+  d.cartoes.forEach(function(cartao){
+    var av=mm.consumo.filter(function(x){return x.cartao===cartao.id;}).reduce(function(s,x){return s+x.valor;},0);
+    if(av>0) add(cartao.diaVencimento||20,{n:'Compras avulsas '+cartao.nome,v:av,t:'desp',s:'Cartão de crédito'});
   });
   mm.consumo.forEach(function(x){ if(!x.cartao) add(x.dia,{n:x.nome||x.cat,v:x.valor,t:'desp',s:x.cat}); });
   mm.reserva.forEach(function(x){ add(x.dia,{n:x.nome||'Investimento',v:x.valor,t:'res',s:'Reserva'}); });
@@ -1691,8 +1754,26 @@ function abrirDia(dd){
 /* ══════ CARTÕES ══════ */
 function renderCartoes(){
   var d=getD(), mm=getMes(d,curM,curA);
-  var teto=d.tetos[tabAtual];
-  var cor=tabAtual==='santander'?'var(--red)':'var(--blue)';
+
+  if(!d.cartoes.length){
+    document.getElementById('cartVazio').style.display='block';
+    document.getElementById('cVisWrap').style.display='none';
+    document.getElementById('cVis').style.display='none';
+    document.getElementById('cartFb').style.display='none';
+    document.getElementById('secResumo').style.display='none';
+    document.getElementById('secParc').style.display='none';
+    document.getElementById('wrapEnc').style.display='none';
+    return;
+  }
+  if(!cartaoPorId(d,tabAtual)){ tabAtual=d.cartoes[0].id; renderAbasCartoes(); }
+  var cartao=cartaoPorId(d,tabAtual);
+
+  document.getElementById('cartVazio').style.display='none';
+  document.getElementById('cartFb').style.display='block';
+  document.getElementById('secResumo').style.display='block';
+  document.getElementById('secParc').style.display='block';
+
+  var teto=cartao.teto, cor=cartao.cor;
   var avulsas=mm.consumo.filter(function(x){return x.cartao===tabAtual;});
   var avTot=avulsas.reduce(function(s,x){return s+x.valor;},0);
   var ativas=[],encerradas=[],futuras=[];
@@ -1706,22 +1787,15 @@ function renderCartoes(){
   var parcTot=ativas.reduce(function(s,x){return s+x.p.valor;},0);
   var fat=parcTot+avTot;
 
-  document.getElementById('cVis').className='cv '+tabAtual;
-  document.getElementById('cVisImg').src=tabAtual==='santander'?'cartao-santander.png':'cartao-nubank.png';
-  document.getElementById('cVisImg').alt=tabAtual==='santander'?'Cartão Santander — Marcos Paulo':'Cartão Nubank — Marcos Paulo';
-  document.getElementById('cBanco').textContent=tabAtual==='santander'?'Santander':'Nubank';
-  document.getElementById('cFat').textContent=fmt(fat);
-  document.getElementById('cVence').textContent='20';
+  renderCardVisual(cartao,fat);
+
   if(teto){
     var pc=Math.min(fat/teto*100,140), ac=fat>teto;
-    document.getElementById('cTeto').innerHTML='<span style="color:'+
-      (ac?'#ffb3c0':'rgba(255,255,255,.55)')+'">'+(ac?'⚠ Acima':'Teto')+': '+fmt(teto)+'</span>';
     document.getElementById('fbP').textContent=pc.toFixed(0)+'%';
     document.getElementById('fbF').style.width=Math.min(pc,100)+'%';
     document.getElementById('fbF').style.background=ac?'var(--red)':
       'linear-gradient(90deg,'+cor+',var(--green))';
   } else {
-    document.getElementById('cTeto').innerHTML='<span style="color:rgba(255,255,255,.5)">Sem teto</span>';
     document.getElementById('fbP').textContent='—';
     document.getElementById('fbF').style.width='0%';
   }
@@ -1734,20 +1808,19 @@ function renderCartoes(){
   document.getElementById('sResumo').innerHTML='<div class="res">'+h+'</div>';
 
   h='';
-  var clsC=tabAtual==='santander'?'rd':'bl';
   avulsas.forEach(function(x){
-    h+='<div class="it '+clsC+'"><div class="it-t"><div class="it-n"><span class="dia">'+
+    h+='<div class="it" style="border-left-color:'+cor+'"><div class="it-t"><div class="it-n"><span class="dia">'+
       (x.dia?String(x.dia).padStart(2,'0'):'—')+'</span>'+(x.nome||x.cat)+
-      '<span class="tg cat">AVULSA</span></div><div class="it-v '+clsC+'">'+fmt(x.valor)+'</div></div>'+
+      '<span class="tg cat">AVULSA</span></div><div class="it-v" style="color:'+cor+'">'+fmt(x.valor)+'</div></div>'+
       '<div class="it-m">'+x.cat+'</div>'+
       '<div class="it-a"><button class="ba" onclick="editM(\'consumo\',\''+x.id+'\')">✎ Editar</button>'+
       '<button class="ba del" onclick="delM(\'consumo\',\''+x.id+'\')">✕ Remover</button></div></div>';
   });
   ativas.forEach(function(o){
     var p=o.p, st=o.st, pc=(st.num/p.total*100).toFixed(0);
-    h+='<div class="it '+clsC+'"><div class="it-t"><div class="it-n">'+p.nome+
+    h+='<div class="it" style="border-left-color:'+cor+'"><div class="it-t"><div class="it-n">'+p.nome+
       (st.ultima?'<span class="tg ult">ÚLTIMA</span>':'<span class="tg ok">'+st.num+'/'+p.total+'</span>')+
-      '</div><div class="it-v '+clsC+'">'+fmt(p.valor)+'</div></div>'+
+      '</div><div class="it-v" style="color:'+cor+'">'+fmt(p.valor)+'</div></div>'+
       '<div class="it-m">'+(st.ultima?'Última parcela deste mês':
         st.restam+' restantes · total '+fmt(p.valor*p.total))+'</div>'+
       '<div class="pp"><div class="pp-l"><span>'+st.num+'/'+p.total+'</span><span>'+pc+'% pago</span></div>'+
@@ -1776,17 +1849,116 @@ function renderCartoes(){
   } else we.style.display='none';
 }
 
-function abrirTeto(){
-  var d=getD();
-  document.getElementById('tS').value=d.tetos.santander||'';
-  document.getElementById('tN').value=d.tetos.nubank||'';
-  document.getElementById('ovT').classList.add('on');
+/* Visual do cartão: se tiver "imagem" cadastrada (ex: foto real do cartão),
+   usa ela; senão gera um cartão genérico via CSS com a cor/bandeira escolhidas. */
+function renderCardVisual(cartao,fat){
+  if(cartao.imagem){
+    document.getElementById('cVis').style.display='none';
+    document.getElementById('cVisWrap').style.display='flex';
+    var img=document.getElementById('cVisImg');
+    img.src=cartao.imagem;
+    img.alt='Cartão '+cartao.nome;
+    return;
+  }
+  document.getElementById('cVisWrap').style.display='none';
+  var el=document.getElementById('cVis');
+  el.style.display='block';
+  el.style.background='linear-gradient(135deg,'+cartao.cor+' 0%,'+cartao.corGradiente+' 100%)';
+  el.innerHTML=
+    '<div class="cv-b">'+cartao.nome+'</div>'+
+    '<div class="cv-chip">▣</div>'+
+    '<div class="cv-fl">Total da fatura</div>'+
+    '<div class="cv-fv">'+fmt(fat)+'</div>'+
+    '<div class="cv-bt">'+
+      '<div class="cv-vc">Vence dia <span>'+(cartao.diaVencimento||20)+'</span></div>'+
+      '<div class="cv-band">'+getBandeiraSVG(cartao.bandeira)+'</div>'+
+    '</div>';
 }
-function salvarTetos(){
+function getBandeiraSVG(bandeira){
+  var icones={
+    visa:       '<span style="font-style:italic;font-weight:700;font-size:1.1rem;color:#fff">VISA</span>',
+    mastercard: '<span style="font-size:1.2rem">🔴🟠</span>',
+    elo:        '<span style="font-weight:700;color:#fff;font-size:.9rem">elo</span>',
+    amex:       '<span style="font-weight:700;color:#fff;font-size:.9rem">AMEX</span>',
+    hipercard:  '<span style="font-weight:700;color:#ff0000;font-size:.9rem">Hiper</span>'
+  };
+  return icones[bandeira]||'';
+}
+
+/* ── Adicionar / editar / excluir cartão ── */
+var cartState={}, cartEditandoId=null;
+function pickCart(el,campo,val){
+  var g=el.parentNode.querySelectorAll('.chip');
+  for(var i=0;i<g.length;i++) g[i].classList.remove('on');
+  el.classList.add('on');
+  cartState[campo]=val;
+}
+function abrirNovoCartao(){
+  cartEditandoId=null;
+  cartState={bandeira:'visa',cor:'#0a2540,#1a4a7a'};
+  document.getElementById('cartaoModalTit').textContent='Novo cartão';
+  document.getElementById('cartSalvarBtn').textContent='✓ Adicionar cartão';
+  document.getElementById('cartNome').value='';
+  document.getElementById('cartTeto').value='';
+  document.getElementById('cartDia').value='20';
+  var qs=document.querySelectorAll.bind(document);
+  [].forEach.call(qs('#cartBandeiraChips .chip'),function(c){c.classList.remove('on');});
+  [].forEach.call(qs('#cartCorChips .chip'),function(c){c.classList.remove('on');});
+  document.getElementById('ovCartao').classList.add('on');
+}
+function abrirEditarCartao(id){
+  var d=getD(), cartao=cartaoPorId(d,id);
+  if(!cartao){ abrirNovoCartao(); return; }
+  cartEditandoId=id;
+  cartState={bandeira:cartao.bandeira,cor:cartao.cor+','+cartao.corGradiente};
+  document.getElementById('cartaoModalTit').textContent='Editar cartão';
+  document.getElementById('cartSalvarBtn').textContent='✓ Salvar cartão';
+  document.getElementById('cartNome').value=cartao.nome;
+  document.getElementById('cartTeto').value=cartao.teto||'';
+  document.getElementById('cartDia').value=cartao.diaVencimento||20;
+  [].forEach.call(document.querySelectorAll('#cartBandeiraChips .chip'),function(c){
+    c.classList.toggle('on', c.getAttribute('onclick').indexOf("'"+cartao.bandeira+"'")>-1);
+  });
+  [].forEach.call(document.querySelectorAll('#cartCorChips .chip'),function(c){
+    c.classList.toggle('on', c.getAttribute('onclick').indexOf(cartao.cor+',')>-1);
+  });
+  document.getElementById('ovCartao').classList.add('on');
+}
+function salvarCartao(){
+  var nome=document.getElementById('cartNome').value.trim();
+  if(!nome){ alert('Informe o nome do cartão.'); return; }
+  var corPar=(cartState.cor||'#0a2540,#1a4a7a').split(',');
+  var teto=parseFloat(document.getElementById('cartTeto').value)||0;
+  var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('cartDia').value)||20));
   var d=getD();
-  d.tetos.santander=parseFloat(document.getElementById('tS').value)||0;
-  d.tetos.nubank=parseFloat(document.getElementById('tN').value)||0;
-  salvar(d); fechar('ovT'); renderTudo();
+  if(!d.cartoes) d.cartoes=[];
+  if(cartEditandoId){
+    var cartao=cartaoPorId(d,cartEditandoId);
+    if(cartao){
+      cartao.nome=nome; cartao.bandeira=cartState.bandeira||cartao.bandeira||'visa';
+      cartao.teto=teto; cartao.diaVencimento=dia;
+      cartao.cor=corPar[0]; cartao.corGradiente=corPar[1];
+    }
+  } else {
+    var novoCartao={id:idNovo('c'),nome:nome,bandeira:cartState.bandeira||'visa',
+      teto:teto,diaVencimento:dia,cor:corPar[0],corGradiente:corPar[1],imagem:null};
+    d.cartoes.push(novoCartao);
+    tabAtual=novoCartao.id;
+  }
+  salvar(d);
+  fechar('ovCartao');
+  renderAbasCartoes();
+  renderCartoes();
+}
+function excluirCartaoAtual(){
+  var d=getD(), cartao=cartaoPorId(d,tabAtual);
+  if(!cartao) return;
+  if(!confirm('Excluir o cartão "'+cartao.nome+'"?\n\nOs lançamentos e parcelas já feitos nesse cartão são mantidos no histórico — só o cartão em si é removido.')) return;
+  d.cartoes=d.cartoes.filter(function(c){return c.id!==tabAtual;});
+  tabAtual=d.cartoes.length?d.cartoes[0].id:'';
+  salvar(d);
+  renderAbasCartoes();
+  renderCartoes();
 }
 
 /* ══════ HISTÓRICO ══════ */
@@ -1865,6 +2037,11 @@ function abrirLanc(){
   document.getElementById('cofreNomeChips').innerHTML=COFRE_PRESETS.map(function(n){
     return '<div class="chip" onclick="setNomeCofre(this,\''+n+'\')">'+n+'</div>';}).join('')+
     '<div class="chip" onclick="document.getElementById(\'cofreNome\').focus()">Outro</div>';
+  document.getElementById('dp2CartaoChips').innerHTML=getD().cartoes.map(function(c){
+    return '<div class="chip" onclick="pick(this,\'cartao\',\''+c.id+'\')">'+c.nome+'</div>';}).join('')||
+    '<div class="vazio">Nenhum cartão cadastrado. Adicione um na aba Cartões.</div>';
+  document.getElementById('pcCartaoChips').innerHTML=getD().cartoes.map(function(c){
+    return '<div class="chip" onclick="setCartaoParc(\''+c.id+'\')">'+c.nome+'</div>';}).join('');
   ['dDesc','dVal','dDia','pVal','pTot','pAt','rDesc','rVal','rDia',
    'dfNome','dfVal','dfDia','pcNome','pcVal','pcTot','pcAt','pcCartao',
    'cofreNome','cofreTeto','cofreValorMensal'].forEach(function(i){
@@ -1967,9 +2144,10 @@ function dp2ok(){
   var fimM=mi+(pt-1), fimA=ai;
   while(fimM>11){ fimM-=12; fimA++; }
   L.cart={nome:desc,valor:pv,total:pt,mesIni:mi,anoIni:ai,cartao:L.cartao,unica:pt===1};
+  var cartaoSel=cartaoPorId(getD(),L.cartao);
   document.getElementById('cBox').innerHTML='<b>'+desc+'</b><br>'+
     'Categoria: '+L.catObj.nome+'<br>'+
-    'Cartão: '+(L.cartao==='santander'?'Santander':'Nubank')+' · vence dia 20<br>'+
+    'Cartão: '+(cartaoSel?cartaoSel.nome:cap(L.cartao))+' · vence dia '+(cartaoSel?(cartaoSel.diaVencimento||20):20)+'<br>'+
     (pt===1?'Pagamento à vista no cartão<br>':'Parcela '+pa+'/'+pt+' · <b>'+fmt(pv)+'/mês</b><br>')+
     'Valor total: <b style="color:var(--red)">'+fmt(pv*pt)+'</b><br>'+
     (pt>1?'Início: '+MES[mi]+'/'+ai+' · Término: <b>'+MES[fimM]+'/'+fimA+'</b>':'');
@@ -2528,9 +2706,9 @@ function onbConfirmar(){
   var parcelamentos=s.parcelas.map(function(p){ return {id:idNovo('pc'),nome:p.nome,valor:p.valor,total:p.total,
     mesIni:p.mesIni,anoIni:p.anoIni,cartao:p.cartao,dia:p.dia||20}; });
   var d={
-    schemaVersion:3, nome:s.nome,
+    schemaVersion:4, nome:s.nome,
     receitasFixas:receitasFixas, despesasFixas:despesasFixas,
-    parcelamentos:parcelamentos, cofrinhos:[], investimentos:[], tetos:{santander:0,nubank:0},
+    parcelamentos:parcelamentos, cofrinhos:[], investimentos:[], cartoes:[],
     meses:{}, historico:[], ultimoMesReal:null
   };
   salvar(d);
