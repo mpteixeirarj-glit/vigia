@@ -1,4 +1,4 @@
-const CACHE = 'vigia-v8';
+const CACHE = 'vigia-v9';
 const FILES = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
