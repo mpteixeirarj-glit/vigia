@@ -1,0 +1,66 @@
+rules_version = '2';
+
+/*
+  Regras do Vigia.
+
+  Publique com:  firebase deploy --only firestore:rules
+  ou cole em: Firebase Console → Firestore → Regras.
+
+  Princípio: o cliente só enxerga o que é dele, e nunca escreve nada que
+  decida acesso pago. Quem grava assinatura e vínculo é o bot, pelo Admin
+  SDK, que ignora estas regras.
+*/
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function ehDono(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Dados financeiros do usuário — só o dono lê e escreve.
+    match /usuarios/{uid}/{documento=**} {
+      allow read, write: if ehDono(uid);
+    }
+
+    /*
+      Assinatura. O cliente LÊ para saber se está ativa, mas NUNCA escreve —
+      senão bastaria abrir o console do navegador e liberar o próprio plano.
+      Só o backend (Admin SDK / webhook do pagamento) grava aqui.
+    */
+    match /assinaturas/{uid} {
+      allow read: if ehDono(uid);
+      allow write: if false;
+    }
+
+    /*
+      Códigos de vínculo pendentes.
+
+      LEITURA PROIBIDA de propósito: quem consegue ler um código pendente
+      consegue mandá-lo para o bot e vincular o PRÓPRIO número à conta de
+      outra pessoa. Por isso o app nunca lê essa coleção — ele só cria, e
+      quem valida e apaga é o bot.
+
+      Como 'create' só vale para documento inexistente, um código repetido
+      é recusado pelas próprias regras e o app tenta outro.
+    */
+    match /vinculos_pendentes/{codigo} {
+      allow get, list: if false;
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow update: if false;
+      allow delete: if request.auth != null
+                    && resource.data.uid == request.auth.uid;
+    }
+
+    /*
+      Vínculo número ↔ conta. O dono lê (para ver o status) e apaga (para
+      desvincular). Criar é só do bot, que é quem confirma que o número
+      realmente mandou o código.
+    */
+    match /whatsapp_usuarios/{numero} {
+      allow read, delete: if request.auth != null
+                          && resource.data.uid == request.auth.uid;
+      allow create, update: if false;
+    }
+  }
+}

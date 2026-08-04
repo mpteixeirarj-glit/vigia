@@ -553,14 +553,19 @@ window.Vigia = {
       return snap.empty ? null : snap.docs[0].data();
     }catch(e){ console.warn('[Vigia] Falha ao ler o vínculo do WhatsApp.', e); return undefined; }
   },
-  async codigoJaExiste(codigo){
-    try{
-      var snap = await getDoc(doc(db,'vinculos_pendentes',codigo));
-      return snap.exists();
-    }catch(e){ return false; }
-  },
+  /* Não existe "verificar se o código já existe": ler vinculos_pendentes é
+     proibido pelas regras de propósito — quem lê um código pendente consegue
+     vincular o próprio número à conta alheia. Usamos create, que as regras só
+     aceitam para documento novo; se o código repetir, o create falha e o app
+     tenta outro. */
   async criarVinculoPendente(codigo, dados){
     await setDoc(doc(db,'vinculos_pendentes',codigo), dados);
+  },
+  async assinatura(uid){
+    try{
+      var snap = await getDoc(doc(db,'assinaturas',uid));
+      return snap.exists() ? snap.data() : null;
+    }catch(e){ console.warn('[Vigia] Falha ao ler a assinatura.', e); return undefined; }
   },
   async cancelarVinculoPendente(codigo){
     try{ await deleteDoc(doc(db,'vinculos_pendentes',codigo)); }catch(e){}
@@ -1090,6 +1095,11 @@ onAuthStateChanged(auth, function(user){
 <div class="ov" id="ovConfig" onclick="fecharFora(event,'ovConfig')">
   <div class="md" onclick="event.stopPropagation()">
     <div class="md-t">Configurações<button class="md-x" onclick="fechar('ovConfig')">✕</button></div>
+
+    <div class="cfg-sec">
+      <div class="cfg-t">Plano</div>
+      <div id="planoStatus" class="wa-status">Verificando…</div>
+    </div>
 
     <div class="cfg-sec">
       <div class="cfg-t">WhatsApp</div>
@@ -2904,7 +2914,25 @@ function fecharAlerta(){ document.getElementById('ovAlerta').classList.remove('o
    mensagem. O código vale por 10 minutos e só pode ser usado uma vez. */
 var NUMERO_BOT = '';           // número do bot, só dígitos (ex: '5521999998888')
 var VINCULO_VALIDADE_MS = 10 * 60 * 1000;
-var codigoAtual = null, timerCodigo = null, vinculoAtual = null;
+var codigoAtual = null, timerCodigo = null, vinculoAtual = null, assinaturaAtual = null;
+
+/* Assinatura mora em assinaturas/{uid}, que o cliente só lê — quem grava é o
+   backend. Se ficasse dentro dos dados do usuário, bastaria abrir o console do
+   navegador para liberar o próprio plano. */
+function assinaturaAtiva(a){
+  if(!a) return false;
+  if(a.status!=='ativa' && a.status!=='teste') return false;
+  if(a.validoAte && Date.now() > Number(a.validoAte)) return false;
+  return true;
+}
+function textoPlano(a){
+  if(a===undefined) return 'Não foi possível verificar o plano agora.';
+  if(!assinaturaAtiva(a)) return a && a.status==='expirada'
+    ? '⚠️ Seu plano expirou. Renove para voltar a lançar pelo WhatsApp.'
+    : '🔒 Sem plano ativo. O app continua livre; o lançamento por WhatsApp é do plano pago.';
+  var ate = a.validoAte ? ' · até '+new Date(Number(a.validoAte)).toLocaleDateString('pt-BR') : '';
+  return (a.status==='teste' ? '🎁 Período de teste' : '✅ Plano ativo')+ate;
+}
 
 function abrirConfig(){
   document.getElementById('ovConfig').classList.add('on');
@@ -2925,7 +2953,26 @@ async function carregarStatusWhatsApp(){
   btnD.style.display='none';
 
   if(!uidAtual || !window.Vigia){ el.textContent='Entre na sua conta para vincular.'; return; }
+
+  assinaturaAtual = await window.Vigia.assinatura(uidAtual);
+  var elPlano=document.getElementById('planoStatus');
+  elPlano.textContent=textoPlano(assinaturaAtual);
+  elPlano.className='wa-status'+(assinaturaAtiva(assinaturaAtual)?' on':'');
+
   vinculoAtual = await window.Vigia.vinculoDoUsuario(uidAtual);
+
+  // Sem plano ativo não adianta gerar código: o bot também recusa.
+  if(!assinaturaAtiva(assinaturaAtual)){
+    btnV.style.display='none';
+    if(vinculoAtual){
+      el.textContent='WhatsApp vinculado (+'+vinculoAtual.numero+'), mas inativo sem plano.';
+      btnD.style.display='block';
+    } else {
+      el.textContent='Disponível no plano pago.';
+    }
+    return;
+  }
+  btnV.style.display='block';
 
   if(vinculoAtual===undefined){
     el.textContent='Não foi possível verificar agora (sem conexão).';
@@ -2951,21 +2998,24 @@ async function gerarCodigoWhatsApp(){
   var textoBtn=btn.textContent;
   btn.disabled=true; btn.textContent='Gerando…';
   try{
-    var codigo=null;
+    /* Tenta criar; se o código já existir, as regras recusam (create só vale
+       para documento novo) e sorteamos outro. */
+    var codigo=null, expira=0, ultimoErro=null;
     for(var i=0;i<5 && !codigo;i++){
       var tentativa=novoCodigo();
-      if(!(await window.Vigia.codigoJaExiste(tentativa))) codigo=tentativa;
+      var agora=Date.now();
+      try{
+        await window.Vigia.criarVinculoPendente(tentativa,{
+          uid: uidAtual,
+          nome: (getD().nome||'').trim(),
+          criadoEm: agora,
+          expiraEm: agora + VINCULO_VALIDADE_MS
+        });
+        codigo=tentativa; expira=agora + VINCULO_VALIDADE_MS;
+      }catch(err){ ultimoErro=err; }
     }
-    if(!codigo) throw new Error('não foi possível gerar um código livre');
-
-    var agora=Date.now();
-    await window.Vigia.criarVinculoPendente(codigo,{
-      uid: uidAtual,
-      nome: (getD().nome||'').trim(),
-      criadoEm: agora,
-      expiraEm: agora + VINCULO_VALIDADE_MS
-    });
-    mostrarCodigo(codigo, agora + VINCULO_VALIDADE_MS);
+    if(!codigo) throw (ultimoErro || new Error('não foi possível gerar um código'));
+    mostrarCodigo(codigo, expira);
   }catch(e){
     console.warn('[Vigia] Falha ao gerar o código de vínculo.', e);
     await vAlert('Não foi possível gerar o código agora. Verifique sua conexão e tente de novo.');
