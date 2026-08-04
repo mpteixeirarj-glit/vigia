@@ -393,6 +393,19 @@ button{font-family:inherit;}
 /* Confirmação/alerta do sistema ficam acima dos outros modais — um alerta de
    validação dispara com o formulário ainda aberto por baixo. */
 .ov-sis{z-index:300;}
+
+/* CONFIGURAÇÕES / VÍNCULO DO WHATSAPP */
+.cfg-sec{margin-bottom:22px;}
+.cfg-t{font-family:monospace;font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--green);margin-bottom:6px;}
+.cfg-d{font-size:.76rem;color:var(--muted);line-height:1.5;margin-bottom:12px;}
+.wa-status{font-size:.8rem;background:var(--surf2);border:1px solid var(--border);
+  border-radius:10px;padding:11px 13px;margin-bottom:12px;line-height:1.5;}
+.wa-status.on{border-color:var(--green);color:var(--green);}
+.wa-codigo{font-family:monospace;font-size:2.1rem;font-weight:700;letter-spacing:.22em;
+  color:var(--green);text-align:center;background:var(--surf2);border:1px dashed var(--green);
+  border-radius:12px;padding:16px 8px;margin-bottom:10px;}
+.wa-instr{font-size:.76rem;color:var(--muted);line-height:1.6;text-align:center;margin-bottom:12px;}
 .md{background:var(--surf);border:1px solid var(--border);border-radius:18px 18px 0 0;
   padding:20px 17px 34px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
 .md-t{font-family:monospace;font-size:.7rem;letter-spacing:.11em;text-transform:uppercase;
@@ -446,7 +459,8 @@ import {
   signInWithEmailAndPassword, createUserWithEmailAndPassword
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import {
-  getFirestore, doc, setDoc, getDoc, onSnapshot
+  getFirestore, doc, setDoc, getDoc, onSnapshot, deleteDoc,
+  collection, query, where, limit, getDocs
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 var firebaseConfig = {
@@ -527,6 +541,32 @@ window.Vigia = {
   },
   pararAssinatura(){
     if(unsubSnapshot){ unsubSnapshot(); unsubSnapshot=null; }
+  },
+
+  /* ── Vínculo com o WhatsApp ──
+     O app grava um código de uso único em vinculos_pendentes/{codigo}; quem
+     manda esse código para o bot tem o número gravado em whatsapp_usuarios. */
+  async vinculoDoUsuario(uid){
+    try{
+      var q = query(collection(db,'whatsapp_usuarios'), where('uid','==',uid), limit(1));
+      var snap = await getDocs(q);
+      return snap.empty ? null : snap.docs[0].data();
+    }catch(e){ console.warn('[Vigia] Falha ao ler o vínculo do WhatsApp.', e); return undefined; }
+  },
+  async codigoJaExiste(codigo){
+    try{
+      var snap = await getDoc(doc(db,'vinculos_pendentes',codigo));
+      return snap.exists();
+    }catch(e){ return false; }
+  },
+  async criarVinculoPendente(codigo, dados){
+    await setDoc(doc(db,'vinculos_pendentes',codigo), dados);
+  },
+  async cancelarVinculoPendente(codigo){
+    try{ await deleteDoc(doc(db,'vinculos_pendentes',codigo)); }catch(e){}
+  },
+  async removerVinculo(numero){
+    await deleteDoc(doc(db,'whatsapp_usuarios',numero));
   }
 };
 
@@ -629,7 +669,7 @@ onAuthStateChanged(auth, function(user){
     <button id="btnOlho" onclick="toggleValores()" title="Ocultar valores">
       <img id="icoOlho" src="olho-aberto.png" alt="Ocultar valores">
     </button>
-    <button class="btn-sair" onclick="confirmarSair()" title="Sair">⏻</button>
+    <button class="btn-sair" onclick="abrirConfig()" title="Configurações">⚙</button>
   </div>
 </div>
 
@@ -1043,6 +1083,38 @@ onAuthStateChanged(auth, function(user){
     <div class="md-t">Quase lá!<button class="md-x" onclick="fechar('ovParabens')">✕</button></div>
     <div id="parabensTexto"></div>
     <button class="bok gr" style="margin-top:16px;" onclick="fechar('ovParabens')">Continuar</button>
+  </div>
+</div>
+
+<!-- MODAL CONFIGURAÇÕES -->
+<div class="ov" id="ovConfig" onclick="fecharFora(event,'ovConfig')">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-t">Configurações<button class="md-x" onclick="fechar('ovConfig')">✕</button></div>
+
+    <div class="cfg-sec">
+      <div class="cfg-t">WhatsApp</div>
+      <div class="cfg-d">Lance gastos mandando mensagem para o Vigia Bot.</div>
+
+      <div id="waStatus" class="wa-status">Verificando…</div>
+
+      <div id="waCodigoBox" style="display:none">
+        <div class="wa-codigo" id="waCodigo">— — —</div>
+        <div class="wa-instr">
+          Envie esse código para o Vigia Bot no WhatsApp<span id="waNumeroBot"></span>.
+          <br>Ele expira em <b id="waTempo">10:00</b>.
+        </div>
+        <a id="waLink" class="bok" style="display:none;text-decoration:none;text-align:center;" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>
+      </div>
+
+      <button class="bok" id="waBtnVincular" onclick="gerarCodigoWhatsApp()">Vincular WhatsApp</button>
+      <button class="ba del" id="waBtnDesvincular" style="display:none;width:100%;margin-top:8px;" onclick="desvincularWhatsApp()">✕ Desvincular</button>
+    </div>
+
+    <div class="cfg-sec">
+      <div class="cfg-t">Aplicativo</div>
+      <button class="ba" style="width:100%;margin-bottom:8px;" onclick="instalarApp()">⬇ Instalar app</button>
+      <button class="ba del" style="width:100%;" onclick="confirmarSair()">⏻ Sair da conta</button>
+    </div>
   </div>
 </div>
 
@@ -2824,6 +2896,127 @@ function vAlert(mensagem){
   });
 }
 function fecharAlerta(){ document.getElementById('ovAlerta').classList.remove('on'); }
+
+/* ══════ CONFIGURAÇÕES / VÍNCULO DO WHATSAPP ══════
+   O app gera um código de 6 dígitos e grava em vinculos_pendentes/{codigo}.
+   Quem mandar esse código para o bot tem o número gravado em
+   whatsapp_usuarios — é isso que o bot consulta para saber de quem é a
+   mensagem. O código vale por 10 minutos e só pode ser usado uma vez. */
+var NUMERO_BOT = '';           // número do bot, só dígitos (ex: '5521999998888')
+var VINCULO_VALIDADE_MS = 10 * 60 * 1000;
+var codigoAtual = null, timerCodigo = null, vinculoAtual = null;
+
+function abrirConfig(){
+  document.getElementById('ovConfig').classList.add('on');
+  esconderCodigo();
+  carregarStatusWhatsApp();
+}
+function esconderCodigo(){
+  if(timerCodigo){ clearInterval(timerCodigo); timerCodigo=null; }
+  codigoAtual=null;
+  document.getElementById('waCodigoBox').style.display='none';
+}
+async function carregarStatusWhatsApp(){
+  var el=document.getElementById('waStatus');
+  var btnV=document.getElementById('waBtnVincular');
+  var btnD=document.getElementById('waBtnDesvincular');
+  el.className='wa-status';
+  el.textContent='Verificando…';
+  btnD.style.display='none';
+
+  if(!uidAtual || !window.Vigia){ el.textContent='Entre na sua conta para vincular.'; return; }
+  vinculoAtual = await window.Vigia.vinculoDoUsuario(uidAtual);
+
+  if(vinculoAtual===undefined){
+    el.textContent='Não foi possível verificar agora (sem conexão).';
+    btnV.textContent='Tentar novamente';
+    return;
+  }
+  if(vinculoAtual){
+    el.className='wa-status on';
+    el.textContent='✅ WhatsApp vinculado: +'+vinculoAtual.numero;
+    btnV.textContent='Vincular outro número';
+    btnD.style.display='block';
+  } else {
+    el.textContent='Nenhum WhatsApp vinculado ainda.';
+    btnV.textContent='Vincular WhatsApp';
+  }
+}
+function novoCodigo(){
+  return String(Math.floor(Math.random()*900000)+100000); // 6 dígitos, sem começar com 0
+}
+async function gerarCodigoWhatsApp(){
+  if(!uidAtual || !window.Vigia){ await vAlert('Entre na sua conta para vincular o WhatsApp.'); return; }
+  var btn=document.getElementById('waBtnVincular');
+  var textoBtn=btn.textContent;
+  btn.disabled=true; btn.textContent='Gerando…';
+  try{
+    var codigo=null;
+    for(var i=0;i<5 && !codigo;i++){
+      var tentativa=novoCodigo();
+      if(!(await window.Vigia.codigoJaExiste(tentativa))) codigo=tentativa;
+    }
+    if(!codigo) throw new Error('não foi possível gerar um código livre');
+
+    var agora=Date.now();
+    await window.Vigia.criarVinculoPendente(codigo,{
+      uid: uidAtual,
+      nome: (getD().nome||'').trim(),
+      criadoEm: agora,
+      expiraEm: agora + VINCULO_VALIDADE_MS
+    });
+    mostrarCodigo(codigo, agora + VINCULO_VALIDADE_MS);
+  }catch(e){
+    console.warn('[Vigia] Falha ao gerar o código de vínculo.', e);
+    await vAlert('Não foi possível gerar o código agora. Verifique sua conexão e tente de novo.');
+  }finally{
+    btn.disabled=false; btn.textContent=textoBtn;
+  }
+}
+function mostrarCodigo(codigo, expiraEm){
+  codigoAtual=codigo;
+  document.getElementById('waCodigo').textContent=codigo.slice(0,3)+' '+codigo.slice(3);
+  document.getElementById('waNumeroBot').textContent=NUMERO_BOT?(' (+'+NUMERO_BOT+')'):'';
+  var link=document.getElementById('waLink');
+  if(NUMERO_BOT){
+    link.href='https://wa.me/'+NUMERO_BOT+'?text='+encodeURIComponent(codigo);
+    link.style.display='block';
+  } else {
+    link.style.display='none';
+  }
+  document.getElementById('waCodigoBox').style.display='block';
+  document.getElementById('waBtnVincular').textContent='Gerar outro código';
+
+  function tick(){
+    var resta=expiraEm-Date.now();
+    if(resta<=0){
+      clearInterval(timerCodigo); timerCodigo=null;
+      document.getElementById('waTempo').textContent='expirado';
+      document.getElementById('waCodigo').style.opacity='.4';
+      return;
+    }
+    var s=Math.floor(resta/1000);
+    document.getElementById('waTempo').textContent=
+      String(Math.floor(s/60))+':'+String(s%60).padStart(2,'0');
+  }
+  document.getElementById('waCodigo').style.opacity='1';
+  if(timerCodigo) clearInterval(timerCodigo);
+  tick(); timerCodigo=setInterval(tick,1000);
+}
+async function desvincularWhatsApp(){
+  if(!vinculoAtual) return;
+  var ok=await vConfirm('O bot vai parar de aceitar lançamentos do número +'+vinculoAtual.numero+
+    '. Seus dados no app continuam intactos.','Desvincular WhatsApp?');
+  if(!ok) return;
+  try{
+    await window.Vigia.removerVinculo(vinculoAtual.numero);
+    esconderCodigo();
+    await carregarStatusWhatsApp();
+  }catch(e){
+    console.warn('[Vigia] Falha ao desvincular.', e);
+    await vAlert('Não foi possível desvincular agora. Tente de novo.');
+  }
+}
 
 /* ══════ UTILS ══════ */
 function fechar(id){ document.getElementById(id).classList.remove('on'); }
