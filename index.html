@@ -36,12 +36,52 @@ button{font-family:inherit;}
 .sp-logo{display:flex;flex-direction:column;align-items:center;cursor:pointer;
   -webkit-tap-highlight-color:transparent;}
 .sp-nome{font-family:monospace;font-size:2.4rem;font-weight:700;color:var(--green);letter-spacing:.1em;}
-.sp-sub{font-family:monospace;font-size:.68rem;color:var(--muted);letter-spacing:.2em;margin-top:4px;margin-bottom:44px;}
+.sp-sub{font-family:monospace;font-size:.68rem;color:var(--muted);letter-spacing:.1em;margin-top:4px;margin-bottom:44px;}
 .sp-btn{width:100%;max-width:320px;border-radius:12px;font-family:monospace;
   font-size:.82rem;letter-spacing:.06em;padding:16px;cursor:pointer;
   -webkit-tap-highlight-color:transparent;border:none;margin-bottom:11px;}
 .sp-btn.p{background:var(--green);color:var(--bg);font-weight:700;}
 .sp-btn.s{background:transparent;color:var(--text);border:1px solid var(--border);}
+
+/* BOOT SPLASH — primeira tela ao abrir o app, por cima de tudo */
+#bootSplash{position:fixed;inset:0;background:#0b0d14;z-index:1100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  transition:opacity .35s ease;}
+#bootSplash.saindo{opacity:0;pointer-events:none;}
+#bootIco{width:100px;height:100px;border-radius:22px;
+  box-shadow:0 8px 40px rgba(0,229,160,.18);}
+#bootNome{font-family:monospace;font-size:2rem;font-weight:700;color:var(--green);
+  letter-spacing:.15em;opacity:0;}
+#bootSub{font-size:.82rem;color:var(--muted);letter-spacing:.1em;opacity:0;}
+@keyframes splashGrow{from{transform:scale(.4);opacity:0;} to{transform:scale(1);opacity:1;}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);}}
+
+/* INTRO — 3 slides, só no primeiro acesso */
+#intro{display:none;position:fixed;inset:0;background:#0b0d14;z-index:1050;
+  flex-direction:column;}
+.ob-dots{display:flex;justify-content:center;gap:8px;padding:60px 0 20px;}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--surf2);
+  transition:background .3s,width .3s;}
+.ob-dot.active{background:var(--green);width:24px;border-radius:4px;}
+.ob-viewport{flex:1;overflow:hidden;}
+.ob-slides{display:flex;height:100%;transition:transform .4s ease;}
+.ob-slide{min-width:100%;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:40px 32px;text-align:center;}
+.ob-slide img{width:120px;margin-bottom:32px;}
+.ob-emoji{font-size:4rem;margin-bottom:32px;}
+.ob-titulo{font-size:1.4rem;font-weight:700;color:var(--text);margin-bottom:16px;line-height:1.3;}
+.ob-texto{font-size:.9rem;color:var(--muted);line-height:1.6;max-width:300px;}
+.ob-actions{display:flex;justify-content:space-between;align-items:center;padding:20px 32px 48px;}
+.ob-skip{background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;
+  font-family:monospace;-webkit-tap-highlight-color:transparent;}
+.ob-next{background:var(--green);color:var(--bg);border:none;border-radius:24px;
+  padding:12px 28px;font-family:monospace;font-size:.85rem;font-weight:700;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;}
+
+/* BOTÃO OCULTAR VALORES */
+#btnOlho{background:none;border:none;cursor:pointer;padding:4px;display:flex;
+  align-items:center;-webkit-tap-highlight-color:transparent;}
+#btnOlho img{width:22px;height:22px;opacity:.7;}
 
 /* LOGIN */
 #login{position:fixed;inset:0;background:var(--bg);z-index:1000;
@@ -79,8 +119,12 @@ button{font-family:inherit;}
 .logo img{width:26px;height:26px;border-radius:7px;}
 .data-atual{font-family:monospace;font-size:.66rem;color:var(--muted);background:none;
   border:none;cursor:pointer;padding:2px 4px;letter-spacing:.04em;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;min-width:0;
   -webkit-tap-highlight-color:transparent;}
 .data-atual:active{color:var(--green);}
+/* Em telas estreitas o topnav não comporta data + mês + olho + sair:
+   a data sai, já que o mês continua visível ao lado. */
+@media (max-width:430px){ .data-atual{display:none;} }
 .mesctrl{display:flex;align-items:center;gap:4px;flex-shrink:0;}
 .mesctrl button{width:28px;height:28px;border-radius:7px;background:var(--surf2);
   border:1px solid var(--border);color:var(--text);font-size:.85rem;cursor:pointer;
@@ -110,8 +154,9 @@ button{font-family:inherit;}
 .tela.on{display:block;}
 
 /* HERO */
-.hero{padding:18px 16px 10px;}
-.hero-saudacao{font-size:.9rem;color:var(--muted);margin-bottom:4px;}
+.hero{padding:18px 16px 10px;text-align:center;}
+.hero-saudacao{font-size:.88rem;color:var(--muted);margin-bottom:8px;padding-top:20px;
+  letter-spacing:.02em;}
 .hero-l{font-family:monospace;font-size:.6rem;letter-spacing:.14em;
   text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
 .hero-v{font-family:monospace;font-size:2.3rem;font-weight:700;line-height:1;}
@@ -493,10 +538,49 @@ onAuthStateChanged(auth, function(user){
 </head>
 <body>
 
+<!-- ═══ BOOT SPLASH (2,5s) ═══ -->
+<div id="bootSplash">
+  <img id="bootIco" src="icon-192.png" alt="Vigia">
+  <div id="bootNome">VIGIA</div>
+  <div id="bootSub">seu copiloto financeiro</div>
+</div>
+
+<!-- ═══ INTRO (só no primeiro acesso) ═══ -->
+<div id="intro">
+  <div class="ob-dots">
+    <div class="ob-dot active"></div>
+    <div class="ob-dot"></div>
+    <div class="ob-dot"></div>
+  </div>
+  <div class="ob-viewport">
+    <div class="ob-slides" id="obSlides">
+      <div class="ob-slide">
+        <img src="olho-aberto-lg.png" alt="">
+        <div class="ob-titulo">Seu dinheiro sob controle</div>
+        <div class="ob-texto">Receitas, despesas, cartões e parcelamentos em um só lugar. Simples e visual.</div>
+      </div>
+      <div class="ob-slide">
+        <div class="ob-emoji">📅</div>
+        <div class="ob-titulo">Nunca perca um vencimento</div>
+        <div class="ob-texto">Calendário financeiro com todos os seus compromissos. Receba lembretes antes de vencer.</div>
+      </div>
+      <div class="ob-slide">
+        <div class="ob-emoji">💬</div>
+        <div class="ob-titulo">Lance pelo WhatsApp</div>
+        <div class="ob-texto">Gastou R$ 25 no mercado? Manda uma mensagem. O Vigia registra e classifica na hora.</div>
+      </div>
+    </div>
+  </div>
+  <div class="ob-actions">
+    <button class="ob-skip" onclick="finalizarIntro()">Pular</button>
+    <button class="ob-next" id="obNext" onclick="proximoSlide()">Próximo →</button>
+  </div>
+</div>
+
 <div id="login">
   <img src="icon-192.png" alt="Vigia" style="width:88px;height:88px;border-radius:20px;margin-bottom:18px;box-shadow:0 8px 40px rgba(0,229,160,.18);">
   <div class="sp-nome" style="font-size:1.9rem;">VIGIA</div>
-  <div class="sp-sub" style="margin-bottom:30px;">ASSISTENTE FINANCEIRO</div>
+  <div class="sp-sub" style="margin-bottom:30px;">seu copiloto financeiro</div>
 
   <div id="loginCarregando">Carregando…</div>
 
@@ -525,7 +609,7 @@ onAuthStateChanged(auth, function(user){
     <img src="icon-192.png" alt="Vigia">
     <div class="sp-nome">VIGIA</div>
   </div>
-  <div class="sp-sub">ASSISTENTE FINANCEIRO</div>
+  <div class="sp-sub">seu copiloto financeiro</div>
   <button class="sp-btn p" onclick="spAcao('lancar')">+ Novo lançamento</button>
   <button class="sp-btn s" onclick="spAcao('painel')">→ Abrir painel</button>
 </div>
@@ -539,6 +623,9 @@ onAuthStateChanged(auth, function(user){
     <button onclick="navMes(-1)">‹</button>
     <div class="lbl" id="mesLbl">—</div>
     <button onclick="navMes(1)">›</button>
+    <button id="btnOlho" onclick="toggleValores()" title="Ocultar valores">
+      <img id="icoOlho" src="olho-aberto.png" alt="Ocultar valores">
+    </button>
     <button class="btn-sair" onclick="confirmarSair()" title="Sair">⏻</button>
   </div>
 </div>
@@ -1313,11 +1400,17 @@ function verificarResetMensal(){
   salvar(d);
 }
 
+/* Ocultar valores: declarado aqui em cima porque fmt()/fmtK() dependem disso —
+   o botão do olho e o toggle ficam mais abaixo, na seção OCULTAR VALORES. */
+var valoresVisiveis=true;
+var MASCARA='••••••';
 function fmt(v){
+  if(!valoresVisiveis) return MASCARA;
   var s=Math.abs(v).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
   return (v<0?'-':'')+'R$ '+s;
 }
 function fmtK(v){
+  if(!valoresVisiveis) return '•••'; /* rótulo do gráfico: máscara curta pra não estourar a barra */
   var a=Math.abs(v);
   var s=a>=1000?(a/1000).toFixed(1)+'k':a.toFixed(0);
   return (v<0?'-':'')+s;
@@ -1497,14 +1590,18 @@ function renderInicio(){
   document.getElementById('heroSaudacao').textContent=
     getSaudacao()+(primeiroNome?', '+primeiroNome:'')+' 👋';
 
-  document.getElementById('hSaldo').textContent=(c.saldo>=0?'+':'')+fmt(c.saldo);
-  document.getElementById('hSaldo').className='hero-v '+(c.saldo>=0?'pos':'neg');
+  document.getElementById('hSaldo').textContent=
+    valoresVisiveis?((c.saldo>=0?'+':'')+fmt(c.saldo)):MASCARA;
+  /* com valores ocultos o verde/vermelho ainda entregaria se o mês fechou no
+     azul ou no vermelho — neutraliza a cor junto com o número */
+  document.getElementById('hSaldo').className=
+    'hero-v '+(!valoresVisiveis?'':(c.saldo>=0?'pos':'neg'));
   document.getElementById('hSub').textContent=MES[curM]+'/'+curA+
     (curM===HOJE.getMonth()&&curA===HOJE.getFullYear()?' · mês atual':'');
-  document.getElementById('tcR').textContent='R$ '+Math.round(c.receitas).toLocaleString('pt-BR');
-  document.getElementById('tcD').textContent='R$ '+Math.round(c.despesas).toLocaleString('pt-BR');
-  document.getElementById('tcC').textContent='R$ '+Math.round(c.cofres).toLocaleString('pt-BR');
-  document.getElementById('tcI').textContent='R$ '+Math.round(carteiraCalc(d).total).toLocaleString('pt-BR');
+  document.getElementById('tcR').textContent=mascarar('R$ '+Math.round(c.receitas).toLocaleString('pt-BR'));
+  document.getElementById('tcD').textContent=mascarar('R$ '+Math.round(c.despesas).toLocaleString('pt-BR'));
+  document.getElementById('tcC').textContent=mascarar('R$ '+Math.round(c.cofres).toLocaleString('pt-BR'));
+  document.getElementById('tcI').textContent=mascarar('R$ '+Math.round(carteiraCalc(d).total).toLocaleString('pt-BR'));
   var pct=c.receitas>0?(c.despesas/c.receitas*100):0;
   document.getElementById('pctL').textContent=pct.toFixed(1)+'%';
   document.getElementById('barF').style.width=Math.min(pct,100)+'%';
@@ -2578,6 +2675,79 @@ function delInvest(id){
   salvar(d); renderTudo();
 }
 
+/* ══════ BOOT SPLASH + INTRO ══════
+   O boot splash e a intro são camadas por cima de tudo (z-index acima do
+   #login). O fluxo de autenticação segue rodando por baixo normalmente — ao
+   sair, essas camadas só revelam o que o Firebase já resolveu (login ou app),
+   sem duplicar nenhuma lógica de auth. */
+var INTRO_KEY='vigia_onboarding_visto';
+
+function mostrarSplash(){
+  document.getElementById('bootIco').style.animation='splashGrow .8s ease-out forwards';
+  setTimeout(function(){
+    document.getElementById('bootNome').style.animation='fadeIn .5s ease forwards';
+  },800);
+  setTimeout(function(){
+    document.getElementById('bootSub').style.animation='fadeIn .5s ease forwards';
+  },1300);
+  setTimeout(verificarPrimeiroAcesso,2500);
+}
+function verificarPrimeiroAcesso(){
+  var boot=document.getElementById('bootSplash');
+  boot.classList.add('saindo');
+  setTimeout(function(){ boot.style.display='none'; },350);
+  var visto;
+  try{ visto=localStorage.getItem(INTRO_KEY); }catch(e){ visto='1'; }
+  if(!visto) document.getElementById('intro').style.display='flex';
+}
+
+var slideAtual=0, TOTAL_SLIDES=3;
+function irParaSlide(n){
+  slideAtual=Math.max(0,Math.min(TOTAL_SLIDES-1,n));
+  document.getElementById('obSlides').style.transform='translateX(-'+(slideAtual*100)+'%)';
+  var dots=document.querySelectorAll('.ob-dot');
+  for(var i=0;i<dots.length;i++) dots[i].classList.toggle('active',i===slideAtual);
+  document.getElementById('obNext').textContent=
+    slideAtual===TOTAL_SLIDES-1?'Começar ✓':'Próximo →';
+}
+function proximoSlide(){
+  if(slideAtual>=TOTAL_SLIDES-1){ finalizarIntro(); return; }
+  irParaSlide(slideAtual+1);
+}
+function finalizarIntro(){
+  try{ localStorage.setItem(INTRO_KEY,'1'); }catch(e){}
+  document.getElementById('intro').style.display='none';
+}
+/* Deslizar entre os slides no celular */
+(function(){
+  var x0=null,y0=null;
+  var alvo=document.getElementById('intro');
+  if(!alvo) return;
+  alvo.addEventListener('touchstart',function(e){
+    x0=e.changedTouches[0].clientX; y0=e.changedTouches[0].clientY;
+  },{passive:true});
+  alvo.addEventListener('touchend',function(e){
+    if(x0===null) return;
+    var dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0;
+    x0=null;
+    if(Math.abs(dx)<40 || Math.abs(dx)<Math.abs(dy)) return; /* gesto vertical, ignora */
+    irParaSlide(slideAtual+(dx<0?1:-1));
+  },{passive:true});
+})();
+
+/* ══════ OCULTAR VALORES ══════
+   Máscara aplicada dentro de fmt()/fmtK(), que são os dois formatadores por
+   onde todo valor monetário do app passa — assim nenhuma tela fica de fora.
+   Estado proposital em memória (valoresVisiveis/MASCARA declarados junto de
+   fmt()): reabrir o app volta com os valores visíveis. */
+function mascarar(valor){ return valoresVisiveis?valor:MASCARA; }
+function toggleValores(){
+  valoresVisiveis=!valoresVisiveis;
+  document.getElementById('icoOlho').src=valoresVisiveis?'olho-aberto.png':'olho-fechado.png';
+  document.getElementById('btnOlho').title=valoresVisiveis?'Ocultar valores':'Mostrar valores';
+  renderTudo();
+}
+
 /* ══════ UTILS ══════ */
 function fechar(id){ document.getElementById(id).classList.remove('on'); }
 function fecharFora(e,id){ if(e.target===document.getElementById(id)) fechar(id); }
@@ -2816,6 +2986,7 @@ function onbPular(){
 
 /* ══════ INIT (independente de login) ══════ */
 (function(){
+  mostrarSplash();
   setInterval(atualizarDataAtual, 60000);
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js')['catch'](function(){});
