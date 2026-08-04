@@ -390,6 +390,9 @@ button{font-family:inherit;}
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.74);z-index:200;
   align-items:flex-end;justify-content:center;}
 .ov.on{display:flex;}
+/* Confirmação/alerta do sistema ficam acima dos outros modais — um alerta de
+   validação dispara com o formulário ainda aberto por baixo. */
+.ov-sis{z-index:300;}
 .md{background:var(--surf);border:1px solid var(--border);border-radius:18px 18px 0 0;
   padding:20px 17px 34px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
 .md-t{font-family:monospace;font-size:.7rem;letter-spacing:.11em;text-transform:uppercase;
@@ -1169,6 +1172,36 @@ onAuthStateChanged(auth, function(user){
   </div>
 </div>
 
+<!-- ═══ CONFIRMAR (substitui confirm() do navegador) ═══
+     Sem style="display:none" inline: o .ov já nasce escondido pelo CSS e o
+     inline venceria a classe .on, deixando o modal preso invisível. -->
+<div class="ov ov-sis" id="ovConfirm">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-t" id="confirmTit" style="color:var(--text);font-size:.9rem;font-weight:600;
+      letter-spacing:0;text-transform:none;margin-bottom:10px;">Confirmar</div>
+    <div id="confirmMsg" style="font-size:.84rem;color:var(--muted);line-height:1.6;margin-bottom:20px;"></div>
+    <div style="display:flex;gap:10px;">
+      <button id="confirmCancel" style="flex:1;padding:12px;border-radius:8px;background:var(--surf2);
+        border:1px solid var(--border);color:var(--muted);font-family:monospace;font-size:.78rem;
+        cursor:pointer;-webkit-tap-highlight-color:transparent;">Cancelar</button>
+      <button id="confirmOk" style="flex:1;padding:12px;border-radius:8px;background:var(--red);
+        border:none;color:#fff;font-family:monospace;font-size:.78rem;font-weight:700;
+        cursor:pointer;-webkit-tap-highlight-color:transparent;">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ALERTA (substitui alert() do navegador) ═══ -->
+<div class="ov ov-sis" id="ovAlerta">
+  <div class="md" onclick="event.stopPropagation()">
+    <div id="alertaMsg" style="font-size:.88rem;color:var(--text);line-height:1.6;
+      margin-bottom:20px;text-align:center;white-space:pre-line;"></div>
+    <button id="alertaOk" style="width:100%;padding:13px;border-radius:8px;background:var(--green);
+      border:none;color:var(--bg);font-family:monospace;font-size:.82rem;font-weight:700;
+      cursor:pointer;-webkit-tap-highlight-color:transparent;">OK</button>
+  </div>
+</div>
+
 <script>
 'use strict';
 
@@ -1179,12 +1212,12 @@ window.addEventListener('beforeinstallprompt', function(e){
   deferredInstall=e;
 });
 window.addEventListener('appinstalled', function(){ deferredInstall=null; });
-function instalarApp(){
+async function instalarApp(){
   if(deferredInstall){
     deferredInstall.prompt();
     deferredInstall.userChoice.then(function(){ deferredInstall=null; });
   } else {
-    alert('Para instalar: toque no menu (⋮) do navegador e escolha "Adicionar à tela inicial" ou "Instalar app".\n\nSe essa opção não aparecer, é porque o app já está instalado neste dispositivo, ou o navegador não oferece instalação nesta página.');
+    await vAlert('Para instalar: toque no menu (⋮) do navegador e escolha "Adicionar à tela inicial" ou "Instalar app".\n\nSe essa opção não aparecer, é porque o app já está instalado neste dispositivo, ou o navegador não oferece instalação nesta página.');
   }
 }
 
@@ -2100,9 +2133,9 @@ function abrirModalCartao(id){
   atualizarPreviewCartao();
   document.getElementById('ovCartao').classList.add('on');
 }
-function salvarCartao(){
+async function salvarCartao(){
   var nome=document.getElementById('cartNome').value.trim();
-  if(!nome){ alert('Informe o nome do cartão.'); return; }
+  if(!nome){ await vAlert('Informe o nome do cartão.'); return; }
   var titular=document.getElementById('cartTitular').value.trim();
   var teto=parseFloat(document.getElementById('cartTeto').value)||0;
   var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('cartDia').value)||20));
@@ -2128,19 +2161,20 @@ function salvarCartao(){
   renderAbasCartoes();
   renderCartoes();
 }
-function menuCartao(id){
+async function menuCartao(id){
   var cartao=cartaoPorId(getD(),id);
   if(!cartao) return;
-  if(confirm('O que deseja fazer com o cartão '+cartao.nome+'?\n\nOK = Editar\nCancelar = Excluir')){
-    abrirModalCartao(id);
-  } else {
-    excluirCartao(id);
-  }
+  var editar=await vConfirm('O que você quer fazer com o cartão '+cartao.nome+'?',
+    'Opções do cartão','var(--green)','✎ Editar','🗑 Excluir');
+  if(editar) abrirModalCartao(id);
+  else await excluirCartao(id);
 }
-function excluirCartao(id){
+async function excluirCartao(id){
   var d=getD(), cartao=cartaoPorId(d,id);
   if(!cartao) return;
-  if(!confirm('Excluir o cartão "'+cartao.nome+'"?\n\nOs lançamentos e parcelas já feitos nesse cartão são mantidos no histórico — só o cartão em si é removido.')) return;
+  var ok=await vConfirm('O cartão "'+cartao.nome+'" será removido. Os lançamentos e parcelas já feitos nele ficam mantidos no histórico.',
+    'Remover cartão?');
+  if(!ok) return;
   d.cartoes=d.cartoes.filter(function(c){return c.id!==id;});
   if(tabAtual===id) tabAtual=d.cartoes.length?d.cartoes[0].id:'';
   salvar(d);
@@ -2188,22 +2222,25 @@ function renderHist(){
       }).join('');
 }
 
-function registrarMes(){
+async function registrarMes(){
   var c=calcMes(curM,curA), d=c.d;
   var idx=-1;
   for(var i=0;i<d.historico.length;i++)
     if(d.historico[i].mes===curM&&d.historico[i].ano===curA){idx=i;break;}
   if(idx>=0){
-    if(!confirm(MES[curM]+'/'+curA+' já registrado. Atualizar?')) return;
+    var ok=await vConfirm(MES[curM]+'/'+curA+' já foi registrado. Deseja substituir pelos valores atuais?',
+      'Substituir registro?','var(--yellow)','Substituir');
+    if(!ok) return;
     d.historico[idx].rec=c.receitas; d.historico[idx].desp=c.despesas;
   } else {
     d.historico.push({id:idNovo('h'),mes:curM,ano:curA,rec:c.receitas,desp:c.despesas});
   }
   salvar(d); anoHist=curA; renderHist();
-  alert(MES[curM]+'/'+curA+' registrado no histórico.');
+  await vAlert(MES[curM]+'/'+curA+' registrado no histórico.');
 }
-function delHist(id){
-  if(!confirm('Remover este registro?')) return;
+async function delHist(id){
+  var ok=await vConfirm('Este mês será removido do histórico.','Remover registro?');
+  if(!ok) return;
   var d=getD();
   d.historico=d.historico.filter(function(h){return h.id!==id;});
   salvar(d); renderHist();
@@ -2289,12 +2326,12 @@ function pickCat(el,id){
   if(L.catObj && L.catObj.dia) document.getElementById('dDia').value=L.catObj.dia;
 }
 
-function dp1ok(){
-  if(!L.cat){ alert('Selecione a categoria.'); return; }
-  if(!L.forma){ alert('Selecione a forma de pagamento.'); return; }
+async function dp1ok(){
+  if(!L.cat){ await vAlert('Selecione a categoria.'); return; }
+  if(!L.forma){ await vAlert('Selecione a forma de pagamento.'); return; }
   var v=parseFloat(document.getElementById('dVal').value);
   if(L.forma==='pix'){
-    if(!v||v<=0){ alert('Informe o valor.'); return; }
+    if(!v||v<=0){ await vAlert('Informe o valor.'); return; }
     var desc=document.getElementById('dDesc').value.trim()||L.catObj.nome;
     var dia=parseInt(document.getElementById('dDia').value)||null;
     L.pix={nome:desc,valor:v,dia:dia,cat:L.catObj.nome};
@@ -2312,17 +2349,17 @@ function dp1ok(){
   }
 }
 
-function dp2ok(){
-  if(!L.cartao){ alert('Selecione o cartão.'); return; }
+async function dp2ok(){
+  if(!L.cartao){ await vAlert('Selecione o cartão.'); return; }
   var pv=parseFloat(document.getElementById('pVal').value);
   var pt=parseInt(document.getElementById('pTot').value);
-  if(!pv||pv<=0){ alert('Informe o valor da parcela.'); return; }
-  if(!pt||pt<1){ alert('Informe o total de parcelas.'); return; }
-  if(L.prim===null){ alert('Informe se é a primeira parcela.'); return; }
+  if(!pv||pv<=0){ await vAlert('Informe o valor da parcela.'); return; }
+  if(!pt||pt<1){ await vAlert('Informe o total de parcelas.'); return; }
+  if(L.prim===null){ await vAlert('Informe se é a primeira parcela.'); return; }
   var pa=1;
   if(!L.prim){
     pa=parseInt(document.getElementById('pAt').value);
-    if(!pa||pa<1||pa>pt){ alert('Parcela atual inválida.'); return; }
+    if(!pa||pa<1||pa>pt){ await vAlert('Parcela atual inválida.'); return; }
   }
   var desc=document.getElementById('dDesc').value.trim()||L.catObj.nome;
   /* mês de início retroagido: se está na parcela pa no mês atual, começou pa-1 meses antes */
@@ -2342,14 +2379,14 @@ function dp2ok(){
   stp('cf1');
 }
 
-function dfOk(){
+async function dfOk(){
   var nome=document.getElementById('dfNome').value.trim();
   var val=parseFloat(document.getElementById('dfVal').value);
   var dia=parseInt(document.getElementById('dfDia').value);
-  if(!nome){ alert('Informe o nome da despesa.'); return; }
-  if(!val||val<=0){ alert('Informe o valor.'); return; }
-  if(!dia||dia<1||dia>31){ alert('Informe o dia de vencimento.'); return; }
-  if(L.descontadoNaFonte===null||L.descontadoNaFonte===undefined){ alert('Informe se é descontado na fonte.'); return; }
+  if(!nome){ await vAlert('Informe o nome da despesa.'); return; }
+  if(!val||val<=0){ await vAlert('Informe o valor.'); return; }
+  if(!dia||dia<1||dia>31){ await vAlert('Informe o dia de vencimento.'); return; }
+  if(L.descontadoNaFonte===null||L.descontadoNaFonte===undefined){ await vAlert('Informe se é descontado na fonte.'); return; }
   L.despFixa={nome:nome,valor:val,dia:dia,descontadoNaFonte:!!L.descontadoNaFonte};
   document.getElementById('cBox').innerHTML='<b>'+nome+'</b><br>'+
     'Valor padrão: <b>'+fmt(val)+'</b><br>Dia de vencimento: '+dia+'<br>'+
@@ -2359,20 +2396,20 @@ function dfOk(){
   stp('cf1');
 }
 
-function pcOk(){
+async function pcOk(){
   var nome=document.getElementById('pcNome').value.trim();
   var val=parseFloat(document.getElementById('pcVal').value);
   var tot=parseInt(document.getElementById('pcTot').value);
   var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('pcDia').value)||20));
   var cartao=document.getElementById('pcCartao').value.trim();
-  if(!nome){ alert('Informe o nome.'); return; }
-  if(!val||val<=0){ alert('Informe o valor da parcela.'); return; }
-  if(!tot||tot<1){ alert('Informe o total de parcelas.'); return; }
-  if(L.pcPrim===null||L.pcPrim===undefined){ alert('Informe se é a primeira parcela.'); return; }
+  if(!nome){ await vAlert('Informe o nome.'); return; }
+  if(!val||val<=0){ await vAlert('Informe o valor da parcela.'); return; }
+  if(!tot||tot<1){ await vAlert('Informe o total de parcelas.'); return; }
+  if(L.pcPrim===null||L.pcPrim===undefined){ await vAlert('Informe se é a primeira parcela.'); return; }
   var pa=1;
   if(!L.pcPrim){
     pa=parseInt(document.getElementById('pcAt').value);
-    if(!pa||pa<1||pa>tot){ alert('Parcela atual inválida.'); return; }
+    if(!pa||pa<1||pa>tot){ await vAlert('Parcela atual inválida.'); return; }
   }
   var mi=curM-(pa-1), ai=curA;
   while(mi<0){ mi+=12; ai--; }
@@ -2388,14 +2425,14 @@ function pcOk(){
   stp('cf1');
 }
 
-function cofreOk(){
+async function cofreOk(){
   var nome=document.getElementById('cofreNome').value.trim();
   var teto=parseFloat(document.getElementById('cofreTeto').value);
   var vm=parseFloat(document.getElementById('cofreValorMensal').value);
   var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('cofreDia').value)||5));
-  if(!nome){ alert('Dê um nome pro cofrinho.'); return; }
-  if(!teto||teto<=0){ alert('Informe a meta (teto).'); return; }
-  if(!vm||vm<=0){ alert('Informe o valor do depósito mensal.'); return; }
+  if(!nome){ await vAlert('Dê um nome pro cofrinho.'); return; }
+  if(!teto||teto<=0){ await vAlert('Informe a meta (teto).'); return; }
+  if(!vm||vm<=0){ await vAlert('Informe o valor do depósito mensal.'); return; }
   var meses=Math.ceil(teto/vm);
   L.cofrinho={nome:nome,teto:teto,valorMensal:vm,dia:dia};
   document.getElementById('cBox').innerHTML='<b>'+nome+'</b><br>'+
@@ -2405,11 +2442,11 @@ function cofreOk(){
   stp('cf1');
 }
 
-function rc1ok(){
+async function rc1ok(){
   var v=parseFloat(document.getElementById('rVal').value);
-  if(!v||v<=0){ alert('Informe o valor.'); return; }
+  if(!v||v<=0){ await vAlert('Informe o valor.'); return; }
   var desc=document.getElementById('rDesc').value.trim();
-  if(!desc){ alert('Informe a descrição.'); return; }
+  if(!desc){ await vAlert('Informe a descrição.'); return; }
   var dia=parseInt(document.getElementById('rDia').value)||null;
   if(L.fixa===null||L.fixa===undefined) L.fixa=false;
   L.rec={nome:desc,valor:v,dia:dia,cat:L.recTipo||'',fixa:L.fixa};
@@ -2486,14 +2523,16 @@ function salvarEdit(){
   });
   salvar(d); fechar('ovE'); renderTudo();
 }
-function del(lista,id){
-  if(!confirm('Remover? Isso afeta TODOS os meses (item fixo).')) return;
+async function del(lista,id){
+  var ok=await vConfirm('Este item repete todo mês. Remover afeta todos os meses.','Remover item fixo?');
+  if(!ok) return;
   var d=getD();
   d[lista]=d[lista].filter(function(x){return x.id!==id;});
   salvar(d); renderTudo();
 }
-function delM(lista,id){
-  if(!confirm('Remover este lançamento de '+MES[curM]+'/'+curA+'?')) return;
+async function delM(lista,id){
+  var ok=await vConfirm('Este lançamento será removido apenas de '+MES[curM]+'/'+curA+'.','Remover lançamento?');
+  if(!ok) return;
   var d=getD(), mm=getMes(d,curM,curA);
   mm[lista]=mm[lista].filter(function(x){return x.id!==id;});
   salvar(d); renderTudo();
@@ -2511,10 +2550,10 @@ function abrirConfirmacao(kind,id){
   document.getElementById('cfVal').value=(c&&c.valor!=null)?c.valor:def.valor;
   document.getElementById('ovC').classList.add('on');
 }
-function salvarConfirmacao(){
+async function salvarConfirmacao(){
   if(!confCtx) return;
   var v=parseFloat(document.getElementById('cfVal').value);
-  if(isNaN(v)||v<0){ alert('Informe um valor válido.'); return; }
+  if(isNaN(v)||v<0){ await vAlert('Informe um valor válido.'); return; }
   var d=getD(), mm=getMes(d,curM,curA);
   mm.confirmacoes[confCtx.id]={confirmado:true,valor:v};
   salvar(d); fechar('ovC'); confCtx=null; renderTudo();
@@ -2554,8 +2593,9 @@ function salvarParc(){
   });
   salvar(d); fechar('ovP'); renderTudo();
 }
-function delParc(id){
-  if(!confirm('Remover este parcelamento? Afeta todos os meses.')) return;
+async function delParc(id){
+  var ok=await vConfirm('O parcelamento será removido de todos os meses restantes.','Remover parcelamento?');
+  if(!ok) return;
   var d=getD();
   d.parcelamentos=d.parcelamentos.filter(function(p){return p.id!==id;});
   salvar(d); renderTudo();
@@ -2586,8 +2626,9 @@ function salvarCofre(){
   });
   salvar(d); fechar('ovCofre'); renderTudo();
 }
-function delCofre(id){
-  if(!confirm('Excluir este cofrinho? O valor já acumulado nele fica só no histórico, mas o depósito mensal automático para.')) return;
+async function delCofre(id){
+  var ok=await vConfirm('O valor já acumulado fica no histórico, mas o depósito mensal automático para.','Remover cofrinho?');
+  if(!ok) return;
   var d=getD();
   d.cofrinhos=d.cofrinhos.filter(function(cf){return cf.id!==id;});
   salvar(d); renderTudo();
@@ -2647,16 +2688,16 @@ function editInvest(id){
   document.getElementById('ivMeta').value=inv.metaPercentual||'';
   document.getElementById('ovInvest').classList.add('on');
 }
-function salvarInvest(){
+async function salvarInvest(){
   var tipo=document.getElementById('ivTipo').value.trim();
   var nome=document.getElementById('ivNome').value.trim();
   var cotas=parseFloat(document.getElementById('ivCotas').value);
   var preco=parseFloat(document.getElementById('ivPreco').value);
   var meta=parseFloat(document.getElementById('ivMeta').value)||0;
-  if(!tipo){ alert('Informe o tipo do investimento.'); return; }
-  if(!nome){ alert('Informe o nome do ativo.'); return; }
-  if(!cotas||cotas<=0){ alert('Informe a quantidade de cotas.'); return; }
-  if(!preco||preco<=0){ alert('Informe o preço da cota.'); return; }
+  if(!tipo){ await vAlert('Informe o tipo do investimento.'); return; }
+  if(!nome){ await vAlert('Informe o nome do ativo.'); return; }
+  if(!cotas||cotas<=0){ await vAlert('Informe a quantidade de cotas.'); return; }
+  if(!preco||preco<=0){ await vAlert('Informe o preço da cota.'); return; }
   var d=getD();
   if(eIvId){
     d.investimentos.forEach(function(inv){
@@ -2668,8 +2709,9 @@ function salvarInvest(){
   }
   salvar(d); fechar('ovInvest'); renderTudo();
 }
-function delInvest(id){
-  if(!confirm('Excluir este investimento da carteira?')) return;
+async function delInvest(id){
+  var ok=await vConfirm('Este ativo será removido da sua carteira de investimentos.','Remover investimento?');
+  if(!ok) return;
   var d=getD();
   d.investimentos=d.investimentos.filter(function(inv){return inv.id!==id;});
   salvar(d); renderTudo();
@@ -2748,6 +2790,41 @@ function toggleValores(){
   renderTudo();
 }
 
+/* ══════ CONFIRMAR / ALERTAR (no lugar do confirm()/alert() do navegador) ══════
+   Devolvem Promise, então quem usa precisa ser async e dar await. Como os
+   botões são recriados a cada chamada (onclick reatribuído), não sobra
+   listener de uma chamada anterior. */
+function vConfirm(mensagem,titulo,corBotao,labelOk,labelCancel){
+  return new Promise(function(resolve){
+    var ov=document.getElementById('ovConfirm');
+    var ok=document.getElementById('confirmOk');
+    var cancel=document.getElementById('confirmCancel');
+    document.getElementById('confirmTit').textContent=titulo||'Confirmar';
+    document.getElementById('confirmMsg').textContent=mensagem;
+    ok.style.background=corBotao||'var(--red)';
+    ok.textContent=labelOk||'Confirmar';
+    cancel.textContent=labelCancel||'Cancelar';
+    ov.classList.add('on');
+    function responder(v){
+      ov.classList.remove('on');
+      ok.onclick=null; cancel.onclick=null;
+      resolve(v);
+    }
+    ok.onclick=function(){ responder(true); };
+    cancel.onclick=function(){ responder(false); };
+  });
+}
+function vAlert(mensagem){
+  return new Promise(function(resolve){
+    var ov=document.getElementById('ovAlerta');
+    var ok=document.getElementById('alertaOk');
+    document.getElementById('alertaMsg').textContent=mensagem;
+    ov.classList.add('on');
+    ok.onclick=function(){ ov.classList.remove('on'); ok.onclick=null; resolve(); };
+  });
+}
+function fecharAlerta(){ document.getElementById('ovAlerta').classList.remove('on'); }
+
 /* ══════ UTILS ══════ */
 function fechar(id){ document.getElementById(id).classList.remove('on'); }
 function fecharFora(e,id){ if(e.target===document.getElementById(id)) fechar(id); }
@@ -2787,8 +2864,9 @@ function acaoLoginEmail(){
   if(modoCriarConta) window.Vigia.criarConta(email,senha);
   else window.Vigia.loginEmail(email,senha);
 }
-function confirmarSair(){
-  if(!confirm('Sair da sua conta?')) return;
+async function confirmarSair(){
+  var ok=await vConfirm('Seus dados ficam salvos na nuvem e voltam quando você entrar de novo.','Sair da conta?','var(--red)','Sair');
+  if(!ok) return;
   uidAtual=null;
   window.Vigia.pararAssinatura();
   window.Vigia.sair();
