@@ -643,6 +643,21 @@ window.Vigia = {
       return snap.exists() ? snap.data() : null;
     }catch(e){ console.warn('[Vigia] Falha ao ler a assinatura.', e); return undefined; }
   },
+
+  /* ── Avisos no WhatsApp ──
+     Documento SEPARADO de dados/principal de propósito: aquele é gravado
+     inteiro (merge:false) a cada salvamento, então qualquer campo que o bot
+     escrevesse ali seria apagado no próximo lançamento feito pelo app. */
+  async configNotificacoes(uid){
+    try{
+      var snap = await getDoc(doc(db,'usuarios',uid,'config','notificacoes'));
+      return snap.exists() ? snap.data() : null;
+    }catch(e){ console.warn('[Vigia] Falha ao ler as notificações.', e); return undefined; }
+  },
+  async salvarConfigNotificacoes(uid,cfg){
+    await setDoc(doc(db,'usuarios',uid,'config','notificacoes'),
+      Object.assign({},cfg,{atualizadoEm:Date.now()}), {merge:true});
+  },
   async cancelarVinculoPendente(codigo){
     try{ await deleteDoc(doc(db,'vinculos_pendentes',codigo)); }catch(e){}
   },
@@ -1352,6 +1367,36 @@ onAuthStateChanged(auth, function(user){
 
       <button class="bok" id="waBtnVincular" onclick="gerarCodigoWhatsApp()">Vincular WhatsApp</button>
       <button class="ba del" id="waBtnDesvincular" style="display:none;width:100%;margin-top:8px;" onclick="desvincularWhatsApp()">✕ Desvincular</button>
+    </div>
+
+    <!-- Avisos no WhatsApp: só aparece para quem já vinculou um número -->
+    <div class="cfg-sec" id="notifSec" style="display:none">
+      <div class="cfg-t">Avisos no WhatsApp</div>
+      <div class="cfg-d">O bot te lembra de conta vencendo, cartão chegando
+        no teto, meta de renda e cofrinho cheio.</div>
+
+      <button class="bok" id="notifToggle" onclick="alternarNotificacoes()">Ligar avisos</button>
+
+      <div id="notifDetalhe" style="display:none;margin-top:16px">
+        <div class="fd"><label>Horário</label>
+          <div class="chips">
+            <div class="chip" id="not-h-manha" onclick="definirHorarioNotif('manha')">Manhã · 9h e 20h</div>
+            <div class="chip" id="not-h-tarde" onclick="definirHorarioNotif('tarde')">Tarde · 12h e 20h</div>
+            <div class="chip" id="not-h-noite" onclick="definirHorarioNotif('noite')">Noite · só 20h</div>
+          </div>
+        </div>
+        <div class="fd"><label>Tipos de aviso</label>
+          <div class="chips">
+            <div class="chip" id="not-t-contasHoje"  onclick="alternarTipoNotif('contasHoje')">Vence hoje</div>
+            <div class="chip" id="not-t-contasAmanha" onclick="alternarTipoNotif('contasAmanha')">Vence amanhã</div>
+            <div class="chip" id="not-t-teto"        onclick="alternarTipoNotif('teto')">Teto do cartão</div>
+            <div class="chip" id="not-t-meta"        onclick="alternarTipoNotif('meta')">Meta de renda</div>
+            <div class="chip" id="not-t-cofrinho"    onclick="alternarTipoNotif('cofrinho')">Cofrinhos</div>
+          </div>
+        </div>
+        <div class="cfg-d">No WhatsApp, responda <b>parar</b> para desligar e
+          <b>ativar</b> para voltar a receber.</div>
+      </div>
     </div>
 
     <div class="cfg-sec">
@@ -3734,6 +3779,69 @@ async function carregarStatusWhatsApp(){
     el.textContent='Nenhum WhatsApp vinculado ainda.';
     btnV.textContent='Vincular WhatsApp';
   }
+  carregarNotificacoes();
+}
+
+/* ══════ AVISOS NO WHATSAPP ══════
+   As preferências ficam em usuarios/{uid}/config/notificacoes, e NÃO em
+   dados/principal: aquele documento é gravado inteiro a cada salvamento, então
+   um campo escrito pelo bot ali seria apagado no lançamento seguinte. */
+var TIPOS_NOTIF=['contasHoje','contasAmanha','teto','meta','cofrinho'];
+var notifAtual=null;
+
+function notifPadrao(){
+  return {ativo:false,horario:'noite',
+    tipos:{contasHoje:true,contasAmanha:true,teto:true,meta:true,cofrinho:true}};
+}
+async function carregarNotificacoes(){
+  var sec=document.getElementById('notifSec');
+  /* Sem vínculo não há para onde mandar aviso — a seção nem aparece. */
+  if(!vinculoAtual || !uidAtual || !window.Vigia){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  var cfg=await window.Vigia.configNotificacoes(uidAtual);
+  if(cfg===undefined){ notifAtual=null; renderNotificacoes(true); return; }
+  notifAtual=Object.assign(notifPadrao(),cfg||{});
+  notifAtual.tipos=Object.assign(notifPadrao().tipos,(cfg&&cfg.tipos)||{});
+  renderNotificacoes();
+}
+function renderNotificacoes(offline){
+  var btn=document.getElementById('notifToggle');
+  var det=document.getElementById('notifDetalhe');
+  if(offline||!notifAtual){
+    btn.textContent='Não foi possível carregar';
+    btn.className='ba'; det.style.display='none';
+    return;
+  }
+  var on=notifAtual.ativo===true;
+  btn.textContent=on?'🔔 Avisos ligados · tocar para desligar':'Ligar avisos';
+  btn.className=on?'ba':'bok';
+  det.style.display=on?'block':'none';
+  ['manha','tarde','noite'].forEach(function(h){
+    document.getElementById('not-h-'+h).classList.toggle('on',notifAtual.horario===h);
+  });
+  TIPOS_NOTIF.forEach(function(t){
+    document.getElementById('not-t-'+t).classList.toggle('on',notifAtual.tipos[t]!==false);
+  });
+}
+async function gravarNotificacoes(){
+  try{ await window.Vigia.salvarConfigNotificacoes(uidAtual,notifAtual); }
+  catch(e){ await vAlert('Não consegui salvar agora. Verifique a conexão.'); }
+  renderNotificacoes();
+}
+async function alternarNotificacoes(){
+  if(!notifAtual) notifAtual=notifPadrao();
+  notifAtual.ativo=!notifAtual.ativo;
+  await gravarNotificacoes();
+}
+async function definirHorarioNotif(h){
+  if(!notifAtual) return;
+  notifAtual.horario=h;
+  await gravarNotificacoes();
+}
+async function alternarTipoNotif(t){
+  if(!notifAtual) return;
+  notifAtual.tipos[t]=notifAtual.tipos[t]===false;
+  await gravarNotificacoes();
 }
 function novoCodigo(){
   return String(Math.floor(Math.random()*900000)+100000); // 6 dígitos, sem começar com 0
