@@ -1697,6 +1697,10 @@ function fmt(v){
   var s=Math.abs(v).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
   return (v<0?'-':'')+'R$ '+s;
 }
+/* Percentual também é valor: "82% da renda comprometida" conta a vida de quem
+   está olhando por cima do ombro tanto quanto o número em reais. O que some é
+   só o texto — as barras continuam desenhadas, senão a tela parece quebrada. */
+function fmtPct(v,casas){ return valoresVisiveis?(Number(v).toFixed(casas||0)+'%'):'••%'; }
 function fmtK(v){
   if(!valoresVisiveis) return '•••'; /* rótulo do gráfico: máscara curta pra não estourar a barra */
   var a=Math.abs(v);
@@ -1716,10 +1720,16 @@ function parcelaNoMes(p,m,a){
 /* ── RECEITA PARCELADA no mês: mesma conta de parcelaNoMes, do lado de quem
    recebe. Serviço fechado em N vezes cai automaticamente todo mês. */
 function calcParcelaReceitaNoMes(rp,m,a){
-  if(rp && rp.ativo===false) return {ativa:false,encerrada:true,num:0};
   var n=difMeses(rp.mesInicio,rp.anoInicio,m,a)+1;
   if(n<1) return {ativa:false,futura:true,num:0};
   if(n>rp.total) return {ativa:false,encerrada:true,num:rp.total};
+  /* Encerrado à mão: para de contar a partir do mês do encerramento, e só
+     dali pra frente. Os meses anteriores continuam valendo — o dinheiro foi
+     recebido de verdade, encerrar não pode reescrever o passado. */
+  if(rp.ativo===false){
+    if(rp.mesEncerrado==null) return {ativa:false,encerrada:true,num:n};
+    if(difMeses(rp.mesEncerrado,rp.anoEncerrado,m,a)>=0) return {ativa:false,encerrada:true,num:n};
+  }
   return {ativa:true,num:n,ultima:n===rp.total,restam:rp.total-n};
 }
 /* Mês/ano em que a última parcela cai, a partir da parcela atual. */
@@ -1929,7 +1939,7 @@ function renderMetaRenda(d,recebido){
     '<div class="it-v bl">'+fmt(meta)+'</div></div>'+
     '<div class="it-m">Recebido: '+fmt(recebido)+
       (faltam>0?(' · faltam '+fmt(faltam)):' · ✅ Meta atingida!')+'</div>'+
-    '<div class="pp"><div class="pp-l"><span>'+pct.toFixed(0)+'% da meta</span>'+
+    '<div class="pp"><div class="pp-l"><span>'+fmtPct(pct)+' da meta</span>'+
     '<span>'+fmt(recebido)+'</span></div>'+
     '<div class="pp-tr"><div class="pp-f" style="width:'+pct+'%;background:var(--green)"></div></div></div></div>';
 }
@@ -1967,7 +1977,7 @@ function renderReceitasParceladas(c){
       '<div class="it-m">Receber todo dia '+rp.diaRecebimento+' · '+
       (st.ultima?'Última parcela':(st.restam+' restantes · termina '+calcTermino(st.num,rp.total)))+'</div>'+
       '<div class="pp"><div class="pp-l"><span>'+st.num+'/'+rp.total+'</span>'+
-      '<span>'+pct+'% recebido</span></div>'+
+      '<span>'+fmtPct(pct)+' recebido</span></div>'+
       '<div class="pp-tr"><div class="pp-f" style="width:'+pct+'%;background:var(--green)"></div></div></div>'+
       '<div class="it-a"><button class="ba del" onclick="excluirReceitaParc(\''+rp.id+'\')">✕ Encerrar</button></div></div>';
   }).join('');
@@ -1993,7 +2003,7 @@ function renderInicio(){
   document.getElementById('tcC').textContent=mascarar('R$ '+Math.round(c.cofres).toLocaleString('pt-BR'));
   document.getElementById('tcI').textContent=mascarar('R$ '+Math.round(carteiraCalc(d).total).toLocaleString('pt-BR'));
   var pct=c.receitas>0?(c.despesas/c.receitas*100):0;
-  document.getElementById('pctL').textContent=pct.toFixed(1)+'%';
+  document.getElementById('pctL').textContent=fmtPct(pct,1);
   document.getElementById('barF').style.width=Math.min(pct,100)+'%';
   document.getElementById('barS').textContent=fmt(c.despesas)+' de '+fmt(c.receitas);
 
@@ -2016,7 +2026,7 @@ function renderInicio(){
     h+='<div class="it yl"><div class="it-t"><div class="it-n">'+p.nome+
       (st.ultima?'<span class="tg ult">ÚLTIMA</span>':'')+'</div>'+
       '<div class="it-v yl">'+fmt(p.valor)+'</div></div>'+
-      '<div class="pp"><div class="pp-l"><span>'+st.num+'/'+p.total+'</span><span>'+pct2.toFixed(0)+'% pago</span></div>'+
+      '<div class="pp"><div class="pp-l"><span>'+st.num+'/'+p.total+'</span><span>'+fmtPct(pct2)+' pago</span></div>'+
       '<div class="pp-tr"><div class="pp-f" style="width:'+pct2+'%;background:var(--yellow)"></div></div></div>'+
       '<div class="it-m">'+st.restam+' restantes · dia '+p.dia+(p.cartao?' · '+cap(p.cartao):'')+
       ' · '+fmt(st.restam*p.valor)+' remanescente</div>'+
@@ -2075,7 +2085,7 @@ function renderInicio(){
       '<div class="leg" style="flex:1;min-width:140px;padding:0;">'+
       carteira.itens.map(function(x,i){
         var cor=CORES_CARTEIRA[i%CORES_CARTEIRA.length];
-        return '<div class="leg-i"><div class="leg-d" style="background:'+cor+'"></div>'+x.inv.nome+' · '+x.pct.toFixed(0)+'%</div>';
+        return '<div class="leg-i"><div class="leg-d" style="background:'+cor+'"></div>'+x.inv.nome+' · '+fmtPct(x.pct)+'</div>';
       }).join('')+
       '</div></div>';
   }
@@ -2085,7 +2095,7 @@ function renderInicio(){
     h+='<div class="it pp" style="border-left-color:'+cor+'"><div class="it-t"><div class="it-n">'+inv.nome+
       '<span class="tg cat">'+inv.tipo+'</span></div><div class="it-v pp" style="color:'+cor+'">'+fmt(x.valorAtual)+'</div></div>'+
       '<div class="it-m">'+inv.cotas+' cotas × '+fmt(inv.precoCota)+'</div>'+
-      '<div class="pp"><div class="pp-l"><span>'+x.pct.toFixed(1)+'% da carteira</span>'+
+      '<div class="pp"><div class="pp-l"><span>'+fmtPct(x.pct,1)+' da carteira</span>'+
       (temMeta?'<span>meta '+inv.metaPercentual.toFixed(0)+'%</span>':'')+'</div>'+
       '<div class="pp-tr"><div class="pp-f" style="width:'+Math.min(x.pct,100)+'%;background:'+cor+'"></div></div></div>'+
       (temMeta?'<div class="it-m">'+(Math.abs(diff)<1?'✓ na meta':(diff>0?
@@ -2120,7 +2130,7 @@ function renderInicio(){
     h+='<div class="it pp"><div class="it-t"><div class="it-n">'+cf.nome+
       (atingiu?'<span class="tg ult" style="background:var(--purple-d,rgba(181,123,255,.15));color:var(--purple);">META ATINGIDA</span>':'')+
       '</div><div class="it-v pp">'+fmt(cf.valorMensal)+'/mês</div></div>'+
-      '<div class="pp"><div class="pp-l"><span>'+fmt(acumulado)+' de '+fmt(cf.teto)+'</span><span>'+pct.toFixed(0)+'%</span></div>'+
+      '<div class="pp"><div class="pp-l"><span>'+fmt(acumulado)+' de '+fmt(cf.teto)+'</span><span>'+fmtPct(pct)+'</span></div>'+
       '<div class="pp-tr"><div class="pp-f" style="width:'+pct+'%;background:var(--purple)"></div></div></div>'+
       '<div class="it-m">'+(atingiu?'Meta atingida! 🎉':'falta '+fmt(Math.max(0,cf.teto-acumulado)))+' · dia '+cf.dia+'</div>'+
       '<div class="it-a"><button class="ba" onclick="editCofre(\''+cf.id+'\')">✎ Editar</button>'+
@@ -2169,8 +2179,8 @@ function renderInicio(){
 
   if(c.receitas>0){
     var pi=(c.reserva+c.cofres)/c.receitas*100;
-    if(pi<5) al.push({t:'w',i:'📉',x:'Reserva em <b>'+pi.toFixed(1)+'%</b> da renda. Meta saudável: ≥ 10%.'});
-    else al.push({t:'ok',i:'📈',x:'Reserva em <b>'+pi.toFixed(1)+'%</b> da renda.'});
+    if(pi<5) al.push({t:'w',i:'📉',x:'Reserva em <b>'+fmtPct(pi,1)+'</b> da renda. Meta saudável: ≥ 10%.'});
+    else al.push({t:'ok',i:'📈',x:'Reserva em <b>'+fmtPct(pi,1)+'</b> da renda.'});
     if(c.totalParcelamentos>0) al.push({t:'w',i:'🏗️',x:'Parcelamentos consomem <b>'+(c.totalParcelamentos/c.receitas*100).toFixed(1)+
       '%</b> da renda · '+c.parcelamentosAtivos.length+' ativo'+(c.parcelamentosAtivos.length===1?'':'s')+'.'});
   }
@@ -2351,7 +2361,7 @@ function renderCartoes(){
 
   if(teto){
     var pc=Math.min(fat/teto*100,140), ac=fat>teto;
-    document.getElementById('fbP').textContent=pc.toFixed(0)+'%';
+    document.getElementById('fbP').textContent=fmtPct(pc);
     document.getElementById('fbF').style.width=Math.min(pc,100)+'%';
     document.getElementById('fbF').style.background=ac?'var(--red)':
       'linear-gradient(90deg,'+cor+',var(--green))';
@@ -2383,7 +2393,7 @@ function renderCartoes(){
       '</div><div class="it-v" style="color:'+cor+'">'+fmt(p.valor)+'</div></div>'+
       '<div class="it-m">'+(st.ultima?'Última parcela deste mês':
         st.restam+' restantes · total '+fmt(p.valor*p.total))+'</div>'+
-      '<div class="pp"><div class="pp-l"><span>'+st.num+'/'+p.total+'</span><span>'+pc+'% pago</span></div>'+
+      '<div class="pp"><div class="pp-l"><span>'+st.num+'/'+p.total+'</span><span>'+fmtPct(pc)+' pago</span></div>'+
       '<div class="pp-tr"><div class="pp-f" style="width:'+pc+'%;background:'+
       (st.ultima?'var(--green)':cor)+'"></div></div></div>'+
       '<div class="it-a"><button class="ba" onclick="editParc(\''+p.id+'\')">✎ Editar</button>'+
@@ -3002,7 +3012,7 @@ function mostrarParabensCofrinho(cf,acumulado,pct){
     '<div style="font-size:2.2rem;text-align:center;margin-bottom:10px;">🎉</div>'+
     '<div style="text-align:center;font-size:.9rem;line-height:1.6;">'+
     'Você está quase lá no cofrinho <b>'+cf.nome+'</b>!<br>'+
-    'Já são <b>'+pct.toFixed(0)+'%</b> da meta — falta só <b>'+fmt(falta)+'</b>.<br><br>'+
+    'Já são <b>'+fmtPct(pct)+'</b> da meta — falta só <b>'+fmt(falta)+'</b>.<br><br>'+
     'Continue assim, você está mandando muito bem! 💪</div>';
   document.getElementById('ovParabens').classList.add('on');
 }
@@ -3318,13 +3328,15 @@ function confirmarRecebimento(){
   fechar('ovRecebimento');
   renderTudo();
 }
+/* Encerrar não apaga: marca o mês em que parou. Apagar faria as parcelas já
+   recebidas sumirem dos meses passados, mudando um histórico que aconteceu. */
 async function excluirReceitaParc(id){
   var d=getD(), rp=(d.receitasParceladas||[]).filter(function(x){return x.id===id;})[0];
   if(!rp) return;
-  var ok=await vConfirm('As parcelas futuras deixam de contar como receita. O que já passou fica no histórico.',
-    'Encerrar recebimento?');
+  var ok=await vConfirm('A partir de '+MES[curM]+'/'+curA+' ela deixa de contar como receita. '+
+    'Os meses anteriores não mudam.','Encerrar '+rp.descricao+'?');
   if(!ok) return;
-  d.receitasParceladas=d.receitasParceladas.filter(function(x){return x.id!==id;});
+  rp.ativo=false; rp.mesEncerrado=curM; rp.anoEncerrado=curA;
   salvar(d); renderTudo();
 }
 
