@@ -163,6 +163,13 @@ button{font-family:inherit;}
 .hero-v.pos{color:var(--green);}
 .hero-v.neg{color:var(--red);}
 .hero-s{font-size:.74rem;color:var(--muted);margin-top:5px;}
+/* Etiqueta do perfil no hero: em qual modo o app está falando com você. Fica
+   aqui e não só nas Configurações porque é o que explica por que a tela de
+   receitas tem essa cara. Toque abre a troca de perfil. */
+.hero-perfil{display:none;width:max-content;margin:12px auto 0;padding:4px 12px;
+  border:1px solid var(--border);border-radius:999px;background:var(--surf2);
+  font-family:monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent;}
 
 .trio{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px 14px;}
 .tc{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:10px 6px;}
@@ -759,6 +766,7 @@ onAuthStateChanged(auth, function(user){
     <div class="hero-l">Saldo do mês</div>
     <div class="hero-v pos" id="hSaldo">R$ 0,00</div>
     <div class="hero-s" id="hSub">—</div>
+    <div class="hero-perfil" id="heroPerfil" onclick="mostrarSelecaoPerfil()"></div>
   </div>
   <div id="bannerPerfil" onclick="mostrarSelecaoPerfil()">
     👤 Selecione seu perfil para uma melhor experiência →
@@ -1069,6 +1077,8 @@ onAuthStateChanged(auth, function(user){
 
     <!-- RECEITA -->
     <div class="stp" id="rc1">
+      <button class="ba" id="rcAtalhoParc" style="width:100%;display:none;margin-bottom:16px"
+        onclick="irParaParcelado()">💳 Recebimento em parcelas? Registrar serviço →</button>
       <div class="fd"><label>Tipo de receita</label>
         <div class="chips" id="recChips"></div>
       </div>
@@ -1077,7 +1087,7 @@ onAuthStateChanged(auth, function(user){
         <div class="fd"><label>Valor (R$)</label><input type="number" id="rVal" placeholder="0.00" step="0.01" inputmode="decimal"></div>
         <div class="fd"><label>Dia</label><input type="number" id="rDia" placeholder="dia" min="1" max="31" inputmode="numeric"></div>
       </div>
-      <div class="fd"><label>Repetir todo mês?</label>
+      <div class="fd"><label id="rcFixaLabel">Repetir todo mês?</label>
         <div class="chips">
           <div class="chip" onclick="pick(this,'fixa',false)">Só este mês</div>
           <div class="chip" onclick="pick(this,'fixa',true)">Todo mês (fixa)</div>
@@ -1478,7 +1488,18 @@ var CATEGORIAS=[
   {id:'outros',   nome:'Outros',       dia:null,sec:'consumo'}
 ];
 var COFRE_PRESETS=['Viagem','Reserva de emergência','Presente','Casa própria','Carro novo','Educação'];
-var TIPOS_REC=['Salário','Plantão extra','Férias','13º Salário','Reembolso','Outros'];
+/* Tipos de receita oferecidos no lançamento. "Plantão extra" e "13º Salário"
+   não querem dizer nada pra quem é autônomo, e "Consulta" não quer dizer nada
+   pra quem é CLT — cada perfil vê o vocabulário da própria vida. Só muda o que
+   é OFERECIDO: um tipo antigo já gravado continua aparecendo no histórico. */
+var TIPOS_REC={
+  clt:['Salário','Plantão extra','Férias','13º Salário','Reembolso','Outros'],
+  autonomo:['Serviço','Consulta','Freelance','Comissão','Venda','Outros'],
+  misto:['Salário','Serviço','Freelance','Plantão extra','Comissão','Reembolso','Outros']
+};
+var PLACEHOLDER_REC={clt:'Ex: plantão extra...',autonomo:'Ex: consulta do João...',
+  misto:'Ex: salário, consulta do João...'};
+function tiposReceita(perfil){ return TIPOS_REC[perfil]||TIPOS_REC.clt; }
 var TIPOS_INVEST=['Renda Fixa','Tesouro Direto','Ações','Fundos Imobiliários','Fundos de Investimento','Criptomoeda'];
 var CORES_CARTEIRA=['#4d9fff','#b57bff','#00e5a0','#f5c842','#ff4d6d','#ff9f43','#4dd0e1','#c084fc','#94a3b8','#f472b6'];
 
@@ -1804,6 +1825,17 @@ function toggleSec(id,head){
   secFechadas[id]=f;
   if(ch) ch.classList.toggle('fechado',f);
   if(!f) el.style.maxHeight='none';
+}
+/* Abre uma seção pelo id, como se o usuário tivesse tocado no cabeçalho. */
+function abrirSec(id){
+  secFechadas[id]=false;
+  var el=document.getElementById(id);
+  if(!el) return;
+  el.classList.remove('fechado');
+  el.style.maxHeight='none';
+  var head=el.previousElementSibling;
+  var ch=head&&head.querySelector('.chev');
+  if(ch) ch.classList.remove('fechado');
 }
 function aplicarFechadas(){
   for(var id in secFechadas){
@@ -2629,8 +2661,14 @@ function abrirLanc(){
   /* montar chips de categoria */
   document.getElementById('catChips').innerHTML=CATEGORIAS.map(function(c){
     return '<div class="chip" onclick="pickCat(this,\''+c.id+'\')">'+c.nome+'</div>';}).join('');
-  document.getElementById('recChips').innerHTML=TIPOS_REC.map(function(t){
+  var perfilAtual=getD().perfil;
+  document.getElementById('recChips').innerHTML=tiposReceita(perfilAtual).map(function(t){
     return '<div class="chip" onclick="pick(this,\'recTipo\',\''+t+'\')">'+t+'</div>';}).join('');
+  document.getElementById('rDesc').placeholder=PLACEHOLDER_REC[perfilAtual]||PLACEHOLDER_REC.clt;
+  document.getElementById('rcAtalhoParc').style.display=
+    (perfilAtual==='autonomo'||perfilAtual==='misto')?'block':'none';
+  document.getElementById('rcFixaLabel').textContent=
+    (perfilAtual==='autonomo')?'Vai se repetir todo mês?':'Repetir todo mês?';
   document.getElementById('cofreNomeChips').innerHTML=COFRE_PRESETS.map(function(n){
     return '<div class="chip" onclick="setNomeCofre(this,\''+n+'\')">'+n+'</div>';}).join('')+
     '<div class="chip" onclick="document.getElementById(\'cofreNome\').focus()">Outro</div>';
@@ -3203,6 +3241,7 @@ function fecharAlerta(){ document.getElementById('ovAlerta').classList.remove('o
    lança o que recebeu, e misto tem os dois. Nada é apagado ao trocar de
    perfil — o que existe continua aparecendo. */
 var PERFIS={clt:'CLT',autonomo:'Autônomo',misto:'Misto'};
+var PERFIL_ICONE={clt:'💼',autonomo:'⚡',misto:'🔄'};
 
 function mostrarSelecaoPerfil(){
   var d=getD();
@@ -3223,7 +3262,11 @@ function selecionarPerfil(tipo){
   d.perfil=tipo;
   salvar(d);
   fecharSelecaoPerfil();
-  renderTudo();
+  /* Abre a seção de receitas: é ela que muda de cara com o perfil, e fechada
+     por padrão a troca parecia não ter feito nada. */
+  abrirSec('sReceitas');
+  if(tipo==='autonomo'||tipo==='misto') abrirSec('sReceitasParc');
+  ir('inicio',document.querySelector('.bn'));
 }
 function abrirMetaRenda(){
   document.getElementById('metaValor').value=getD().metaRendaMensal||'';
@@ -3256,6 +3299,20 @@ function pickRv(el,campo,val){
 function goStepRv(id){
   document.querySelectorAll('#ovRecebimento .stp').forEach(function(s){ s.classList.remove('on'); });
   document.getElementById(id).classList.add('on');
+}
+/* Ponte entre os dois caminhos de receita: quem entrou pelo + e percebeu que o
+   serviço é parcelado cai direto no passo das parcelas, sem ter que fechar
+   tudo e procurar o "Recebi hoje". A descrição já digitada vai junto. */
+function irParaParcelado(){
+  var desc=document.getElementById('rDesc').value.trim();
+  fechar('ovL');
+  setTimeout(function(){
+    abrirRecebimento();
+    document.getElementById('rvDesc').value=desc;
+    var chips=document.querySelectorAll('#rv1 .chip');
+    if(chips.length>1) pickRv(chips[1],'forma','parcelado');
+    goStepRv('rv2');
+  },160);
 }
 function abrirRecebimento(){
   rvState={forma:null,prim:null};
@@ -3514,6 +3571,11 @@ function spAcao(a){
 function renderPerfilUI(){
   var d=getD(), temPerfil=!!d.perfil;
   document.getElementById('bannerPerfil').style.display=temPerfil?'none':'block';
+  var hp=document.getElementById('heroPerfil');
+  if(hp){
+    hp.style.display=temPerfil?'block':'none';
+    if(temPerfil) hp.textContent=PERFIL_ICONE[d.perfil]+' Perfil '+PERFIS[d.perfil];
+  }
   var st=document.getElementById('perfilStatus');
   if(st) st.innerHTML=temPerfil
     ?('✅ <b>'+PERFIS[d.perfil]+'</b> · toque para trocar')
