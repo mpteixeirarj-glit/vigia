@@ -11,6 +11,16 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
 <title>Vigia</title>
+<script>
+/* Escala da fonte antes do primeiro paint — se esperar o app carregar, a tela
+   pisca no tamanho errado. Fica no aparelho e não na conta: quem precisa de
+   letra maior é o olho de quem está segurando o celular, não o login. */
+(function(){
+  var f=null;
+  try{ f=localStorage.getItem('vigia_fonte'); }catch(e){}
+  document.documentElement.setAttribute('data-fonte',f||'g');
+})();
+</script>
 <style>
 :root{
   --bg:#0b0d14;--surf:#12151f;--surf2:#1a1e2e;--border:#232840;
@@ -22,6 +32,12 @@
   --text:#dde1f0;--muted:#5a607a;
   --NAV:56px;--BOT:64px;
 }
+/* Escala do texto. Como todo o CSS está em rem, mexer aqui muda o app inteiro
+   de uma vez, sem tocar em nenhuma regra. "Grande" é o padrão: com 16px o
+   corpo do texto ficava em 13px e os rótulos em 9px — pequeno no celular. */
+html{font-size:16px;}
+html[data-fonte="g"]{font-size:18px;}
+html[data-fonte="gg"]{font-size:20px;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
@@ -96,7 +112,7 @@ button{font-family:inherit;}
   padding:14px;font-size:.85rem;font-weight:600;cursor:pointer;margin-bottom:16px;
   display:flex;align-items:center;justify-content:center;gap:10px;
   -webkit-tap-highlight-color:transparent;}
-.login-ou{color:var(--muted);font-family:monospace;font-size:.62rem;letter-spacing:.1em;
+.login-ou{color:var(--muted);font-family:monospace;font-size:.66rem;letter-spacing:.1em;
   margin-bottom:16px;display:flex;align-items:center;gap:10px;width:100%;}
 .login-ou::before,.login-ou::after{content:'';flex:1;height:1px;background:var(--border);}
 .login-email-form{width:100%;}
@@ -137,7 +153,7 @@ button{font-family:inherit;}
   border-top:1px solid var(--border);display:flex;justify-content:space-around;
   align-items:center;z-index:100;}
 .bn{display:flex;flex-direction:column;align-items:center;gap:3px;font-family:monospace;
-  font-size:.56rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+  font-size:.64rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
   cursor:pointer;padding:6px 10px;border:none;background:none;
   -webkit-tap-highlight-color:transparent;}
 .bn.active{color:var(--green);}
@@ -157,7 +173,7 @@ button{font-family:inherit;}
 .hero{padding:18px 16px 10px;text-align:center;}
 .hero-saudacao{font-size:.88rem;color:var(--muted);margin-bottom:8px;padding-top:20px;
   letter-spacing:.02em;}
-.hero-l{font-family:monospace;font-size:.6rem;letter-spacing:.14em;
+.hero-l{font-family:monospace;font-size:.66rem;letter-spacing:.14em;
   text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
 .hero-v{font-family:monospace;font-size:2.3rem;font-weight:700;line-height:1;}
 .hero-v.pos{color:var(--green);}
@@ -168,42 +184,46 @@ button{font-family:inherit;}
    receitas tem essa cara. Toque abre a troca de perfil. */
 .hero-perfil{display:none;width:max-content;margin:12px auto 0;padding:4px 12px;
   border:1px solid var(--border);border-radius:999px;background:var(--surf2);
-  font-family:monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+  font-family:monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent;}
 
+/* Quatro valores em dinheiro lado a lado só cabem enquanto a fonte é pequena.
+   Com texto legível num celular estreito, "R$ 2.968" quebra no meio — então
+   abaixo de 400px vira 2x2, que é largo o bastante pra qualquer valor. */
 .trio{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px 14px;}
+@media (max-width:400px){ .trio{grid-template-columns:repeat(2,1fr);} }
 .tc{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:10px 6px;}
-.tc-v{font-family:monospace;font-size:.78rem;font-weight:700;line-height:1;}
+.tc-v{font-family:monospace;font-size:.84rem;font-weight:700;line-height:1;}
 .tc-v.pos{color:var(--green);}
 .tc-v.neg{color:var(--red);}
 .tc-v.blu{color:var(--blue);}
 .tc-v.pp{color:var(--purple);}
-.tc-l{font-size:.55rem;color:var(--muted);margin-top:4px;}
+.tc-l{font-size:.66rem;color:var(--muted);margin-top:4px;}
 
 .barra{background:var(--surf);border:1px solid var(--border);border-radius:10px;
   padding:13px;margin:0 16px 14px;}
 .barra-l{display:flex;justify-content:space-between;font-family:monospace;
-  font-size:.66rem;color:var(--muted);margin-bottom:7px;}
+  font-size:.7rem;color:var(--muted);margin-bottom:7px;}
 .track{height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
 .fill{height:100%;border-radius:4px;transition:width .5s;
   background:linear-gradient(90deg,var(--green),var(--blue));}
-.barra-s{font-family:monospace;font-size:.63rem;color:var(--muted);margin-top:5px;text-align:right;}
+.barra-s{font-family:monospace;font-size:.68rem;color:var(--muted);margin-top:5px;text-align:right;}
 
 /* SEÇÃO RECOLHÍVEL */
 .sec{padding:0 16px;margin-bottom:2px;}
 .sec-h{display:flex;justify-content:space-between;align-items:center;
   margin:16px 0 9px;cursor:pointer;-webkit-tap-highlight-color:transparent;
   padding:4px 0;}
-.sec-t{font-family:monospace;font-size:.61rem;letter-spacing:.13em;
+.sec-t{font-family:monospace;font-size:.68rem;letter-spacing:.13em;
   text-transform:uppercase;display:flex;align-items:center;gap:6px;}
 .sec-t.gr{color:var(--green);}
 .sec-t.rd{color:var(--red);}
 .sec-t.yl{color:var(--yellow);}
 .sec-t.bl{color:var(--blue);}
 .sec-t.pp{color:var(--purple);}
-.chev{font-size:.6rem;transition:transform .2s;display:inline-block;opacity:.7;}
+.chev{font-size:.66rem;transition:transform .2s;display:inline-block;opacity:.7;}
 .chev.fechado{transform:rotate(-90deg);}
-.sec-tot{font-family:monospace;font-size:.68rem;color:var(--muted);}
+.sec-tot{font-family:monospace;font-size:.72rem;color:var(--muted);}
 .sec-body{overflow:hidden;transition:max-height .25s ease;}
 .sec-body.fechado{max-height:0 !important;}
 
@@ -216,37 +236,37 @@ button{font-family:inherit;}
 .it.bl{border-left-color:var(--blue);}
 .it.pp{border-left-color:var(--purple);}
 .it-t{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-.it-n{font-size:.84rem;font-weight:500;flex:1;line-height:1.3;}
-.it-v{font-family:monospace;font-size:.84rem;font-weight:700;white-space:nowrap;}
+.it-n{font-size:.88rem;font-weight:500;flex:1;line-height:1.3;}
+.it-v{font-family:monospace;font-size:.88rem;font-weight:700;white-space:nowrap;}
 .it-v.gr{color:var(--green);}
 .it-v.rd{color:var(--red);}
 .it-v.yl{color:var(--yellow);}
 .it-v.bl{color:var(--blue);}
 .it-v.pp{color:var(--purple);}
 .it-v.dim{color:var(--muted);}
-.it-m{font-size:.69rem;color:var(--muted);margin-top:3px;}
+.it-m{font-size:.74rem;color:var(--muted);margin-top:3px;}
 .it-a{display:flex;gap:6px;margin-top:9px;}
-.ba{flex:1;padding:6px 0;border-radius:7px;font-family:monospace;font-size:.67rem;
+.ba{flex:1;padding:6px 0;border-radius:7px;font-family:monospace;font-size:.72rem;
   letter-spacing:.05em;border:1px solid var(--border);cursor:pointer;
   background:var(--surf2);color:var(--muted);-webkit-tap-highlight-color:transparent;}
 .ba:active{border-color:var(--green);color:var(--green);}
 .ba.del:active{border-color:var(--red);color:var(--red);}
 
 .dia{display:inline-block;background:var(--surf2);border:1px solid var(--border);
-  font-family:monospace;font-size:.58rem;color:var(--muted);padding:2px 6px;
+  font-family:monospace;font-size:.66rem;color:var(--muted);padding:2px 6px;
   border-radius:4px;margin-right:5px;vertical-align:middle;}
-.tg{display:inline-block;font-family:monospace;font-size:.56rem;letter-spacing:.05em;
+.tg{display:inline-block;font-family:monospace;font-size:.64rem;letter-spacing:.05em;
   padding:2px 7px;border-radius:20px;margin-left:5px;vertical-align:middle;}
 .tg.ok{background:var(--green-d);color:var(--green);}
 .tg.ult{background:var(--yellow-d);color:var(--yellow);}
 .tg.enc{background:rgba(90,96,122,.16);color:var(--muted);}
 .tg.cat{background:var(--surf2);color:var(--muted);border:1px solid var(--border);}
 
-.vazio{text-align:center;padding:20px 14px;color:var(--muted);font-size:.78rem;line-height:1.6;}
+.vazio{text-align:center;padding:20px 14px;color:var(--muted);font-size:.82rem;line-height:1.6;}
 
 /* ALERTA */
 .al{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:8px;
-  font-size:.78rem;line-height:1.45;margin-bottom:7px;}
+  font-size:.82rem;line-height:1.45;margin-bottom:7px;}
 .al.ok{background:var(--green-d);border-left:3px solid var(--green);}
 .al.w{background:var(--yellow-d);border-left:3px solid var(--yellow);}
 .al.d{background:var(--red-d);border-left:3px solid var(--red);}
@@ -262,11 +282,11 @@ button{font-family:inherit;}
   border:1px solid var(--border);color:var(--text);font-size:1rem;cursor:pointer;
   display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
 .leg{display:flex;gap:12px;padding:0 18px 12px;flex-wrap:wrap;}
-.leg-i{display:flex;align-items:center;gap:5px;font-size:.65rem;color:var(--muted);}
+.leg-i{display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--muted);}
 .leg-d{width:8px;height:8px;border-radius:50%;}
 .cal-w{padding:0 10px;}
 .cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-.cal-dw{text-align:center;font-family:monospace;font-size:.57rem;letter-spacing:.06em;
+.cal-dw{text-align:center;font-family:monospace;font-size:.66rem;letter-spacing:.06em;
   text-transform:uppercase;color:var(--muted);padding:5px 0 8px;}
 .cal-d{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;
   justify-content:center;border-radius:10px;cursor:pointer;gap:3px;
@@ -278,16 +298,16 @@ button{font-family:inherit;}
 .dn{font-size:.85rem;font-weight:500;line-height:1;}
 .dd{display:flex;gap:2px;justify-content:center;min-height:6px;}
 .dd i{width:5px;height:5px;border-radius:50%;display:block;}
-.tl-t{font-family:monospace;font-size:.61rem;letter-spacing:.13em;text-transform:uppercase;
+.tl-t{font-family:monospace;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;
   color:var(--green);padding:18px 18px 10px;}
 .tl-g{margin:0 16px 14px;}
-.tl-d{font-family:monospace;font-size:.66rem;color:var(--muted);letter-spacing:.07em;
+.tl-d{font-family:monospace;font-size:.7rem;color:var(--muted);letter-spacing:.07em;
   margin-bottom:7px;display:flex;align-items:center;gap:8px;}
 .tl-d::after{content:'';flex:1;height:1px;background:var(--border);}
 
 /* CARTÕES */
 .tabs{display:flex;border-bottom:1px solid var(--border);padding:0 16px;margin-top:4px;}
-.tab{flex:1;padding:12px 0;text-align:center;font-family:monospace;font-size:.7rem;
+.tab{flex:1;padding:12px 0;text-align:center;font-family:monospace;font-size:.74rem;
   letter-spacing:.07em;text-transform:uppercase;color:var(--muted);cursor:pointer;
   border-bottom:2px solid transparent;transition:all .2s;-webkit-tap-highlight-color:transparent;}
 .tab.on{color:var(--green);border-bottom-color:var(--green);}
@@ -323,12 +343,12 @@ button{font-family:inherit;}
 .cor-item.sel{border-color:var(--green);}
 .cor-item img{width:100%;display:block;border-radius:6px;}
 .cor-item span{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.5);
-  color:#fff;font-size:.6rem;text-align:center;padding:3px;}
+  color:#fff;font-size:.66rem;text-align:center;padding:3px;}
 .fb{margin:11px 16px 0;}
-.fb-l{display:flex;justify-content:space-between;font-family:monospace;font-size:.63rem;
+.fb-l{display:flex;justify-content:space-between;font-family:monospace;font-size:.68rem;
   color:var(--muted);margin-bottom:5px;align-items:center;}
 .fb-l button{background:var(--surf2);border:1px solid var(--border);color:var(--muted);
-  font-family:monospace;font-size:.6rem;padding:3px 9px;border-radius:12px;cursor:pointer;
+  font-family:monospace;font-size:.66rem;padding:3px 9px;border-radius:12px;cursor:pointer;
   -webkit-tap-highlight-color:transparent;}
 .fb-l button:active{border-color:var(--green);color:var(--green);}
 .fb-tr{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
@@ -341,7 +361,7 @@ button{font-family:inherit;}
 .res-r.tot{font-weight:600;margin-top:3px;}
 .res-v{font-family:monospace;font-size:.8rem;}
 .pp{margin-top:9px;}
-.pp-l{display:flex;justify-content:space-between;font-family:monospace;font-size:.6rem;
+.pp-l{display:flex;justify-content:space-between;font-family:monospace;font-size:.66rem;
   color:var(--muted);margin-bottom:4px;}
 .pp-tr{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
 .pp-f{height:100%;border-radius:2px;transition:width .4s;}
@@ -350,7 +370,7 @@ button{font-family:inherit;}
 .anu{margin:16px 16px 0;background:var(--surf);border:1px solid var(--border);
   border-radius:12px;padding:15px;}
 .anu-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;}
-.anu-t{font-family:monospace;font-size:.61rem;letter-spacing:.13em;
+.anu-t{font-family:monospace;font-size:.68rem;letter-spacing:.13em;
   text-transform:uppercase;color:var(--green);}
 .anu-a{font-family:monospace;font-size:.7rem;color:var(--muted);display:flex;gap:6px;align-items:center;}
 .anu-a button{background:var(--surf2);border:1px solid var(--border);color:var(--text);
@@ -361,24 +381,24 @@ button{font-family:inherit;}
 .anu-cv{font-family:monospace;font-size:.8rem;font-weight:700;line-height:1;}
 .anu-cv.pos{color:var(--green);}
 .anu-cv.neg{color:var(--red);}
-.anu-cl{font-size:.59rem;color:var(--muted);margin-top:4px;}
+.anu-cl{font-size:.66rem;color:var(--muted);margin-top:4px;}
 .gw{overflow-x:auto;padding-bottom:4px;}
 .gf{display:flex;align-items:flex-end;gap:6px;min-height:114px;padding:0 4px;min-width:max-content;}
 .bc{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:34px;}
-.bv{font-family:monospace;font-size:.53rem;color:var(--muted);text-align:center;min-height:13px;}
+.bv{font-family:monospace;font-size:.66rem;color:var(--muted);text-align:center;min-height:13px;}
 .bb{width:26px;border-radius:4px 4px 0 0;min-height:4px;transition:height .4s;}
 .bb.pos{background:var(--green);}
 .bb.neg{background:var(--red);}
-.bm{font-family:monospace;font-size:.56rem;color:var(--muted);}
+.bm{font-family:monospace;font-size:.66rem;color:var(--muted);}
 .zl{height:1px;background:var(--border);margin:0 4px;}
 .ht{background:var(--surf);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
 .hh,.hr{display:grid;grid-template-columns:66px 1fr 1fr 78px 46px;gap:4px;padding:10px 11px;align-items:center;}
 .hh{background:var(--surf2);border-bottom:1px solid var(--border);font-family:monospace;
-  font-size:.58rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
+  font-size:.66rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
 .hr{border-bottom:1px solid var(--border);}
 .hr:last-child{border:none;}
-.hm{font-family:monospace;font-size:.72rem;color:var(--muted);}
-.hv{font-family:monospace;font-size:.72rem;}
+.hm{font-family:monospace;font-size:.76rem;color:var(--muted);}
+.hv{font-family:monospace;font-size:.76rem;}
 .hv.pos{color:var(--green);}
 .hv.neg{color:var(--red);}
 .hac{display:flex;gap:4px;}
@@ -420,13 +440,16 @@ button{font-family:inherit;}
   border:1px solid var(--green);color:var(--green);font-family:monospace;font-size:.82rem;
   font-weight:700;letter-spacing:.06em;cursor:pointer;margin-bottom:12px;
   -webkit-tap-highlight-color:transparent;}
-.sec-subtitle{font-family:monospace;font-size:.6rem;letter-spacing:.1em;
+.sec-subtitle{font-family:monospace;font-size:.66rem;letter-spacing:.1em;
   text-transform:uppercase;color:var(--muted);margin:8px 0 10px;}
 
 /* CONFIGURAÇÕES / VÍNCULO DO WHATSAPP */
 .cfg-sec{margin-bottom:22px;}
-.cfg-t{font-family:monospace;font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;
+.cfg-t{font-family:monospace;font-size:.7rem;letter-spacing:.11em;text-transform:uppercase;
   color:var(--green);margin-bottom:6px;}
+/* os três chips mostram o próprio tamanho que aplicam — a amostra é o rótulo */
+.fonte-chips{margin-bottom:10px;}
+.fonte-chips .chip{display:flex;align-items:center;}
 .cfg-d{font-size:.76rem;color:var(--muted);line-height:1.5;margin-bottom:12px;}
 .wa-status{font-size:.8rem;background:var(--surf2);border:1px solid var(--border);
   border-radius:10px;padding:11px 13px;margin-bottom:12px;line-height:1.5;}
@@ -437,11 +460,11 @@ button{font-family:inherit;}
 .wa-instr{font-size:.76rem;color:var(--muted);line-height:1.6;text-align:center;margin-bottom:12px;}
 .md{background:var(--surf);border:1px solid var(--border);border-radius:18px 18px 0 0;
   padding:20px 17px 34px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
-.md-t{font-family:monospace;font-size:.7rem;letter-spacing:.11em;text-transform:uppercase;
+.md-t{font-family:monospace;font-size:.74rem;letter-spacing:.11em;text-transform:uppercase;
   color:var(--green);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
 .md-x{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:0 4px;}
 .fd{margin-bottom:12px;}
-.fd label{display:block;font-family:monospace;font-size:.67rem;color:var(--muted);
+.fd label{display:block;font-family:monospace;font-size:.72rem;color:var(--muted);
   margin-bottom:5px;letter-spacing:.05em;}
 .fd input,.fd select{width:100%;background:var(--surf2);border:1px solid var(--border);
   color:var(--text);font-size:.9rem;padding:11px 12px;border-radius:8px;outline:none;
@@ -450,7 +473,7 @@ button{font-family:inherit;}
 .fd2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
 .chips{display:flex;gap:7px;flex-wrap:wrap;}
 .chip{background:var(--surf2);border:1px solid var(--border);color:var(--muted);
-  font-family:monospace;font-size:.71rem;padding:8px 13px;border-radius:20px;
+  font-family:monospace;font-size:.75rem;padding:8px 13px;border-radius:20px;
   cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .chip.on{background:var(--green-d);border-color:var(--green);color:var(--green);}
 .stp{display:none;}
@@ -476,9 +499,9 @@ button{font-family:inherit;}
 .pop-i{display:flex;justify-content:space-between;align-items:flex-start;
   padding:10px 0;border-bottom:1px solid var(--border);gap:8px;}
 .pop-i:last-child{border:none;}
-.pop-n{font-size:.84rem;font-weight:500;}
+.pop-n{font-size:.88rem;font-weight:500;}
 .pop-s{font-size:.68rem;color:var(--muted);margin-top:2px;}
-.pop-v{font-family:monospace;font-size:.84rem;font-weight:700;white-space:nowrap;}
+.pop-v{font-family:monospace;font-size:.88rem;font-weight:700;white-space:nowrap;}
 </style>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -1252,6 +1275,16 @@ onAuthStateChanged(auth, function(user){
 <div class="ov" id="ovConfig" onclick="fecharFora(event,'ovConfig')">
   <div class="md" onclick="event.stopPropagation()">
     <div class="md-t">Configurações<button class="md-x" onclick="fechar('ovConfig')">✕</button></div>
+
+    <div class="cfg-sec">
+      <div class="cfg-t">Tamanho do texto</div>
+      <div class="chips fonte-chips">
+        <div class="chip" id="fonte-n"  onclick="aplicarFonte('n')"  style="font-size:.72rem">A Padrão</div>
+        <div class="chip" id="fonte-g"  onclick="aplicarFonte('g')"  style="font-size:.85rem">A Grande</div>
+        <div class="chip" id="fonte-gg" onclick="aplicarFonte('gg')" style="font-size:1rem">A Maior</div>
+      </div>
+      <div class="cfg-d">Vale só neste aparelho.</div>
+    </div>
 
     <div class="cfg-sec">
       <div class="cfg-t">Perfil financeiro</div>
@@ -3426,8 +3459,24 @@ function textoPlano(a){
 
 function abrirConfig(){
   document.getElementById('ovConfig').classList.add('on');
+  renderFonteUI();
   esconderCodigo();
   carregarStatusWhatsApp();
+}
+
+/* ══════ TAMANHO DO TEXTO ══════ */
+function fonteAtual(){ return document.documentElement.getAttribute('data-fonte')||'g'; }
+function renderFonteUI(){
+  var atual=fonteAtual();
+  ['n','g','gg'].forEach(function(f){
+    var el=document.getElementById('fonte-'+f);
+    if(el) el.classList.toggle('on',f===atual);
+  });
+}
+function aplicarFonte(f){
+  document.documentElement.setAttribute('data-fonte',f);
+  try{ localStorage.setItem('vigia_fonte',f); }catch(e){}
+  renderFonteUI();
 }
 function esconderCodigo(){
   if(timerCodigo){ clearInterval(timerCodigo); timerCodigo=null; }
