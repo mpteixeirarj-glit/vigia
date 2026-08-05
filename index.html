@@ -146,6 +146,15 @@ button{font-family:inherit;}
   border:1px solid var(--border);color:var(--text);font-size:.85rem;cursor:pointer;
   display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
 .mesctrl .lbl{font-family:monospace;font-size:.72rem;color:var(--text);min-width:78px;text-align:center;}
+/* Com o texto maior, o topo não comporta logo + mês + sino + olho + engrenagem
+   num celular estreito. O ícone do app basta para identificar a marca. */
+@media (max-width:400px){ .logo-txt{display:none;} .mesctrl .lbl{min-width:66px;} }
+#btnAvisos{position:relative;overflow:visible;font-size:.8rem!important;}
+.sino-badge{position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;padding:0 4px;
+  border-radius:9px;background:var(--red);color:#fff;font-family:monospace;font-size:.62rem;
+  font-weight:700;line-height:17px;text-align:center;display:none;}
+.sino-badge.on{display:block;}
+.sino-badge.aviso{background:var(--yellow);color:#241f00;}
 .btn-sair{margin-left:6px;color:var(--muted)!important;font-size:.95rem!important;}
 .btn-sair:active{color:var(--red)!important;border-color:var(--red)!important;}
 
@@ -447,6 +456,21 @@ button{font-family:inherit;}
 .cfg-sec{margin-bottom:22px;}
 .cfg-t{font-family:monospace;font-size:.7rem;letter-spacing:.11em;text-transform:uppercase;
   color:var(--green);margin-bottom:6px;}
+/* AVISOS DE TETO / META */
+.avi{border:1px solid var(--border);border-left-width:3px;border-radius:9px;
+  padding:12px 13px;margin-bottom:11px;background:var(--surf2);}
+.avi.estouro{border-left-color:var(--red);background:var(--red-d);}
+.avi.atencao{border-left-color:var(--yellow);background:var(--yellow-d);}
+.avi.meta{border-left-color:var(--green);background:var(--green-d);}
+.avi-t{display:flex;gap:8px;align-items:flex-start;margin-bottom:5px;}
+.avi-n{font-size:.86rem;font-weight:600;color:var(--text);line-height:1.35;flex:1;}
+.avi-x{font-size:.76rem;color:var(--muted);line-height:1.55;}
+.avi-a{display:flex;gap:7px;margin-top:11px;}
+.avi-a button{flex:1;padding:8px 0;border-radius:7px;background:var(--surf);
+  border:1px solid var(--border);color:var(--muted);font-family:monospace;
+  font-size:.68rem;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.avi-a button:active{color:var(--text);border-color:var(--text);}
+
 /* os três chips mostram o próprio tamanho que aplicam — a amostra é o rótulo */
 .fonte-chips{margin-bottom:10px;}
 .fonte-chips .chip{display:flex;align-items:center;}
@@ -768,13 +792,16 @@ onAuthStateChanged(auth, function(user){
 
 <div class="topnav">
   <div class="topnav-esq">
-    <div class="logo" onclick="instalarApp()"><img src="icon-192.png" alt="">VIGIA</div>
+    <div class="logo" onclick="instalarApp()"><img src="icon-192.png" alt=""><span class="logo-txt">VIGIA</span></div>
     <button class="data-atual" id="dataAtual" onclick="voltarHoje()">—</button>
   </div>
   <div class="mesctrl">
     <button onclick="navMes(-1)">‹</button>
     <div class="lbl" id="mesLbl">—</div>
     <button onclick="navMes(1)">›</button>
+    <button id="btnAvisos" onclick="abrirAvisos()" title="Avisos de teto e meta">
+      🔔<span class="sino-badge" id="sinoBadge">0</span>
+    </button>
     <button id="btnOlho" onclick="toggleValores()" title="Ocultar valores">
       <img id="icoOlho" src="olho-aberto.png" alt="Ocultar valores">
     </button>
@@ -1271,6 +1298,15 @@ onAuthStateChanged(auth, function(user){
   </div>
 </div>
 
+<!-- MODAL AVISOS DE TETO / META -->
+<div class="ov" id="ovAvisos" onclick="fecharFora(event,'ovAvisos')">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-t">Avisos<button class="md-x" onclick="fechar('ovAvisos')">✕</button></div>
+    <div id="avisosLista"></div>
+    <div class="cfg-d" id="avisosRodape" style="margin-top:14px"></div>
+  </div>
+</div>
+
 <!-- MODAL CONFIGURAÇÕES -->
 <div class="ov" id="ovConfig" onclick="fecharFora(event,'ovConfig')">
   <div class="md" onclick="event.stopPropagation()">
@@ -1558,10 +1594,11 @@ function arquivoCor(k){ return 'cartoes/'+corCartao(k).arquivo; }
 /* Dados de exemplo genéricos — usados só até o usuário logar e ter dados
    próprios no Firestore (ou como fallback offline). Nenhum dado real. */
 var INIT={
-  schemaVersion:6,
+  schemaVersion:7,
   perfil:null,
   metaRendaMensal:0,
   receitasParceladas:[],
+  avisosSilenciados:{},
   receitasFixas:[
     {id:'rf1',dia:5, nome:'Salário', valor:5000.00},
     {id:'rf2',dia:15,nome:'Renda extra', valor:800.00}
@@ -1678,6 +1715,15 @@ function migrarV5paraV6(d){
   return d;
 }
 
+/* v6 → v7: avisos de teto/meta que a pessoa pode adiar. Guarda só o que está
+   silenciado e até quando — o aviso em si é sempre recalculado, então nunca
+   fica um alerta velho gravado dizendo algo que já não é verdade. */
+function migrarV6paraV7(d){
+  if(!d.avisosSilenciados) d.avisosSilenciados={};
+  d.schemaVersion=7;
+  return d;
+}
+
 function getD(){
   var raw=localStorage.getItem(chaveLocal(uidAtual));
   if(!raw){ var d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
@@ -1688,6 +1734,7 @@ function getD(){
     if(d.schemaVersion===3){ d=migrarV3paraV4(d); salvar(d); }
     if(d.schemaVersion===4){ d=migrarV4paraV5(d); salvar(d); }
     if(d.schemaVersion===5){ d=migrarV5paraV6(d); salvar(d); }
+    if(d.schemaVersion===6){ d=migrarV6paraV7(d); salvar(d); }
     if(!d.meses)d.meses={};
     if(!d.historico)d.historico=[];
     if(!d.parcelamentos)d.parcelamentos=[];
@@ -1696,6 +1743,7 @@ function getD(){
     if(!d.investimentos)d.investimentos=[];
     if(!d.cartoes)d.cartoes=[];
     if(!d.receitasParceladas)d.receitasParceladas=[];
+    if(!d.avisosSilenciados)d.avisosSilenciados={};
     if(d.perfil===undefined)d.perfil=null;
     if(d.metaRendaMensal===undefined)d.metaRendaMensal=0;
     if(d.ultimoMesReal===undefined)d.ultimoMesReal=null;
@@ -2261,6 +2309,165 @@ function renderInicio(){
   document.getElementById('sAlertas').innerHTML=al.map(function(a){
     return '<div class="al '+a.t+'"><span class="al-i">'+a.i+'</span><span>'+a.x+'</span></div>';
   }).join('');
+}
+
+/* ══════ AVISOS DE TETO / META ══════
+   Todo teto ou meta que a pessoa configurou vira aviso: teto do cartão, meta
+   do cofrinho, meta de renda e meta de cada investimento na carteira. Os
+   avisos NÃO são gravados — só o silenciamento é. Assim um aviso nunca fica
+   guardado dizendo algo que deixou de ser verdade: some sozinho quando o
+   problema some.
+
+   A chave carrega o mês, então "só mês que vem" é só silenciar até o dia 1º:
+   no mês seguinte a chave é outra e o aviso volta por conta própria. */
+var AVISO_ADIAR_DIAS=7;
+
+function chaveMesAviso(m,a){ return a+'-'+String(m+1).padStart(2,'0'); }
+
+function calcularAvisos(c,d,m,a){
+  var av=[], km=chaveMesAviso(m,a);
+  function add(tipo,ref,nivel,icone,titulo,texto){
+    av.push({chave:tipo+':'+ref+':'+km,nivel:nivel,icone:icone,titulo:titulo,texto:texto});
+  }
+
+  /* teto do cartão — o único teto que é um limite de gasto de verdade */
+  d.cartoes.forEach(function(ct){
+    var teto=Number(ct.teto)||0; if(teto<=0) return;
+    var fat=faturaMes(ct.id,m,a), pct=fat/teto*100;
+    if(fat>teto){
+      add('teto-cartao',ct.id,'estouro','🔴',ct.nome+' passou do teto',
+        'A fatura está em '+fmt(fat)+', ou seja '+fmt(fat-teto)+
+        ' acima do teto de '+fmt(teto)+' que você definiu.');
+    } else if(pct>=80){
+      add('teto-cartao',ct.id,'atencao','🟡',ct.nome+' está perto do teto',
+        fmtPct(pct)+' do teto usado. Ainda cabem '+fmt(teto-fat)+' antes de estourar.');
+    }
+  });
+
+  /* meta do cofrinho — aqui "passar do teto" é notícia boa */
+  (c.cofrinhos||[]).forEach(function(x){
+    var teto=Number(x.cf.teto)||0; if(teto<=0) return;
+    var pct=x.acumulado/teto*100;
+    if(x.acumulado>=teto){
+      add('meta-cofrinho',x.cf.id,'meta','🎉','Cofrinho '+x.cf.nome+' bateu a meta',
+        'Você já juntou '+fmt(x.acumulado)+' dos '+fmt(teto)+
+        ' planejados. Dá para sacar ou aumentar a meta.');
+    } else if(pct>=80){
+      add('meta-cofrinho',x.cf.id,'atencao','🐷','Cofrinho '+x.cf.nome+' quase lá',
+        fmtPct(pct)+' da meta. Faltam '+fmt(teto-x.acumulado)+'.');
+    }
+  });
+
+  /* meta de renda mensal (autônomo e misto) */
+  var meta=Number(d.metaRendaMensal)||0;
+  if(meta>0){
+    var recebido=c.recExt+c.recParc;
+    if(recebido>=meta){
+      add('meta-renda','mes','meta','🎯','Meta de renda batida',
+        'Você recebeu '+fmt(recebido)+' dos '+fmt(meta)+' que era a meta do mês.');
+    } else if(diaDoMesJaPassou(m,a,0.7)){
+      add('meta-renda','mes','atencao','⏳','Meta de renda atrasada',
+        'Faltam '+fmt(meta-recebido)+' para a meta de '+fmt(meta)+
+        ' e o mês já está acabando.');
+    }
+  }
+
+  /* meta de alocação de cada investimento na carteira */
+  var cart=carteiraCalc(d);
+  if(cart.total>0){
+    (d.investimentos||[]).forEach(function(inv){
+      var alvo=Number(inv.metaPercentual)||0; if(alvo<=0) return;
+      var valor=(Number(inv.cotas)||0)*(Number(inv.precoCota)||0);
+      var pct=valor/cart.total*100, dif=pct-alvo;
+      if(Math.abs(dif)<10) return;
+      add('meta-investimento',inv.id,'atencao',dif>0?'📈':'📉',
+        inv.nome+(dif>0?' acima da meta':' abaixo da meta'),
+        'Está em '+fmtPct(pct,1)+' da carteira, e a meta é '+fmtPct(alvo)+'.');
+    });
+  }
+
+  /* comprometimento da renda: o teto implícito de todo mês é a própria renda */
+  if(c.receitas>0 && c.despesas>c.receitas){
+    add('teto-renda','mes','estouro','🔴','Despesas passaram da renda',
+      'As despesas somam '+fmt(c.despesas)+' contra '+fmt(c.receitas)+
+      ' de receita — '+fmt(c.despesas-c.receitas)+' a descoberto.');
+  }
+  return av;
+}
+
+/* Já passou a fração `f` do mês? Só faz sentido para o mês corrente: num mês
+   passado tudo já aconteceu, num futuro nada aconteceu ainda. */
+function diaDoMesJaPassou(m,a,f){
+  if(m!==HOJE.getMonth()||a!==HOJE.getFullYear()) return false;
+  var total=new Date(a,m+1,0).getDate();
+  return HOJE.getDate()/total>=f;
+}
+
+function avisosVisiveis(c,d,m,a){
+  var agora=Date.now(), sil=d.avisosSilenciados||{};
+  return calcularAvisos(c,d,m,a).filter(function(x){
+    return !(sil[x.chave]>agora);
+  });
+}
+
+/* Silencia até `ate`. Aproveita para varrer o que já venceu — sem isso o
+   objeto cresceria para sempre com chaves de meses antigos. */
+function silenciarAviso(chave,ate){
+  var d=getD(), agora=Date.now(), sil=d.avisosSilenciados||{};
+  Object.keys(sil).forEach(function(k){ if(!(sil[k]>agora)) delete sil[k]; });
+  sil[chave]=ate;
+  d.avisosSilenciados=sil;
+  salvar(d);
+  renderAvisos();
+}
+function adiarAviso(chave){
+  silenciarAviso(chave,Date.now()+AVISO_ADIAR_DIAS*24*60*60*1000);
+}
+function adiarAvisoAteProximoMes(chave){
+  /* 1º dia do mês seguinte ao mês do aviso, que vem no fim da chave */
+  var partes=chave.split(':').pop().split('-');
+  var ano=parseInt(partes[0],10), mes=parseInt(partes[1],10);  /* mes é 1-12 */
+  silenciarAviso(chave,new Date(ano,mes,1).getTime());
+}
+
+function abrirAvisos(){
+  renderAvisos();
+  document.getElementById('ovAvisos').classList.add('on');
+}
+
+function renderAvisos(){
+  var c=calcMes(curM,curA);
+  var av=avisosVisiveis(c,c.d,curM,curA);
+
+  var badge=document.getElementById('sinoBadge');
+  if(badge){
+    badge.textContent=av.length>9?'9+':String(av.length);
+    badge.classList.toggle('on',av.length>0);
+    /* vermelho só quando algo estourou de verdade; o resto é amarelo */
+    badge.classList.toggle('aviso',av.length>0&&!av.some(function(x){return x.nivel==='estouro';}));
+  }
+
+  var lista=document.getElementById('avisosLista');
+  if(!lista) return;
+  if(!av.length){
+    lista.innerHTML='<div class="vazio">Nenhum aviso em '+MES[curM]+'/'+curA+'.<br>'+
+      'Tetos e metas que você configurar aparecem aqui.</div>';
+  } else {
+    lista.innerHTML=av.map(function(x){
+      var ch=x.chave.replace(/'/g,'');
+      return '<div class="avi '+x.nivel+'">'+
+        '<div class="avi-t"><span class="al-i">'+x.icone+'</span>'+
+        '<span class="avi-n">'+x.titulo+'</span></div>'+
+        '<div class="avi-x">'+x.texto+'</div>'+
+        '<div class="avi-a">'+
+        '<button onclick="adiarAviso(\''+ch+'\')">⏰ Adiar '+AVISO_ADIAR_DIAS+' dias</button>'+
+        '<button onclick="adiarAvisoAteProximoMes(\''+ch+'\')">📅 Só mês que vem</button>'+
+        '</div></div>';
+    }).join('');
+  }
+  document.getElementById('avisosRodape').textContent=
+    'Avisos de '+MES[curM]+'/'+curA+'. Adiar esconde por '+AVISO_ADIAR_DIAS+
+    ' dias; "só mês que vem" esconde até o dia 1º.';
 }
 
 function faturaMes(cartao,m,a){
@@ -3633,9 +3840,23 @@ function renderPerfilUI(){
   if(bm) bm.style.display=(d.perfil==='autonomo'||d.perfil==='misto')?'block':'none';
 }
 
+/* Abre o painel sozinho uma vez por sessão quando algo estourou de verdade —
+   um teto passado não pode depender de a pessoa reparar num badge pequeno.
+   Só para "estouro": abrir modal por causa de meta batida seria estorvo. */
+var avisosJaAbertos=false;
+function avisarSeEstourou(){
+  if(avisosJaAbertos) return;
+  var c=calcMes(curM,curA);
+  var av=avisosVisiveis(c,c.d,curM,curA);
+  if(!av.some(function(x){return x.nivel==='estouro';})) return;
+  avisosJaAbertos=true;
+  abrirAvisos();
+}
+
 function renderTudo(){
   document.getElementById('mesLbl').textContent=MESF[curM]+' '+String(curA).slice(-2);
   renderPerfilUI();
+  renderAvisos();
   if(telaAtual==='inicio') renderInicio();
   else if(telaAtual==='agenda') renderAgenda();
   else if(telaAtual==='cartoes') renderCartoes();
@@ -3685,6 +3906,8 @@ function iniciarApp(){
   document.getElementById('fab').style.display='flex';
   atualizarDataAtual();
   renderTudo();
+  /* depois da splash, senão o painel abre atrás dela */
+  setTimeout(avisarSeEstourou,900);
 }
 
 function finalizarEntrada(user){
@@ -3845,10 +4068,10 @@ function onbConfirmar(){
   var parcelamentos=s.parcelas.map(function(p){ return {id:idNovo('pc'),nome:p.nome,valor:p.valor,total:p.total,
     mesIni:p.mesIni,anoIni:p.anoIni,cartao:p.cartao,dia:p.dia||20}; });
   var d={
-    schemaVersion:6, nome:s.nome,
+    schemaVersion:7, nome:s.nome,
     receitasFixas:receitasFixas, despesasFixas:despesasFixas,
     parcelamentos:parcelamentos, cofrinhos:[], investimentos:[], cartoes:[],
-    perfil:null, metaRendaMensal:0, receitasParceladas:[],
+    perfil:null, metaRendaMensal:0, receitasParceladas:[], avisosSilenciados:{},
     meses:{}, historico:[], ultimoMesReal:null
   };
   salvar(d);
