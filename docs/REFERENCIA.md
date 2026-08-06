@@ -395,7 +395,7 @@ O app não tem suíte versionada. Os testes foram escritos em `playwright-core` 
 ## 9. Pendências conhecidas
 
 - `NUMERO_AUTORIZADO` ainda preenchida no Railway — enquanto estiver, o bot fica restrito e o modo multiusuário não vale.
-- O cron do bot nunca rodou em produção; só a rota manual foi validada.
+- ~~O cron do bot nunca rodou em produção.~~ **Validado em 06/08/2026:** a leva das 9h saiu no horário de Brasília, agrupada numa mensagem só, com teto de cartão a 101% e cofrinho na meta.
 - `firestore.rules` é publicado à mão no console do Firebase, não por deploy.
 - `usuarios/{uid}/alertas/**` é gravável pelo cliente (a regra `{documento=**}` cobre). O prejuízo possível é a própria pessoa silenciar os próprios avisos.
 - A barra de progresso não é mascarada pelo olho — só o número.
