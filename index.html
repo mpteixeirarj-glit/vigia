@@ -141,6 +141,16 @@ button{font-family:inherit;}
 /* Em telas estreitas o topnav não comporta data + mês + olho + sair:
    a data sai, já que o mês continua visível ao lado. */
 @media (max-width:430px){ .data-atual{display:none;} }
+/* Contador da sessão. Só no computador: no celular o topo já está cheio, e é
+   no PC de trabalho que o logout por inatividade pega a pessoa de surpresa —
+   ver o tempo restante evita perder o que estava fazendo. Clicar renova. */
+.sessao-timer{display:none;font-family:monospace;font-size:.66rem;letter-spacing:.05em;
+  color:var(--muted);background:var(--surf2);border:1px solid var(--border);
+  border-radius:20px;padding:3px 10px;cursor:pointer;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;}
+.sessao-timer.perto{color:var(--yellow);border-color:var(--yellow);}
+.sessao-timer:active{color:var(--text);}
+@media (min-width:768px){ .sessao-timer.on{display:inline-flex;align-items:center;} }
 .mesctrl{display:flex;align-items:center;gap:4px;flex-shrink:0;}
 .mesctrl button{width:28px;height:28px;border-radius:7px;background:var(--surf2);
   border:1px solid var(--border);color:var(--text);font-size:.85rem;cursor:pointer;
@@ -891,6 +901,8 @@ onAuthStateChanged(auth, function(user){
   <div class="topnav-esq">
     <div class="logo" onclick="instalarApp()"><img src="icon-192.png" alt=""><span class="logo-txt">VIGIA</span></div>
     <button class="data-atual" id="dataAtual" onclick="voltarHoje()">—</button>
+    <button class="sessao-timer" id="sessaoTimer" onclick="continuarSessao()"
+      title="Tempo restante da sessão. Clique para renovar.">—</button>
   </div>
   <div class="mesctrl">
     <button onclick="navMes(-1)">‹</button>
@@ -4384,11 +4396,30 @@ function atualizarDataAtual(){
 var TEMPO_SESSAO=15*60*1000;
 var AVISO_ANTES=2*60*1000;
 var timerSessao=null, timerAvisoSessao=null, sessaoAtiva=false;
+var sessaoExpiraEm=0, tickerSessao=null;
 var SAIU_EM_KEY='vigia_saiu_em';
 
 function limparTimersSessao(){
   if(timerSessao){ clearTimeout(timerSessao); timerSessao=null; }
   if(timerAvisoSessao){ clearTimeout(timerAvisoSessao); timerAvisoSessao=null; }
+  if(tickerSessao){ clearInterval(tickerSessao); tickerSessao=null; }
+}
+
+/* O relógio é desenhado a partir de sessaoExpiraEm, não de um contador que
+   decrementa: um setInterval de 1s atrasa quando a aba fica em segundo plano,
+   e o número mostrado deixaria de bater com a expiração de verdade. */
+function formatarRestante(ms){
+  var seg=Math.max(0,Math.ceil(ms/1000));
+  return Math.floor(seg/60)+':'+String(seg%60).padStart(2,'0');
+}
+function pintarTimerSessao(){
+  var el=document.getElementById('sessaoTimer');
+  if(!el) return;
+  if(!sessaoAtiva){ el.classList.remove('on'); return; }
+  var resta=sessaoExpiraEm-Date.now();
+  el.classList.add('on');
+  el.textContent='⏱ '+formatarRestante(resta);
+  el.classList.toggle('perto',resta<=AVISO_ANTES);
 }
 function esconderBannerSessao(){
   var b=document.getElementById('bannerSessao');
@@ -4400,6 +4431,9 @@ function esconderBannerSessao(){
 function iniciarTimerSessao(){
   limparTimersSessao();
   esconderBannerSessao();
+  sessaoExpiraEm=Date.now()+TEMPO_SESSAO;
+  pintarTimerSessao();
+  tickerSessao=setInterval(pintarTimerSessao,1000);
   timerAvisoSessao=setTimeout(function(){
     if(!sessaoAtiva) return;
     var b=document.getElementById('bannerSessao');
@@ -4427,6 +4461,8 @@ function pararSessao(){
   sessaoAtiva=false;
   limparTimersSessao();
   esconderBannerSessao();
+  var el=document.getElementById('sessaoTimer');
+  if(el) el.classList.remove('on');
 }
 async function encerrarSessao(){
   if(!sessaoAtiva) return; // já caiu; não desloga duas vezes
