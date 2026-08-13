@@ -3,7 +3,7 @@
 > Documento de contexto para retomar o desenvolvimento em outra sessão de IA.
 > Descreve **o que existe**, **onde está** e **o que não pode ser quebrado**.
 >
-> Última atualização: agosto/2026 · `schemaVersion: 7` · service worker `vigia-v20`
+> Última atualização: agosto/2026 · `schemaVersion: 8` · service worker `vigia-v21`
 
 ---
 
@@ -84,17 +84,25 @@ A conversa chega como `<lid>@lid` e o número real vai em `key.senderPn` / `key.
 
 ### 2.7 Bump do service worker a cada deploy
 
-`sw.js` é cache-first. Sem trocar `const CACHE = 'vigia-vNN'`, o usuário continua com a versão velha. **Está em `vigia-v20`.**
+`sw.js` é cache-first. Sem trocar `const CACHE = 'vigia-vNN'`, o usuário continua com a versão velha. **Está em `vigia-v21`.**
 
 ### 2.8 Migração encadeada
 
 Toda mudança de formato precisa de `migrarVNparaVN+1` chamada em sequência dentro de `getD()`, e o `schemaVersion` de `INIT` e de `onbConfirmar()` sobe junto. Campos novos ganham default defensivo no fim de `getD()` — dado que veio da nuvem pode ser mais velho que a migração.
 
-### 2.9 Verifique `git status -sb` antes de commitar
+### 2.9 Campo de dinheiro nunca é lido com `parseFloat(.value)`
+
+Os 23 campos de `MOEDA_INPUTS` formatam enquanto a pessoa digita: "7785" vira
+"77,85". Depois disso `parseFloat("1.111.111,11")` devolve **1.111**. Toda
+leitura passa por `obterValorInput()`, toda escrita por `setValorInput()` e
+toda limpeza por `limparValorInput()`/`limparCampos()` — limpar só o `.value`
+deixa o `dataset.valor` antigo e o campo grava o valor do lançamento anterior.
+
+### 2.10 Verifique `git status -sb` antes de commitar
 
 O clone local desta máquina já perdeu commits duas vezes. Sempre `git fetch` e compare com o remoto antes.
 
-### 2.10 O perfil decide o que é OFERECIDO, não o que é ocultado
+### 2.11 O perfil decide o que é OFERECIDO, não o que é ocultado
 
 Trocar de perfil nunca esconde nem apaga dado já cadastrado. Quem tem receita fixa continua vendo no perfil autônomo.
 
@@ -102,13 +110,14 @@ Trocar de perfil nunca esconde nem apaga dado já cadastrado. Quem tem receita f
 
 ## 3. Modelo de dados
 
-### 3.1 `usuarios/{uid}/dados/principal` — schemaVersion 7
+### 3.1 `usuarios/{uid}/dados/principal` — schemaVersion 8
 
 ```js
 {
-  schemaVersion: 7,
+  schemaVersion: 8,
   nome: "Marcos Paulo",
-  perfil: null | "clt" | "autonomo" | "misto",
+  perfil: null | "clt" | "autonomo" | "misto" | "vendedor",
+  subPerfil: null | "marketplace" | "direto" | "misto_vendedor",  // só vendedor
   metaRendaMensal: 0,
 
   receitasFixas:   [{ id, dia, nome, valor }],
@@ -131,6 +140,7 @@ Trocar de perfil nunca esconde nem apaga dado já cadastrado. Quem tem receita f
       receitas:  [{ id, nome, valor, dia, cat, tipo }],
       consumo:   [{ id, nome, valor, dia, cat, cartao, fonte }],
       reserva:   [{ id, nome, valor, dia }],
+      vendas:    [{ id, desc, valor, custo, taxa, taxaPct, qtd, dia, canal, forma }],
       cofres:    [{ id, nome, valor, dia, cofrinhoId }],
       confirmacoes: { "<idDoItemFixo>": { confirmado: true, valor: 1850 } }
     }
@@ -162,6 +172,9 @@ Trocar de perfil nunca esconde nem apaga dado já cadastrado. Quem tem receita f
 | `vigia_ultimo_uid` | última conta logada, para o modo offline |
 | `vigia_onboarding_visto` | intro de 3 slides já vista |
 | `vigia_fonte` | escala do texto: `n`, `g` ou `gg` |
+
+E em `sessionStorage` (morre ao fechar o app): `vigia_saiu_em`, hora em que o app
+foi para segundo plano, usada para conferir o tempo real de inatividade na volta.
 
 ---
 

@@ -427,12 +427,22 @@ button{font-family:inherit;}
   align-items:flex-end;justify-content:center;}
 .ov.on{display:flex;}
 /* Confirmação/alerta do sistema ficam acima dos outros modais — um alerta de
-   validação dispara com o formulário ainda aberto por baixo. */
-.ov-sis{z-index:300;}
+   validação dispara com o formulário ainda aberto por baixo. Acima também da
+   tela de login (z-index 1000): o aviso de sessão expirada aparece justo
+   quando o login acabou de voltar, e ficaria invisível atrás dele. */
+.ov-sis{z-index:1100;}
 
 /* PERFIL FINANCEIRO */
 #telaPerfil{display:none;position:fixed;inset:0;background:var(--bg);z-index:990;
   overflow-y:auto;padding:40px 20px calc(40px + env(safe-area-inset-bottom));}
+/* Sub-perfil fica por cima da seleção: é um passo a mais, não uma troca de tela */
+#telaSubPerfil{display:none;position:fixed;inset:0;background:var(--bg);z-index:991;
+  overflow-y:auto;padding:40px 20px calc(40px + env(safe-area-inset-bottom));}
+.perfil-topo{text-align:center;margin-bottom:32px;}
+.perfil-kicker{font-family:monospace;font-size:.66rem;letter-spacing:.14em;
+  color:var(--green);margin-bottom:8px;text-transform:uppercase;}
+.perfil-titulo{font-size:1.2rem;font-weight:700;color:var(--text);}
+.perfil-sub{font-size:.82rem;color:var(--muted);margin-top:6px;}
 .perfil-card{background:var(--surf);border:2px solid var(--border);border-radius:14px;
   padding:20px;margin-bottom:12px;cursor:pointer;transition:border-color .2s,background .2s;
   -webkit-tap-highlight-color:transparent;max-width:480px;margin-left:auto;margin-right:auto;}
@@ -442,6 +452,11 @@ button{font-family:inherit;}
 .perfil-desc{font-size:.8rem;color:var(--muted);line-height:1.5;margin-bottom:12px;}
 .perfil-features{list-style:none;padding:0;}
 .perfil-features li{font-size:.78rem;color:var(--green);padding:3px 0;}
+#bannerSessao{display:none;background:var(--yellow-d);border-left:3px solid var(--yellow);
+  padding:10px 14px;margin:0 16px 12px;border-radius:8px;font-size:.78rem;color:var(--text);}
+#bannerSessao button{background:none;border:none;color:var(--yellow);font-family:monospace;
+  font-size:.74rem;font-weight:700;cursor:pointer;margin-left:8px;text-decoration:underline;
+  -webkit-tap-highlight-color:transparent;}
 #bannerPerfil{background:var(--yellow-d);border-left:3px solid var(--yellow);
   padding:10px 14px;margin:0 16px 12px;border-radius:8px;font-size:.8rem;
   color:var(--text);display:none;cursor:pointer;-webkit-tap-highlight-color:transparent;}
@@ -532,7 +547,8 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import {
   getAuth, onAuthStateChanged, signOut, GoogleAuthProvider,
   signInWithPopup, signInWithRedirect, getRedirectResult,
-  signInWithEmailAndPassword, createUserWithEmailAndPassword
+  signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  setPersistence, browserSessionPersistence
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import {
   getFirestore, doc, setDoc, getDoc, onSnapshot, deleteDoc,
@@ -553,6 +569,12 @@ var auth = getAuth(app);
 var db = getFirestore(app);
 var googleProvider = new GoogleAuthProvider();
 var unsubSnapshot = null;
+
+/* Sessão do navegador, não do aparelho. O padrão do Firebase mantém o login
+   entre reaberturas do app; com dado financeiro na tela isso é escolha errada.
+   Fechou o app, pede login de novo. */
+setPersistence(auth, browserSessionPersistence)
+  .catch(function(e){ console.warn('[Vigia] Falha ao definir persistência de sessão.', e); });
 
 function docPrincipal(uid){ return doc(db,'usuarios',uid,'dados','principal'); }
 
@@ -731,10 +753,70 @@ onAuthStateChanged(auth, function(user){
     </ul>
   </div>
 
+  <div class="perfil-card" id="pcVen" onclick="abrirSubPerfil()">
+    <div class="perfil-icon">🛍️</div>
+    <div class="perfil-nome">Vendedor</div>
+    <div class="perfil-desc">Vendo produtos, online ou presencialmente. Controlo receita por venda, custo e taxa de plataforma.</div>
+    <ul class="perfil-features">
+      <li>✓ Lançamento por venda</li>
+      <li>✓ Custo do produto e taxa da plataforma</li>
+      <li>✓ Lucro e margem do mês</li>
+      <li>✓ Separação por canal de venda</li>
+    </ul>
+  </div>
+
   <button onclick="fecharSelecaoPerfil()" style="display:block;width:100%;max-width:480px;
     margin:16px auto 0;padding:13px;background:transparent;border:1px solid var(--border);
     color:var(--muted);border-radius:10px;font-family:monospace;font-size:.78rem;cursor:pointer;">
     Decidir depois</button>
+</div>
+
+<!-- SUB-PERFIL DO VENDEDOR: o canal muda o que é perguntado na venda -->
+<div id="telaSubPerfil">
+  <div class="perfil-topo">
+    <div style="font-size:2rem;margin-bottom:10px;">🛍️</div>
+    <div class="perfil-kicker">Perfil vendedor</div>
+    <h1 class="perfil-titulo">Como você vende?</h1>
+    <p class="perfil-sub">Isso muda o que o app pergunta a cada venda.</p>
+  </div>
+
+  <div class="perfil-card" id="spMkt" onclick="selecionarSubPerfil('marketplace')">
+    <div class="perfil-icon">🏪</div>
+    <div class="perfil-nome">Marketplace</div>
+    <div class="perfil-desc">Mercado Livre, Shopee, Amazon, Magalu. A plataforma desconta a taxa antes de repassar.</div>
+    <ul class="perfil-features">
+      <li>✓ Taxa da plataforma em cada venda</li>
+      <li>✓ Faturamento e recebido líquido</li>
+      <li>✓ Lucro depois de custo e taxa</li>
+    </ul>
+  </div>
+
+  <div class="perfil-card" id="spDir" onclick="selecionarSubPerfil('direto')">
+    <div class="perfil-icon">📱</div>
+    <div class="perfil-nome">Venda direta</div>
+    <div class="perfil-desc">Instagram, WhatsApp ou loja própria. Recebe Pix ou dinheiro na hora, sem taxa de plataforma.</div>
+    <ul class="perfil-features">
+      <li>✓ Lançamento rápido por venda</li>
+      <li>✓ Custo do produto</li>
+      <li>✓ Margem de lucro por venda</li>
+    </ul>
+  </div>
+
+  <div class="perfil-card" id="spMis" onclick="selecionarSubPerfil('misto_vendedor')">
+    <div class="perfil-icon">🔄</div>
+    <div class="perfil-nome">Marketplace + direta</div>
+    <div class="perfil-desc">Uso os dois e quero ver separado por canal.</div>
+    <ul class="perfil-features">
+      <li>✓ Escolha do canal em cada venda</li>
+      <li>✓ Comparação entre canais</li>
+      <li>✓ Total unificado no saldo</li>
+    </ul>
+  </div>
+
+  <button onclick="voltarSelecaoPerfil()" style="display:block;width:100%;max-width:480px;
+    margin:16px auto 0;padding:13px;background:transparent;border:1px solid var(--border);
+    color:var(--muted);border-radius:10px;font-family:monospace;font-size:.78rem;cursor:pointer;">
+    ← Voltar</button>
 </div>
 
 <div id="intro">
@@ -832,6 +914,10 @@ onAuthStateChanged(auth, function(user){
     <div class="hero-v pos" id="hSaldo">R$ 0,00</div>
     <div class="hero-s" id="hSub">—</div>
     <div class="hero-perfil" id="heroPerfil" onclick="mostrarSelecaoPerfil()"></div>
+  </div>
+  <div id="bannerSessao">
+    ⏰ Sua sessão expira em 2 minutos por inatividade.
+    <button onclick="continuarSessao()">Continuar</button>
   </div>
   <div id="bannerPerfil" onclick="mostrarSelecaoPerfil()">
     👤 Selecione seu perfil para uma melhor experiência →
@@ -1301,6 +1387,57 @@ onAuthStateChanged(auth, function(user){
   </div>
 </div>
 
+<!-- MODAL REGISTRAR VENDA (perfil vendedor) -->
+<div class="ov" id="ovVenda" onclick="fecharFora(event,'ovVenda')">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-t">Registrar venda<button class="md-x" onclick="fechar('ovVenda')">✕</button></div>
+
+    <div class="stp on" id="vd1">
+      <div class="fd"><label>O que você vendeu</label>
+        <input type="text" id="vdDesc" placeholder="Ex: Camiseta G, kit skincare...">
+      </div>
+      <div class="fd2">
+        <div class="fd"><label>Valor da venda (R$)</label>
+          <input type="tel" id="vdValor" inputmode="numeric" placeholder="0,00"></div>
+        <div class="fd"><label>Custo do produto (R$)</label>
+          <input type="tel" id="vdCusto" inputmode="numeric" placeholder="0,00"></div>
+      </div>
+
+      <div class="fd" id="vdCanalWrap" style="display:none"><label>Canal de venda</label>
+        <div class="chips" id="vdCanalChips"></div>
+      </div>
+
+      <div class="fd" id="vdTaxaWrap" style="display:none"><label>Taxa da plataforma (%)</label>
+        <input type="number" id="vdTaxa" min="0" max="100" step="0.1" inputmode="decimal" placeholder="Ex: 12">
+        <div class="cfg-d" style="margin:6px 0 0">Deixe em branco se não houver taxa.</div>
+      </div>
+
+      <div class="fd"><label>Como recebeu</label>
+        <div class="chips">
+          <div class="chip" onclick="pickVd(this,'forma','pix')">Pix</div>
+          <div class="chip" onclick="pickVd(this,'forma','dinheiro')">Dinheiro</div>
+          <div class="chip" onclick="pickVd(this,'forma','cartao')">Cartão</div>
+          <div class="chip" onclick="pickVd(this,'forma','plataforma')">Pela plataforma</div>
+        </div>
+      </div>
+
+      <div class="fd2">
+        <div class="fd"><label>Dia</label>
+          <input type="number" id="vdDia" min="1" max="31" inputmode="numeric"></div>
+        <div class="fd"><label>Quantidade</label>
+          <input type="number" id="vdQtd" min="1" inputmode="numeric" placeholder="1"></div>
+      </div>
+
+      <button class="bok gr" onclick="vd1ok()">Revisar →</button>
+    </div>
+
+    <div class="stp" id="vd2">
+      <div class="cbx" id="vdConfirmBox"></div>
+      <button class="bok gr" onclick="confirmarVenda()">✓ Registrar venda</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL META DE RENDA -->
 <div class="ov" id="ovMeta" onclick="fecharFora(event,'ovMeta')">
   <div class="md" onclick="event.stopPropagation()">
@@ -1639,8 +1776,9 @@ function arquivoCor(k){ return 'cartoes/'+corCartao(k).arquivo; }
 /* Dados de exemplo genéricos — usados só até o usuário logar e ter dados
    próprios no Firestore (ou como fallback offline). Nenhum dado real. */
 var INIT={
-  schemaVersion:7,
+  schemaVersion:8,
   perfil:null,
+  subPerfil:null,
   metaRendaMensal:0,
   receitasParceladas:[],
   avisosSilenciados:{},
@@ -1769,6 +1907,16 @@ function migrarV6paraV7(d){
   return d;
 }
 
+/* v7 → v8: perfil vendedor. subPerfil diz o canal (marketplace, direto ou os
+   dois) e mm.vendas guarda cada venda com custo e taxa, para o lucro sair sem
+   depender de a pessoa lançar o custo à parte. */
+function migrarV7paraV8(d){
+  if(d.subPerfil===undefined) d.subPerfil=null;
+  for(var k in (d.meses||{})){ if(!d.meses[k].vendas) d.meses[k].vendas=[]; }
+  d.schemaVersion=8;
+  return d;
+}
+
 function getD(){
   var raw=localStorage.getItem(chaveLocal(uidAtual));
   if(!raw){ var d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
@@ -1780,6 +1928,7 @@ function getD(){
     if(d.schemaVersion===4){ d=migrarV4paraV5(d); salvar(d); }
     if(d.schemaVersion===5){ d=migrarV5paraV6(d); salvar(d); }
     if(d.schemaVersion===6){ d=migrarV6paraV7(d); salvar(d); }
+    if(d.schemaVersion===7){ d=migrarV7paraV8(d); salvar(d); }
     if(!d.meses)d.meses={};
     if(!d.historico)d.historico=[];
     if(!d.parcelamentos)d.parcelamentos=[];
@@ -1789,6 +1938,7 @@ function getD(){
     if(!d.cartoes)d.cartoes=[];
     if(!d.receitasParceladas)d.receitasParceladas=[];
     if(!d.avisosSilenciados)d.avisosSilenciados={};
+    if(d.subPerfil===undefined)d.subPerfil=null;
     if(d.perfil===undefined)d.perfil=null;
     if(d.metaRendaMensal===undefined)d.metaRendaMensal=0;
     if(d.ultimoMesReal===undefined)d.ultimoMesReal=null;
@@ -1805,14 +1955,80 @@ function salvar(d){
 function chaveM(m,a){ return a+'-'+String(m+1).padStart(2,'0'); }
 function getMes(d,m,a){
   var k=chaveM(m,a);
-  if(!d.meses[k]) d.meses[k]={consumo:[],reserva:[],cofres:[],receitas:[],confirmacoes:{}};
+  if(!d.meses[k]) d.meses[k]={consumo:[],reserva:[],cofres:[],receitas:[],vendas:[],confirmacoes:{}};
   var x=d.meses[k];
   if(!x.consumo)x.consumo=[]; if(!x.reserva)x.reserva=[];
-  if(!x.cofres)x.cofres=[]; if(!x.receitas)x.receitas=[];
+  if(!x.cofres)x.cofres=[]; if(!x.receitas)x.receitas=[]; if(!x.vendas)x.vendas=[];
   if(!x.confirmacoes)x.confirmacoes={};
   return x;
 }
 function cap(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):s; }
+
+/* ══════ CAMPOS DE DINHEIRO ══════
+   Digitar "7785" vira "77,85": os dois últimos dígitos são sempre centavos.
+   Some a vírgula esquecida e o ponto no lugar errado, que era o erro campeão
+   dos testes — quem digitava "1500" queria mil e quinhentos, não quinze reais.
+
+   O valor de verdade fica em dataset.valor, nunca no texto: depois de
+   formatado, parseFloat("1.111.111,11") daria 1.111. Por isso TODA leitura
+   passa por obterValorInput() e TODA escrita por setValorInput(). */
+var MOEDA_INPUTS=['dVal','pVal','dfVal','pcVal','cofreTeto','cofreValorMensal',
+  'rVal','cfVal','eVal','epV','ecTeto','ecValorMensal','ivPreco','rvValor',
+  'rvTotal','metaValor','cartTeto','vdValor','vdCusto',
+  'onbRendaValor','onbRendaExtraValor','onbDespValor','onbParcValor'];
+
+function elMoeda(x){ return typeof x==='string'?document.getElementById(x):x; }
+
+function formatarValorInput(el){
+  el=elMoeda(el); if(!el) return;
+  var digitos=String(el.value).replace(/\D/g,'').slice(0,12);
+  /* Zero é o mesmo que vazio aqui. Sem isso o campo trava em "0,00": apagar
+     de novo deixa "0,0", que volta a virar "0,00", e o placeholder nunca mais
+     aparece — o usuário não consegue limpar o campo. */
+  if(!digitos||parseInt(digitos,10)===0){ el.value=''; el.dataset.valor=''; return; }
+  var reais=parseInt(digitos,10)/100;
+  el.value=reais.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  el.dataset.valor=reais.toFixed(2);
+}
+function obterValorInput(x){
+  var el=elMoeda(x); if(!el) return 0;
+  if(el.dataset && el.dataset.valor!=null && el.dataset.valor!=='') return parseFloat(el.dataset.valor)||0;
+  /* Sem dataset (campo nunca tocado ou preenchido por fora): interpreta o
+     texto no formato brasileiro, tirando o ponto de milhar antes da vírgula. */
+  return parseFloat(String(el.value).replace(/\./g,'').replace(',','.'))||0;
+}
+function setValorInput(x,valor){
+  var el=elMoeda(x); if(!el) return;
+  var n=Number(valor)||0;
+  if(!n){ limparValorInput(el); return; }
+  el.value=n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  el.dataset.valor=n.toFixed(2);
+}
+function limparValorInput(x){
+  var el=elMoeda(x); if(!el) return;
+  el.value=''; el.dataset.valor='';
+}
+/* Limpar um campo de moeda só com .value='' deixaria o dataset.valor antigo:
+   o campo pareceria vazio e gravaria o valor do lançamento anterior. */
+function limparCampos(ids){
+  ids.forEach(function(i){
+    var el=document.getElementById(i); if(!el) return;
+    if(MOEDA_INPUTS.indexOf(i)>=0) limparValorInput(el); else el.value='';
+  });
+}
+/* Roda uma vez: os campos são estáticos no HTML, os modais não são recriados. */
+function prepararInputsMoeda(){
+  MOEDA_INPUTS.forEach(function(id){
+    var el=document.getElementById(id); if(!el||el.dataset.moedaPronto) return;
+    el.dataset.moedaPronto='1';
+    /* type=number recusa "1.234,56" e devolve string vazia no .value — com a
+       formatação ligada o campo ficaria sempre em branco. */
+    el.type='tel';
+    el.inputMode='numeric';
+    el.placeholder='0,00';
+    el.addEventListener('input',function(){ formatarValorInput(el); });
+  });
+}
 
 /* ══════ RESET MENSAL ══════
    Quando o mês/ano real muda desde a última abertura do app, arquiva
@@ -1879,6 +2095,24 @@ function calcParcelaReceitaNoMes(rp,m,a){
   }
   return {ativa:true,num:n,ultima:n===rp.total,restam:rp.total-n};
 }
+/* ── VENDAS do mês (perfil vendedor) ──
+   Uma venda é receita pelo valor CHEIO; custo do produto e taxa da plataforma
+   são despesa. Guardar só o lucro esconderia o quanto passou pela mão da
+   pessoa, e o faturamento é justamente o número que ela acompanha. */
+function calcVendas(mm){
+  var vendas=mm.vendas||[];
+  var bruto=vendas.reduce(function(s,v){return s+(Number(v.valor)||0);},0);
+  var custo=vendas.reduce(function(s,v){return s+(Number(v.custo)||0);},0);
+  var taxa=vendas.reduce(function(s,v){return s+(Number(v.taxa)||0);},0);
+  return {vendas:vendas,bruto:bruto,custo:custo,taxa:taxa,
+    saida:custo+taxa,lucro:bruto-custo-taxa,
+    margem:bruto>0?((bruto-custo-taxa)/bruto*100):0};
+}
+/* Taxa cobrada pela plataforma, em reais, a partir do percentual informado. */
+function taxaDaVenda(valor,pct){
+  return Math.round((Number(valor)||0)*(Number(pct)||0))/100;
+}
+
 /* Mês/ano em que a última parcela cai, a partir da parcela atual. */
 function calcTermino(atual,total){
   var m=curM+(total-atual), a=curA;
@@ -2007,7 +2241,10 @@ function calcMes(m,a){
   var receitasParcAtivas=receitasParc.filter(function(x){return x.st.ativa;});
   var recParc=receitasParcAtivas.reduce(function(s,x){return s+(Number(x.rp.valorParcela)||0);},0);
 
-  var receitas=recFixConf+recExt+recParc;
+  /* Vendas: faturamento entra como receita, custo e taxa como despesa. */
+  var vd=calcVendas(mm);
+
+  var receitas=recFixConf+recExt+recParc+vd.bruto;
 
   /* Consumo livre + reserva (lançados pelo usuário) */
   var consumo=mm.consumo.filter(function(x){return !x.cartao;}).reduce(function(s,x){return s+x.valor;},0);
@@ -2028,8 +2265,8 @@ function calcMes(m,a){
   var cofresLegado=mm.cofres.filter(function(x){return !x.cofrinhoId;}).reduce(function(s,x){return s+x.valor;},0);
   var cofres=totalCofrinhosMes+cofresLegado;
 
-  var despesas=totalParcelamentos+despFixConf+consumo+cartAvulso+reserva+cofres;
-  return {receitas:receitas,recFixConf:recFixConf,recExt:recExt,
+  var despesas=totalParcelamentos+despFixConf+consumo+cartAvulso+reserva+cofres+vd.saida;
+  return {receitas:receitas,recFixConf:recFixConf,recExt:recExt,vd:vd,
     recParc:recParc,receitasParc:receitasParc,receitasParcAtivas:receitasParcAtivas,
     despFixConf:despFixConf,
     despesasConfirmaveis:despesasConfirmaveis,despesasFonte:despesasFonte,
@@ -2101,7 +2338,51 @@ function renderMetaRenda(d,recebido){
     '<span>'+fmt(recebido)+'</span></div>'+
     '<div class="pp-tr"><div class="pp-f" style="width:'+pct+'%;background:var(--green)"></div></div></div></div>';
 }
+/* ── Vendedor ── */
+function renderLucroDoMes(c){
+  var v=c.vd;
+  if(!v.vendas.length) return '';
+  return '<div class="it bl"><div class="it-t"><div class="it-n">💰 Lucro do mês</div>'+
+    '<div class="it-v '+(v.lucro>=0?'gr':'rd')+'">'+fmt(v.lucro)+'</div></div>'+
+    '<div class="it-m">Faturamento '+fmt(v.bruto)+
+    (v.custo>0?' · custos '+fmt(v.custo):'')+
+    (v.taxa>0?' · taxas '+fmt(v.taxa):'')+
+    ' · margem '+fmtPct(v.margem,1)+'</div></div>';
+}
+function itensVendas(c){
+  var vendas=c.vd.vendas;
+  if(!vendas.length) return '<div class="vazio">Nenhuma venda registrada neste mês.<br>'+
+    'Toque em <b>+ Registrar venda</b> para começar.</div>';
+  /* mais recentes primeiro: quem vende no dia quer ver o que acabou de lançar */
+  return vendas.slice().sort(function(a,b){return (b.dia||0)-(a.dia||0);}).map(function(v){
+    var lucro=(Number(v.valor)||0)-(Number(v.custo)||0)-(Number(v.taxa)||0);
+    return '<div class="it gr"><div class="it-t"><div class="it-n"><span class="dia">'+
+      String(v.dia||'--').padStart(2,'0')+'</span>'+v.desc+
+      (v.qtd>1?'<span class="tg cat">'+v.qtd+' un.</span>':'')+'</div>'+
+      '<div class="it-v gr">'+fmt(v.valor)+'</div></div>'+
+      '<div class="it-m">'+(CANAIS[v.canal]||'Venda direta')+
+      (v.custo>0?' · custo '+fmt(v.custo):'')+
+      (v.taxa>0?' · taxa '+fmt(v.taxa):'')+
+      ' · lucro <b>'+fmt(lucro)+'</b></div>'+
+      '<div class="it-a"><button class="ba del" onclick="excluirVenda(\''+v.id+'\')">✕ Excluir</button></div></div>';
+  }).join('');
+}
+function renderSecaoVendedor(c,d,mm,conf){
+  var sub=d.subPerfil||'direto';
+  var rotulo={marketplace:'+ Registrar venda (marketplace)',
+    direto:'+ Registrar venda',misto_vendedor:'+ Registrar venda'}[sub]||'+ Registrar venda';
+  var h='<button class="btn-recebi-hoje" onclick="abrirVenda()">'+rotulo+'</button>';
+  h+=renderLucroDoMes(c);
+  h+=itensVendas(c);
+  /* Nada é escondido: quem tem salário ou recebimento avulso cadastrado
+     continua vendo, mesmo no perfil vendedor. */
+  var fixas=itensReceitasFixas(d,conf), recebimentos=itensRecebimentos(mm);
+  if(fixas||recebimentos) h+='<div class="sec-subtitle" style="margin-top:14px">Outras receitas</div>'+fixas+recebimentos;
+  return h;
+}
+
 function renderSecaoReceitas(c,d,mm,conf){
+  if(d.perfil==='vendedor') return renderSecaoVendedor(c,d,mm,conf);
   var fixas=itensReceitasFixas(d,conf);
   var recebimentos=itensRecebimentos(mm);
 
@@ -2538,6 +2819,9 @@ function eventosMes(m,a){
   }
   addTipo2(d.receitasFixas,'rec');
   mm.receitas.forEach(function(r){ add(r.dia,{n:r.nome,v:r.valor,t:'rec',s:'Receita '+(r.cat||'')}); });
+  (mm.vendas||[]).forEach(function(v){
+    add(v.dia,{n:v.desc,v:v.valor,t:'rec',s:'Venda · '+(CANAIS[v.canal]||'direta')});
+  });
   /* parcelas a receber caem no dia combinado, como qualquer outra receita. Não
      dependem do perfil: quem já registrou um parcelado continua vendo mesmo se
      trocar de perfil depois. */
@@ -2816,7 +3100,7 @@ function abrirModalCartao(id){
   document.getElementById('cartSalvarBtn').textContent=cartao?'✓ Salvar cartão':'✓ Adicionar cartão';
   document.getElementById('cartNome').value=cartao?cartao.nome:'';
   document.getElementById('cartTitular').value=cartao?(cartao.titular||''):((d.nome||'').trim().toUpperCase());
-  document.getElementById('cartTeto').value=cartao?(cartao.teto||''):'';
+  setValorInput('cartTeto',cartao?cartao.teto:0);
   document.getElementById('cartDia').value=cartao?(cartao.diaVencimento||20):20;
   renderBandChips();
   renderCoresGrid();
@@ -2827,7 +3111,7 @@ async function salvarCartao(){
   var nome=document.getElementById('cartNome').value.trim();
   if(!nome){ await vAlert('Informe o nome do cartão.'); return; }
   var titular=document.getElementById('cartTitular').value.trim();
-  var teto=parseFloat(document.getElementById('cartTeto').value)||0;
+  var teto=obterValorInput('cartTeto');
   var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('cartDia').value)||20));
   var d=getD();
   if(!d.cartoes) d.cartoes=[];
@@ -2962,10 +3246,9 @@ function abrirLanc(){
     '<div class="vazio">Nenhum cartão cadastrado. Adicione um na aba Cartões.</div>';
   document.getElementById('pcCartaoChips').innerHTML=getD().cartoes.map(function(c){
     return '<div class="chip" onclick="setCartaoParc(\''+c.id+'\')">'+c.nome+'</div>';}).join('');
-  ['dDesc','dVal','dDia','pVal','pTot','pAt','rDesc','rVal','rDia',
-   'dfNome','dfVal','dfDia','pcNome','pcVal','pcTot','pcAt','pcCartao',
-   'cofreNome','cofreTeto','cofreValorMensal'].forEach(function(i){
-    var e=document.getElementById(i); if(e) e.value='';});
+  limparCampos(['dDesc','dVal','dDia','pVal','pTot','pAt','rDesc','rVal','rDia',
+    'dfNome','dfVal','dfDia','pcNome','pcVal','pcTot','pcAt','pcCartao',
+    'cofreNome','cofreTeto','cofreValorMensal']);
   document.getElementById('dDia').value=
     (curM===HOJE.getMonth()&&curA===HOJE.getFullYear())?HOJE.getDate():'';
   document.getElementById('pcDia').value=20;
@@ -3025,7 +3308,7 @@ function pickCat(el,id){
 async function dp1ok(){
   if(!L.cat){ await vAlert('Selecione a categoria.'); return; }
   if(!L.forma){ await vAlert('Selecione a forma de pagamento.'); return; }
-  var v=parseFloat(document.getElementById('dVal').value);
+  var v=obterValorInput('dVal');
   if(L.forma==='pix'){
     if(!v||v<=0){ await vAlert('Informe o valor.'); return; }
     var desc=document.getElementById('dDesc').value.trim()||L.catObj.nome;
@@ -3040,14 +3323,14 @@ async function dp1ok(){
     stp('cf1');
   } else {
     /* cartão: pode ser à vista (1x) ou parcelado */
-    if(v>0) document.getElementById('pVal').value=v;
+    if(v>0) setValorInput('pVal',v);
     stp('dp2');
   }
 }
 
 async function dp2ok(){
   if(!L.cartao){ await vAlert('Selecione o cartão.'); return; }
-  var pv=parseFloat(document.getElementById('pVal').value);
+  var pv=obterValorInput('pVal');
   var pt=parseInt(document.getElementById('pTot').value);
   if(!pv||pv<=0){ await vAlert('Informe o valor da parcela.'); return; }
   if(!pt||pt<1){ await vAlert('Informe o total de parcelas.'); return; }
@@ -3077,7 +3360,7 @@ async function dp2ok(){
 
 async function dfOk(){
   var nome=document.getElementById('dfNome').value.trim();
-  var val=parseFloat(document.getElementById('dfVal').value);
+  var val=obterValorInput('dfVal');
   var dia=parseInt(document.getElementById('dfDia').value);
   if(!nome){ await vAlert('Informe o nome da despesa.'); return; }
   if(!val||val<=0){ await vAlert('Informe o valor.'); return; }
@@ -3094,7 +3377,7 @@ async function dfOk(){
 
 async function pcOk(){
   var nome=document.getElementById('pcNome').value.trim();
-  var val=parseFloat(document.getElementById('pcVal').value);
+  var val=obterValorInput('pcVal');
   var tot=parseInt(document.getElementById('pcTot').value);
   var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('pcDia').value)||20));
   var cartao=document.getElementById('pcCartao').value.trim();
@@ -3123,8 +3406,8 @@ async function pcOk(){
 
 async function cofreOk(){
   var nome=document.getElementById('cofreNome').value.trim();
-  var teto=parseFloat(document.getElementById('cofreTeto').value);
-  var vm=parseFloat(document.getElementById('cofreValorMensal').value);
+  var teto=obterValorInput('cofreTeto');
+  var vm=obterValorInput('cofreValorMensal');
   var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('cofreDia').value)||5));
   if(!nome){ await vAlert('Dê um nome pro cofrinho.'); return; }
   if(!teto||teto<=0){ await vAlert('Informe a meta (teto).'); return; }
@@ -3139,7 +3422,7 @@ async function cofreOk(){
 }
 
 async function rc1ok(){
-  var v=parseFloat(document.getElementById('rVal').value);
+  var v=obterValorInput('rVal');
   if(!v||v<=0){ await vAlert('Informe o valor.'); return; }
   var desc=document.getElementById('rDesc').value.trim();
   if(!desc){ await vAlert('Informe a descrição.'); return; }
@@ -3192,7 +3475,7 @@ function edit(lista,id){
   if(!it) return;
   eCtx={lista:lista,id:id,mensal:false};
   document.getElementById('eDesc').value=it.nome||'';
-  document.getElementById('eVal').value=it.valor||0;
+  setValorInput('eVal',it.valor);
   document.getElementById('eDia').value=it.dia||'';
   document.getElementById('ovE').classList.add('on');
 }
@@ -3202,7 +3485,7 @@ function editM(lista,id){
   if(!it) return;
   eCtx={lista:lista,id:id,mensal:true};
   document.getElementById('eDesc').value=it.nome||'';
-  document.getElementById('eVal').value=it.valor||0;
+  setValorInput('eVal',it.valor);
   document.getElementById('eDia').value=it.dia||'';
   document.getElementById('ovE').classList.add('on');
 }
@@ -3213,7 +3496,7 @@ function salvarEdit(){
   arr.forEach(function(x){
     if(x.id!==eCtx.id) return;
     x.nome=document.getElementById('eDesc').value.trim()||x.nome;
-    x.valor=parseFloat(document.getElementById('eVal').value)||0;
+    x.valor=obterValorInput('eVal');
     var dv=parseInt(document.getElementById('eDia').value);
     x.dia=dv||null;
   });
@@ -3243,12 +3526,12 @@ function abrirConfirmacao(kind,id){
   var c=mm.confirmacoes[id];
   confCtx={kind:kind,id:id};
   document.getElementById('cfNome').textContent=def.nome+' · dia '+def.dia;
-  document.getElementById('cfVal').value=(c&&c.valor!=null)?c.valor:def.valor;
+  setValorInput('cfVal',(c&&c.valor!=null)?c.valor:def.valor);
   document.getElementById('ovC').classList.add('on');
 }
 async function salvarConfirmacao(){
   if(!confCtx) return;
-  var v=parseFloat(document.getElementById('cfVal').value);
+  var v=obterValorInput('cfVal');
   if(isNaN(v)||v<0){ await vAlert('Informe um valor válido.'); return; }
   var d=getD(), mm=getMes(d,curM,curA);
   mm.confirmacoes[confCtx.id]={confirmado:true,valor:v};
@@ -3266,7 +3549,7 @@ function editParc(id){
   ePid=id;
   var st=parcelaNoMes(p,curM,curA);
   document.getElementById('epD').value=p.nome;
-  document.getElementById('epV').value=p.valor;
+  setValorInput('epV',p.valor);
   document.getElementById('epT').value=p.total;
   document.getElementById('epA').value=st.num||1;
   document.getElementById('epDia').value=p.dia||20;
@@ -3278,7 +3561,7 @@ function salvarParc(){
   d.parcelamentos.forEach(function(p){
     if(p.id!==ePid) return;
     p.nome=document.getElementById('epD').value.trim()||p.nome;
-    p.valor=parseFloat(document.getElementById('epV').value)||0;
+    p.valor=obterValorInput('epV');
     p.total=parseInt(document.getElementById('epT').value)||1;
     p.dia=Math.min(31,Math.max(1,parseInt(document.getElementById('epDia').value)||p.dia||20));
     p.cartao=document.getElementById('epCartao').value.trim().toLowerCase()||null;
@@ -3306,8 +3589,8 @@ function editCofre(id){
   if(!cf) return;
   eCfId=id;
   document.getElementById('ecNome').value=cf.nome;
-  document.getElementById('ecTeto').value=cf.teto;
-  document.getElementById('ecValorMensal').value=cf.valorMensal;
+  setValorInput('ecTeto',cf.teto);
+  setValorInput('ecValorMensal',cf.valorMensal);
   document.getElementById('ecDia').value=cf.dia;
   document.getElementById('ovCofre').classList.add('on');
 }
@@ -3316,8 +3599,8 @@ function salvarCofre(){
   d.cofrinhos.forEach(function(cf){
     if(cf.id!==eCfId) return;
     cf.nome=document.getElementById('ecNome').value.trim()||cf.nome;
-    cf.teto=parseFloat(document.getElementById('ecTeto').value)||cf.teto;
-    cf.valorMensal=parseFloat(document.getElementById('ecValorMensal').value)||cf.valorMensal;
+    cf.teto=obterValorInput('ecTeto')||cf.teto;
+    cf.valorMensal=obterValorInput('ecValorMensal')||cf.valorMensal;
     cf.dia=Math.min(31,Math.max(1,parseInt(document.getElementById('ecDia').value)||cf.dia));
   });
   salvar(d); fechar('ovCofre'); renderTudo();
@@ -3359,8 +3642,7 @@ function abrirInvest(){
   document.getElementById('ivTit').innerHTML='Novo investimento<button class="md-x" onclick="fechar(\'ovInvest\')">✕</button>';
   document.getElementById('ivTipoChips').innerHTML=TIPOS_INVEST.map(function(t){
     return '<div class="chip" onclick="setTipoInvest(this,\''+t+'\')">'+t+'</div>';}).join('');
-  ['ivTipo','ivNome','ivCotas','ivPreco','ivMeta'].forEach(function(i){
-    document.getElementById(i).value='';});
+  limparCampos(['ivTipo','ivNome','ivCotas','ivPreco','ivMeta']);
   document.getElementById('ovInvest').classList.add('on');
 }
 function setTipoInvest(el,tipo){
@@ -3380,7 +3662,7 @@ function editInvest(id){
   document.getElementById('ivTipo').value=inv.tipo;
   document.getElementById('ivNome').value=inv.nome;
   document.getElementById('ivCotas').value=inv.cotas;
-  document.getElementById('ivPreco').value=inv.precoCota;
+  setValorInput('ivPreco',inv.precoCota);
   document.getElementById('ivMeta').value=inv.metaPercentual||'';
   document.getElementById('ovInvest').classList.add('on');
 }
@@ -3388,7 +3670,7 @@ async function salvarInvest(){
   var tipo=document.getElementById('ivTipo').value.trim();
   var nome=document.getElementById('ivNome').value.trim();
   var cotas=parseFloat(document.getElementById('ivCotas').value);
-  var preco=parseFloat(document.getElementById('ivPreco').value);
+  var preco=obterValorInput('ivPreco');
   var meta=parseFloat(document.getElementById('ivMeta').value)||0;
   if(!tipo){ await vAlert('Informe o tipo do investimento.'); return; }
   if(!nome){ await vAlert('Informe o nome do ativo.'); return; }
@@ -3525,15 +3807,20 @@ function fecharAlerta(){ document.getElementById('ovAlerta').classList.remove('o
    Muda o formato da seção Receitas: CLT confirma salário todo mês, autônomo
    lança o que recebeu, e misto tem os dois. Nada é apagado ao trocar de
    perfil — o que existe continua aparecendo. */
-var PERFIS={clt:'CLT',autonomo:'Autônomo',misto:'Misto'};
-var PERFIL_ICONE={clt:'💼',autonomo:'⚡',misto:'🔄'};
+var PERFIS={clt:'CLT',autonomo:'Autônomo',misto:'Misto',vendedor:'Vendedor'};
+var PERFIL_ICONE={clt:'💼',autonomo:'⚡',misto:'🔄',vendedor:'🛍️'};
+var SUB_PERFIS={marketplace:'Marketplace',direto:'Venda direta',misto_vendedor:'Marketplace + direta'};
+var CANAIS={ml:'Mercado Livre',shopee:'Shopee',amazon:'Amazon',magalu:'Magalu',
+  instagram:'Instagram',whatsapp:'WhatsApp',loja:'Loja própria',outros:'Outros',
+  /* usados quando o sub-perfil já define o canal e não há o que perguntar */
+  plataforma:'Marketplace',direto:'Venda direta'};
 
 function mostrarSelecaoPerfil(){
   var d=getD();
-  ['pcClt','pcAut','pcMis'].forEach(function(id){
+  ['pcClt','pcAut','pcMis','pcVen'].forEach(function(id){
     document.getElementById(id).classList.remove('selecionado');
   });
-  var atual={clt:'pcClt',autonomo:'pcAut',misto:'pcMis'}[d.perfil];
+  var atual={clt:'pcClt',autonomo:'pcAut',misto:'pcMis',vendedor:'pcVen'}[d.perfil];
   if(atual) document.getElementById(atual).classList.add('selecionado');
   fechar('ovConfig');
   document.getElementById('telaPerfil').style.display='block';
@@ -3541,6 +3828,7 @@ function mostrarSelecaoPerfil(){
 }
 function fecharSelecaoPerfil(){
   document.getElementById('telaPerfil').style.display='none';
+  document.getElementById('telaSubPerfil').style.display='none';
 }
 function selecionarPerfil(tipo){
   var d=getD();
@@ -3553,13 +3841,121 @@ function selecionarPerfil(tipo){
   if(tipo==='autonomo'||tipo==='misto') abrirSec('sReceitasParc');
   ir('inicio',document.querySelector('.bn'));
 }
+/* ══════ SUB-PERFIL E VENDAS (perfil vendedor) ══════ */
+function abrirSubPerfil(){
+  var d=getD();
+  ['spMkt','spDir','spMis'].forEach(function(id){
+    document.getElementById(id).classList.remove('selecionado');
+  });
+  var atual={marketplace:'spMkt',direto:'spDir',misto_vendedor:'spMis'}[d.subPerfil];
+  if(atual) document.getElementById(atual).classList.add('selecionado');
+  document.getElementById('telaSubPerfil').style.display='block';
+  window.scrollTo(0,0);
+}
+function voltarSelecaoPerfil(){
+  document.getElementById('telaSubPerfil').style.display='none';
+}
+function selecionarSubPerfil(sub){
+  var d=getD();
+  d.perfil='vendedor';
+  d.subPerfil=sub;
+  salvar(d);
+  document.getElementById('telaSubPerfil').style.display='none';
+  fecharSelecaoPerfil();
+  abrirSec('sReceitas');
+  ir('inicio',document.querySelector('.bn'));
+}
+
+var vdState={forma:null,canal:null};
+function pickVd(el,campo,val){
+  var g=el.parentNode.querySelectorAll('.chip');
+  for(var i=0;i<g.length;i++) g[i].classList.remove('on');
+  el.classList.add('on');
+  vdState[campo]=val;
+}
+function abrirVenda(){
+  var d=getD(), sub=d.subPerfil||'direto';
+  vdState={forma:null,canal:null};
+  limparCampos(['vdDesc','vdValor','vdCusto','vdTaxa','vdQtd']);
+  document.getElementById('vdDia').value=
+    (curM===HOJE.getMonth()&&curA===HOJE.getFullYear())?HOJE.getDate():'';
+  document.querySelectorAll('#ovVenda .chip').forEach(function(c){ c.classList.remove('on'); });
+  /* Marketplace tem taxa; venda direta não. No misto a pessoa escolhe o canal
+     e a taxa só aparece quando o canal for de plataforma. */
+  document.getElementById('vdCanalWrap').style.display=sub==='misto_vendedor'?'block':'none';
+  document.getElementById('vdTaxaWrap').style.display=sub==='marketplace'?'block':'none';
+  if(sub==='misto_vendedor'){
+    document.getElementById('vdCanalChips').innerHTML=Object.keys(CANAIS).map(function(k){
+      return '<div class="chip" onclick="pickCanalVenda(this,\''+k+'\')">'+CANAIS[k]+'</div>';
+    }).join('');
+  }
+  document.querySelectorAll('#ovVenda .stp').forEach(function(s){ s.classList.remove('on'); });
+  document.getElementById('vd1').classList.add('on');
+  document.getElementById('ovVenda').classList.add('on');
+}
+var CANAIS_COM_TAXA=['ml','shopee','amazon','magalu'];
+function pickCanalVenda(el,k){
+  pickVd(el,'canal',k);
+  document.getElementById('vdTaxaWrap').style.display=
+    CANAIS_COM_TAXA.indexOf(k)>=0?'block':'none';
+}
+async function vd1ok(){
+  var d=getD(), sub=d.subPerfil||'direto';
+  var valor=obterValorInput('vdValor');
+  if(!valor||valor<=0){ await vAlert('Informe o valor da venda.'); return; }
+  var custo=obterValorInput('vdCusto');
+  if(custo>valor){ await vAlert('O custo está maior que o valor da venda. Confira os dois campos.'); return; }
+  if(sub==='misto_vendedor' && !vdState.canal){ await vAlert('Escolha o canal da venda.'); return; }
+  if(!vdState.forma){ await vAlert('Informe como você recebeu.'); return; }
+
+  var pct=parseFloat(document.getElementById('vdTaxa').value)||0;
+  if(pct<0||pct>100){ await vAlert('A taxa precisa estar entre 0 e 100%.'); return; }
+  var mostraTaxa=document.getElementById('vdTaxaWrap').style.display!=='none';
+  var taxa=mostraTaxa?taxaDaVenda(valor,pct):0;
+
+  var qtd=Math.max(1,parseInt(document.getElementById('vdQtd').value,10)||1);
+  var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('vdDia').value,10)||HOJE.getDate()));
+  var desc=document.getElementById('vdDesc').value.trim()||'Venda';
+  var lucro=valor-custo-taxa;
+
+  vdState.venda={desc:desc,valor:valor,custo:custo,taxa:taxa,taxaPct:mostraTaxa?pct:0,
+    qtd:qtd,dia:dia,canal:vdState.canal||(sub==='marketplace'?'plataforma':'direto'),
+    forma:vdState.forma};
+
+  document.getElementById('vdConfirmBox').innerHTML=
+    '<b>'+desc+'</b>'+(qtd>1?' · '+qtd+' un.':'')+'<br>'+
+    'Venda: <b style="color:var(--green)">'+fmt(valor)+'</b><br>'+
+    (custo>0?'Custo: '+fmt(custo)+'<br>':'')+
+    (taxa>0?'Taxa ('+fmtPct(pct,1)+'): '+fmt(taxa)+'<br>':'')+
+    'Lucro: <b style="color:'+(lucro>=0?'var(--green)':'var(--red)')+'">'+fmt(lucro)+'</b>'+
+    (valor>0?' · margem '+fmtPct(lucro/valor*100,1):'')+'<br>'+
+    'Dia '+dia+' · '+(CANAIS[vdState.canal]||'Venda direta');
+  document.querySelectorAll('#ovVenda .stp').forEach(function(s){ s.classList.remove('on'); });
+  document.getElementById('vd2').classList.add('on');
+}
+function confirmarVenda(){
+  var d=getD(), mm=getMes(d,curM,curA), v=vdState.venda;
+  if(!mm.vendas) mm.vendas=[];
+  mm.vendas.push(Object.assign({id:idNovo('vd')},v));
+  salvar(d);
+  fechar('ovVenda');
+  renderTudo();
+}
+async function excluirVenda(id){
+  var ok=await vConfirm('A venda sai do faturamento e do lucro do mês.','Excluir venda?','var(--red)','Excluir');
+  if(!ok) return;
+  var d=getD(), mm=getMes(d,curM,curA);
+  mm.vendas=(mm.vendas||[]).filter(function(x){return x.id!==id;});
+  salvar(d); renderTudo();
+}
+
 function abrirMetaRenda(){
-  document.getElementById('metaValor').value=getD().metaRendaMensal||'';
+  setValorInput('metaValor',getD().metaRendaMensal);
   document.getElementById('ovMeta').classList.add('on');
 }
 function salvarMetaRenda(){
   var d=getD();
-  d.metaRendaMensal=Math.max(0,parseFloat(document.getElementById('metaValor').value)||0);
+  d.metaRendaMensal=Math.max(0,obterValorInput('metaValor'));
   salvar(d);
   fechar('ovMeta');
   renderTudo();
@@ -3602,9 +3998,7 @@ function irParaParcelado(){
 function abrirRecebimento(){
   rvState={forma:null,prim:null};
   goStepRv('rv1');
-  ['rvDesc','rvValor','rvTotal','rvParcelas','rvAtual'].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.value='';
-  });
+  limparCampos(['rvDesc','rvValor','rvTotal','rvParcelas','rvAtual']);
   document.getElementById('rvDia').value=new Date().getDate();
   document.getElementById('rvParcAtual').style.display='none';
   document.getElementById('rvValorSimples').style.display='block';
@@ -3614,7 +4008,7 @@ function abrirRecebimento(){
 async function rv1ok(){
   if(!rvState.forma){ await vAlert('Selecione a forma de recebimento.'); return; }
   if(rvState.forma==='dinheiro'){
-    var v=parseFloat(document.getElementById('rvValor').value);
+    var v=obterValorInput('rvValor');
     if(!v||v<=0){ await vAlert('Informe o valor recebido.'); return; }
     var desc=document.getElementById('rvDesc').value.trim()||'Recebimento';
     rvState.simples={desc:desc,valor:v};
@@ -3628,7 +4022,7 @@ async function rv1ok(){
   }
 }
 async function rv2ok(){
-  var total=parseFloat(document.getElementById('rvTotal').value);
+  var total=obterValorInput('rvTotal');
   var parc=parseInt(document.getElementById('rvParcelas').value);
   var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('rvDia').value)||1));
   if(!total||total<=0){ await vAlert('Informe o valor total do serviço.'); return; }
@@ -3938,11 +4332,14 @@ function renderPerfilUI(){
   var hp=document.getElementById('heroPerfil');
   if(hp){
     hp.style.display=temPerfil?'block':'none';
-    if(temPerfil) hp.textContent=PERFIL_ICONE[d.perfil]+' Perfil '+PERFIS[d.perfil];
+    if(temPerfil) hp.textContent=PERFIL_ICONE[d.perfil]+' Perfil '+PERFIS[d.perfil]+
+      (d.perfil==='vendedor'&&SUB_PERFIS[d.subPerfil]?' · '+SUB_PERFIS[d.subPerfil]:'');
   }
   var st=document.getElementById('perfilStatus');
   if(st) st.innerHTML=temPerfil
-    ?('✅ <b>'+PERFIS[d.perfil]+'</b> · toque para trocar')
+    ?('✅ <b>'+PERFIS[d.perfil]+'</b>'+
+       (d.perfil==='vendedor'&&SUB_PERFIS[d.subPerfil]?' · '+SUB_PERFIS[d.subPerfil]:'')+
+       ' · toque para trocar')
     :'⚠️ Nenhum perfil escolhido · toque para escolher';
   var bm=document.getElementById('btnMetaRenda');
   if(bm) bm.style.display=(d.perfil==='autonomo'||d.perfil==='misto')?'block':'none';
@@ -3977,6 +4374,92 @@ function atualizarDataAtual(){
   document.getElementById('dataAtual').textContent=agora.getDate()+' - '+DOWF[agora.getDay()];
 }
 
+/* ══════ SESSÃO ══════
+   Dado financeiro na tela de um celular emprestado, esquecido na mesa ou
+   perdido não pode ficar aberto para sempre: 15 minutos sem toque e o app
+   desloga. Qualquer interação zera a contagem.
+
+   Fechar o app também derruba a sessão — isso vem do browserSessionPersistence
+   configurado no módulo do Firebase, não daqui. */
+var TEMPO_SESSAO=15*60*1000;
+var AVISO_ANTES=2*60*1000;
+var timerSessao=null, timerAvisoSessao=null, sessaoAtiva=false;
+var SAIU_EM_KEY='vigia_saiu_em';
+
+function limparTimersSessao(){
+  if(timerSessao){ clearTimeout(timerSessao); timerSessao=null; }
+  if(timerAvisoSessao){ clearTimeout(timerAvisoSessao); timerAvisoSessao=null; }
+}
+function esconderBannerSessao(){
+  var b=document.getElementById('bannerSessao');
+  if(b) b.style.display='none';
+}
+/* Recria os dois tempos do zero. Sem limpar o timer do AVISO junto com o de
+   expiração, cada toque na tela empilharia mais um aviso pendente e o banner
+   apareceria em horas aleatórias. */
+function iniciarTimerSessao(){
+  limparTimersSessao();
+  esconderBannerSessao();
+  timerAvisoSessao=setTimeout(function(){
+    if(!sessaoAtiva) return;
+    var b=document.getElementById('bannerSessao');
+    if(b) b.style.display='block';
+  },TEMPO_SESSAO-AVISO_ANTES);
+  timerSessao=setTimeout(function(){
+    console.log('⏰ Sessão expirada por inatividade');
+    encerrarSessao();
+  },TEMPO_SESSAO);
+}
+function resetarTimerSessao(){
+  if(!sessaoAtiva) return;
+  iniciarTimerSessao();
+}
+function continuarSessao(){
+  resetarTimerSessao();
+  esconderBannerSessao();
+}
+function iniciarSessao(){
+  sessaoAtiva=true;
+  try{ sessionStorage.removeItem(SAIU_EM_KEY); }catch(e){}
+  iniciarTimerSessao();
+}
+function pararSessao(){
+  sessaoAtiva=false;
+  limparTimersSessao();
+  esconderBannerSessao();
+}
+async function encerrarSessao(){
+  if(!sessaoAtiva) return; // já caiu; não desloga duas vezes
+  pararSessao();
+  try{ if(window.Vigia) await window.Vigia.sair(); }catch(e){}
+  /* Devolve a tela de login por conta própria em vez de esperar o callback do
+     Firebase: no modo offline não existe usuário logado, o callback não
+     dispara e o app ficaria aberto com os dados na tela. */
+  mostrarLogin();
+  setTimeout(function(){
+    vAlert('Sua sessão expirou por inatividade.\nEntre de novo para continuar.');
+  },350);
+}
+
+['touchstart','touchmove','click','keydown','scroll','pointerdown'].forEach(function(ev){
+  document.addEventListener(ev,resetarTimerSessao,{passive:true,capture:true});
+});
+
+/* App em segundo plano não recebe evento de toque, e o setTimeout de um
+   aparelho com a tela apagada não é confiável. Guardamos a hora da saída e
+   conferimos o tempo real na volta. */
+document.addEventListener('visibilitychange',function(){
+  if(!sessaoAtiva) return;
+  if(document.visibilityState==='hidden'){
+    try{ sessionStorage.setItem(SAIU_EM_KEY,String(Date.now())); }catch(e){}
+    return;
+  }
+  var saiuEm=0;
+  try{ saiuEm=parseInt(sessionStorage.getItem(SAIU_EM_KEY)||'0',10); }catch(e){}
+  if(saiuEm && Date.now()-saiuEm>TEMPO_SESSAO) encerrarSessao();
+  else resetarTimerSessao();
+});
+
 /* ══════ AUTENTICAÇÃO ══════ */
 var modoCriarConta=false;
 
@@ -4010,6 +4493,7 @@ window.onLoginErro=onLoginErro;
 
 function iniciarApp(){
   getD();
+  prepararInputsMoeda();
   verificarResetMensal();
   document.getElementById('fab').style.display='flex';
   atualizarDataAtual();
@@ -4039,19 +4523,31 @@ function onVigiaAuthChange(user){
   document.getElementById('loginCarregando').style.display='none';
   if(user){
     uidAtual=user.uid;
+    iniciarSessao();
     try{ localStorage.setItem(ULTIMO_UID_KEY,user.uid); }catch(e){}
     document.getElementById('login').style.display='none';
     document.getElementById('splash').style.display='';
     iniciarComNuvem(user);
   } else {
-    uidAtual=null;
-    if(modoCriarConta) alternarCriarConta();
-    document.getElementById('loginEmail').value='';
-    document.getElementById('loginSenha').value='';
-    document.getElementById('loginErro').style.display='none';
-    document.getElementById('loginForm').classList.add('on');
-    document.getElementById('login').style.display='flex';
+    mostrarLogin();
   }
+}
+/* Volta o app para a tela de login e apaga o que estava em memória. Usada
+   tanto pelo callback do Firebase quanto pela expiração da sessão. */
+function mostrarLogin(){
+  pararSessao();
+  uidAtual=null;
+  if(typeof unsubSnapshot!=='undefined' && window.Vigia) window.Vigia.pararAssinatura();
+  if(modoCriarConta) alternarCriarConta();
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginSenha').value='';
+  document.getElementById('loginErro').style.display='none';
+  document.getElementById('loginForm').classList.add('on');
+  document.getElementById('login').style.display='flex';
+  document.getElementById('fab').style.display='none';
+  ['ovConfig','ovAvisos','ovL','ovD'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.classList.remove('on');
+  });
 }
 window.onVigiaAuthChange=onVigiaAuthChange;
 
@@ -4064,6 +4560,7 @@ function entrarOffline(){
   var ultimoUid=localStorage.getItem(ULTIMO_UID_KEY);
   if(!ultimoUid) return;
   uidAtual=ultimoUid;
+  iniciarSessao(); // o limite de inatividade vale offline também
   document.getElementById('login').style.display='none';
   document.getElementById('splash').style.display='';
   iniciarApp();
@@ -4085,6 +4582,7 @@ var onbState=null, onbUser=null;
 
 function abrirOnboarding(user){
   onbUser=user;
+  prepararInputsMoeda(); // o cadastro inicial vem antes de iniciarApp()
   onbState={nome:'',rendaPrincipal:null,outrasRendas:[],despesas:[],parcelas:[]};
   document.querySelectorAll('#ovOnb .stp').forEach(function(s){ s.classList.remove('on'); });
   document.getElementById('onb0').classList.add('on');
@@ -4101,7 +4599,7 @@ function onbSalvarNome(){
   onbIr(2);
 }
 function onbSalvarRendaPrincipal(){
-  var v=parseFloat(document.getElementById('onbRendaValor').value)||0;
+  var v=obterValorInput('onbRendaValor');
   var d=Math.min(31,Math.max(1,parseInt(document.getElementById('onbRendaDia').value)||1));
   onbState.rendaPrincipal={nome:'Renda principal',valor:v,dia:d};
   onbIr(3);
@@ -4122,27 +4620,27 @@ function onbRemover(campo,i){
 }
 function onbAdicionarRenda(){
   var nome=document.getElementById('onbRendaNome').value.trim();
-  var valor=parseFloat(document.getElementById('onbRendaExtraValor').value);
+  var valor=obterValorInput('onbRendaExtraValor');
   if(!nome||!valor) return;
   onbState.outrasRendas.push({nome:nome,valor:valor,dia:1});
   document.getElementById('onbRendaNome').value='';
-  document.getElementById('onbRendaExtraValor').value='';
+  limparValorInput('onbRendaExtraValor');
   onbRenderLista('onbListaRendas',onbState.outrasRendas,'outrasRendas');
 }
 function onbAdicionarDespesa(){
   var nome=document.getElementById('onbDespNome').value.trim();
-  var valor=parseFloat(document.getElementById('onbDespValor').value);
+  var valor=obterValorInput('onbDespValor');
   var fonte=document.getElementById('onbDespFonte').checked;
   if(!nome||!valor) return;
   onbState.despesas.push({nome:nome,valor:valor,dia:5,descontadoNaFonte:fonte});
   document.getElementById('onbDespNome').value='';
-  document.getElementById('onbDespValor').value='';
+  limparValorInput('onbDespValor');
   document.getElementById('onbDespFonte').checked=false;
   onbRenderLista('onbListaDespesas',onbState.despesas,'despesas');
 }
 function onbAdicionarParcela(){
   var nome=document.getElementById('onbParcNome').value.trim();
-  var valor=parseFloat(document.getElementById('onbParcValor').value);
+  var valor=obterValorInput('onbParcValor');
   var total=parseInt(document.getElementById('onbParcTotal').value);
   var atual=parseInt(document.getElementById('onbParcAtual').value)||1;
   var cartao=document.getElementById('onbParcCartao').value;
@@ -4152,7 +4650,7 @@ function onbAdicionarParcela(){
   while(mi<0){ mi+=12; ai--; }
   onbState.parcelas.push({nome:nome,valor:valor,total:total,mesIni:mi,anoIni:ai,cartao:cartao,dia:20});
   document.getElementById('onbParcNome').value='';
-  document.getElementById('onbParcValor').value='';
+  limparValorInput('onbParcValor');
   document.getElementById('onbParcTotal').value='';
   document.getElementById('onbParcAtual').value='';
   onbRenderLista('onbListaParcelas',onbState.parcelas,'parcelas');
@@ -4176,10 +4674,10 @@ function onbConfirmar(){
   var parcelamentos=s.parcelas.map(function(p){ return {id:idNovo('pc'),nome:p.nome,valor:p.valor,total:p.total,
     mesIni:p.mesIni,anoIni:p.anoIni,cartao:p.cartao,dia:p.dia||20}; });
   var d={
-    schemaVersion:7, nome:s.nome,
+    schemaVersion:8, nome:s.nome,
     receitasFixas:receitasFixas, despesasFixas:despesasFixas,
     parcelamentos:parcelamentos, cofrinhos:[], investimentos:[], cartoes:[],
-    perfil:null, metaRendaMensal:0, receitasParceladas:[], avisosSilenciados:{},
+    perfil:null, subPerfil:null, metaRendaMensal:0, receitasParceladas:[], avisosSilenciados:{},
     meses:{}, historico:[], ultimoMesReal:null
   };
   salvar(d);
