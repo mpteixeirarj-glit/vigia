@@ -169,7 +169,11 @@ button{font-family:inherit;}
 .lp-passo{background:var(--surf2);border:1px solid var(--border);border-radius:16px;padding:24px;}
 .lp-passo h3{font-size:1.05rem;margin-bottom:8px;}
 .lp-passo p{font-size:.86rem;color:var(--muted);line-height:1.6;margin-bottom:18px;}
-.lp-passo img{width:100%;max-width:280px;display:block;margin:0 auto;
+/* As capturas têm proporções diferentes — umas são a tela inteira, outras um
+   trecho. Sem altura fixa os cartões ficam desencontrados; recortando pelo
+   topo, o que interessa (o começo da tela) aparece em todas. */
+.lp-passo img{width:100%;max-width:280px;height:330px;object-fit:cover;
+  object-position:top center;display:block;margin:0 auto;
   border-radius:14px;border:1px solid var(--border);}
 .lp-num{width:30px;height:30px;border-radius:50%;background:var(--green-d);
   color:var(--green);font-family:monospace;font-weight:700;font-size:.86rem;
@@ -182,10 +186,12 @@ button{font-family:inherit;}
 .lp-perfil p{font-size:.82rem;color:var(--muted);line-height:1.55;}
 
 .lp-shots{display:grid;gap:16px;grid-template-columns:1fr;justify-items:center;}
-.lp-shots img{width:100%;max-width:280px;border-radius:14px;border:1px solid var(--border);}
+.lp-shots img{width:100%;max-width:280px;height:400px;object-fit:cover;
+  object-position:top center;border-radius:14px;border:1px solid var(--border);}
 
 .lp-duo{display:grid;gap:28px;grid-template-columns:1fr;align-items:center;margin-top:26px;}
-.lp-duo img{width:100%;max-width:290px;justify-self:center;
+.lp-duo img{width:100%;max-width:290px;max-height:520px;object-fit:cover;
+  object-position:top center;justify-self:center;
   border-radius:16px;border:1px solid var(--border);}
 .lp-lista{list-style:none;padding:0;margin-bottom:18px;}
 .lp-lista li{font-size:.88rem;color:var(--muted);line-height:1.6;
@@ -199,9 +205,10 @@ button{font-family:inherit;}
 .lp-msg.eu{background:var(--green-d);color:var(--text);align-self:flex-end;border-bottom-right-radius:4px;}
 .lp-msg.bot{background:var(--surf2);color:var(--muted);align-self:flex-start;border-bottom-left-radius:4px;}
 
-.lp-grid{display:grid;gap:22px;grid-template-columns:1fr;margin-top:30px;}
+.lp-grid{display:grid;gap:26px;grid-template-columns:1fr;margin-top:30px;align-items:start;}
 .lp-grid figure{text-align:center;}
-.lp-grid img{width:100%;max-width:250px;border-radius:14px;border:1px solid var(--border);}
+.lp-grid img{width:100%;max-width:250px;height:300px;object-fit:cover;
+  object-position:top center;border-radius:14px;border:1px solid var(--border);}
 .lp-grid figcaption{font-size:.82rem;color:var(--muted);line-height:1.55;margin-top:12px;}
 .lp-grid figcaption b{display:block;color:var(--text);font-size:.9rem;margin-bottom:3px;}
 
@@ -1069,21 +1076,21 @@ onAuthStateChanged(auth, function(user){
         <h3>Cadastre o que já é fixo</h3>
         <p>Salário, aluguel, contas e parcelamentos em andamento. O app pergunta
           na primeira entrada e monta o mês para você.</p>
-        <img src="screenshots/screen-dashboard-vazio.jpg" alt="Tela inicial do Vigia" loading="lazy">
+        <img src="screenshots/lp/cadastrar-fixa.jpg" alt="Cadastro de conta fixa" loading="lazy">
       </div>
       <div class="lp-passo">
         <div class="lp-num">2</div>
         <h3>Lance no dia a dia</h3>
         <p>Um toque no + registra o gasto. Ou mande uma mensagem no WhatsApp:
           <i>"gastei 25 no mercado"</i>.</p>
-        <img src="screenshots/screen-modal-consumo.jpg" alt="Lançamento de gasto" loading="lazy">
+        <img src="screenshots/lp/lancar-gasto.jpg" alt="Lançamento de um gasto" loading="lazy">
       </div>
       <div class="lp-passo">
         <div class="lp-num">3</div>
         <h3>Acompanhe o mês inteiro</h3>
         <p>Saldo, comprometimento da renda e o que ainda vai vencer, tudo na
           primeira tela.</p>
-        <img src="screenshots/screen-dashboard-dados.jpg" alt="Painel com dados" loading="lazy">
+        <img src="screenshots/lp/inicio-visao-geral.jpg" alt="Tela inicial com o mês em andamento" loading="lazy">
       </div>
     </div>
   </section>
@@ -1116,9 +1123,9 @@ onAuthStateChanged(auth, function(user){
       </div>
     </div>
     <div class="lp-shots">
-      <img src="screenshots/screen-perfil-clt.jpg" alt="Perfil CLT" loading="lazy">
-      <img src="screenshots/screen-perfil-aut-mis.jpg" alt="Perfis autônomo e misto" loading="lazy">
-      <img src="screenshots/screen-modal-venda.jpg" alt="Registro de venda" loading="lazy">
+      <img src="screenshots/lp/perfis.jpg" alt="Escolha do perfil financeiro" loading="lazy">
+      <img src="screenshots/lp/perfil-autonomo.jpg" alt="Receitas no perfil autônomo" loading="lazy">
+      <img src="screenshots/lp/perfil-vendedor.jpg" alt="Vendas e lucro no perfil vendedor" loading="lazy">
     </div>
   </section>
 
@@ -1137,7 +1144,7 @@ onAuthStateChanged(auth, function(user){
         <p class="lp-p">Cada aviso pode ser adiado por 7 dias ou empurrado para o
           mês que vem. Silenciar na tela silencia no WhatsApp também.</p>
       </div>
-      <img src="screenshots/screen-config-avisos.jpg" alt="Painel de avisos" loading="lazy">
+      <img src="screenshots/lp/avisos.jpg" alt="Painel de avisos de teto e meta" loading="lazy">
     </div>
   </section>
 
@@ -1157,7 +1164,7 @@ onAuthStateChanged(auth, function(user){
         <p class="lp-p">Ele também manda os lembretes do dia no horário que você
           escolher — de manhã, à tarde ou só à noite.</p>
       </div>
-      <img src="screenshots/screen-config-whatsapp.jpg" alt="Vínculo do WhatsApp" loading="lazy">
+      <img src="screenshots/lp/whatsapp-avisos.jpg" alt="WhatsApp vinculado e avisos ligados" loading="lazy">
     </div>
   </section>
 
@@ -1165,17 +1172,17 @@ onAuthStateChanged(auth, function(user){
     <div class="lp-kick">O que você acompanha</div>
     <h2 class="lp-h2">Tudo em um lugar só</h2>
     <div class="lp-grid">
-      <figure><img src="screenshots/screen-agenda-calendario.jpg" alt="Agenda" loading="lazy">
+      <figure><img src="screenshots/lp/agenda.jpg" alt="Agenda" loading="lazy">
         <figcaption><b>Agenda</b> Todo vencimento do mês num calendário.</figcaption></figure>
-      <figure><img src="screenshots/screen-cartao-santander-teto.jpg" alt="Cartões" loading="lazy">
+      <figure><img src="screenshots/lp/cartao-teto.jpg" alt="Cartão com teto e fatura" loading="lazy">
         <figcaption><b>Cartões</b> Fatura, teto e o que a compõe.</figcaption></figure>
-      <figure><img src="screenshots/screen-parcelamentos.jpg" alt="Parcelamentos" loading="lazy">
+      <figure><img src="screenshots/lp/parcelamentos.jpg" alt="Parcelamentos em andamento" loading="lazy">
         <figcaption><b>Parcelamentos</b> Quantas faltam e quando termina.</figcaption></figure>
-      <figure><img src="screenshots/screen-cofrinhos.jpg" alt="Cofrinhos" loading="lazy">
+      <figure><img src="screenshots/lp/cofrinhos.jpg" alt="Cofrinhos" loading="lazy">
         <figcaption><b>Cofrinhos</b> Metas de poupança com depósito mensal.</figcaption></figure>
-      <figure><img src="screenshots/screen-carteira-grafico.jpg" alt="Carteira" loading="lazy">
+      <figure><img src="screenshots/lp/carteira.jpg" alt="Carteira de investimentos" loading="lazy">
         <figcaption><b>Carteira</b> Investimentos e a meta de alocação.</figcaption></figure>
-      <figure><img src="screenshots/screen-analise.jpg" alt="Análise" loading="lazy">
+      <figure><img src="screenshots/lp/analise.jpg" alt="Análise do mês" loading="lazy">
         <figcaption><b>Análise</b> O que os números do mês estão dizendo.</figcaption></figure>
     </div>
   </section>
@@ -1191,7 +1198,7 @@ onAuthStateChanged(auth, function(user){
         <p class="lp-p">A sessão expira sozinha depois de 15 minutos parada, e
           fechar o aplicativo pede login de novo.</p>
       </div>
-      <img src="screenshots/screen-receitas-ocultas.jpg" alt="Valores ocultos" loading="lazy">
+      <img src="screenshots/lp/valores-ocultos.jpg" alt="Valores ocultos pelo botão do olho" loading="lazy">
     </div>
   </section>
 

@@ -3,7 +3,7 @@
 > Documento de contexto para retomar o desenvolvimento em outra sessão de IA.
 > Descreve **o que existe**, **onde está** e **o que não pode ser quebrado**.
 >
-> Última atualização: agosto/2026 · `schemaVersion: 8` · versão `1.0.0-beta` · service worker `vigia-v23`
+> Última atualização: agosto/2026 · `schemaVersion: 8` · versão `1.0.0-beta` · service worker `vigia-v24`
 
 ---
 
@@ -27,7 +27,9 @@ vigia/
 ├── manifest.json       manifesto do PWA
 ├── firestore.rules     regras de segurança (publicadas à mão no console)
 ├── cartoes/            10 PNGs base dos cartões
-├── screenshots/        37 telas usadas na landing
+├── screenshots/        capturas do app
+│   ├── lp/             as 20 usadas na landing (geradas)
+│   └── gerar-lp.js     refaz as capturas dirigindo o app
 ├── logo-animado.mp4    vídeo do hero da landing
 ├── icon-192.png, icon-512.png, olho-*.png
 └── docs/               esta referência e o guia do usuário
@@ -86,7 +88,7 @@ A conversa chega como `<lid>@lid` e o número real vai em `key.senderPn` / `key.
 
 ### 2.7 Bump do service worker a cada deploy
 
-`sw.js` é cache-first. Sem trocar `const CACHE = 'vigia-vNN'`, o usuário continua com a versão velha. **Está em `vigia-v23`.**
+`sw.js` é cache-first. Sem trocar `const CACHE = 'vigia-vNN'`, o usuário continua com a versão velha. **Está em `vigia-v24`.**
 
 ### 2.8 Migração encadeada
 
@@ -194,6 +196,11 @@ bootSplash → onVigiaAuthChange
 `.logado` no `<body>` é o que liga o layout de computador: acima de 768px troca
 a navegação de baixo (`.botnav`) pelo menu lateral (`.sidebar`) e limita o
 conteúdo a 920px. A landing e o login nunca têm essa classe.
+
+As capturas da landing NÃO são feitas à mão: `screenshots/gerar-lp.js` abre o
+app com um conjunto de dados fictício e coerente e fotografa cada tela. Mudou a
+interface, roda de novo — assim a landing nunca mostra uma versão que não
+existe mais.
 
 `VERSAO` (`1.0.0-beta`) aparece em três lugares: rodapé da landing, menu
 lateral e ⚙ Configurações → Aplicativo.
