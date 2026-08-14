@@ -152,7 +152,7 @@ Trocar de perfil nunca esconde nem apaga dado já cadastrado. Quem tem receita f
       receitas:  [{ id, nome, valor, dia, cat, tipo }],
       consumo:   [{ id, nome, valor, dia, cat, cartao, fonte }],
       reserva:   [{ id, nome, valor, dia }],
-      vendas:    [{ id, desc, valor, custo, taxa, taxaPct, qtd, dia, canal, forma }],
+      vendas:    [{ id, desc, valor, custo, taxa, taxaPct, frete, embalagem, qtd, dia, canal, forma }],
       cofres:    [{ id, nome, valor, dia, cofrinhoId }],
       confirmacoes: { "<idDoItemFixo>": { confirmado: true, valor: 1850 } }
     }
@@ -304,6 +304,46 @@ Modal `#ovRecebimento` em 3 passos. `abrirRecebimento()`, `pickRv(el,campo,val)`
 
 **Encerrar não apaga:** grava `ativo:false` + `mesEncerrado`/`anoEncerrado`. Os meses anteriores continuam valendo.
 
+### 5.7b Vendas e planejamento de lote (perfil vendedor)
+
+**Registrar uma venda que já aconteceu** — modal `#ovVenda`, 2 passos:
+`abrirVenda()`, `pickVd(el,campo,val)`, `vd1ok()`, `confirmarVenda()`, `excluirVenda(id)`.
+
+| Função | O que faz |
+|---|---|
+| `taxaDaVenda(valor,pct)` | taxa do marketplace em reais, arredondada ao centavo |
+| `lucroDaVenda(v)` | `valor − custo − taxa − frete − embalagem` |
+| `calcVendas(mm)` | totais do mês: `bruto`, `custo`, `taxa`, `extras` (frete+embalagem), `saida`, `lucro`, `margem` |
+
+`saida` (custo + taxa + frete + embalagem) entra nas despesas do mês; só o `lucro`
+entra no saldo. Vender R$ 35 não deixa o usuário R$ 35 mais rico.
+
+**Planejar um lote antes de comprar** — modal `#ovLote`, tudo recalculado a cada
+tecla, nada é gravado enquanto o usuário não mandar:
+
+| Função | O que faz |
+|---|---|
+| `abrirLote()` | limpa os campos e liga `oninput` → `calcularLote` |
+| `lerLote()` | lê os 7 campos; `taxaPct` é limitada a 0–100 |
+| `calcularLote()` | pinta os três cartões de resultado |
+| `usarLoteNaVenda()` | leva preço, custo unitário, frete, embalagem e taxa para `#ovVenda` |
+| `lancarCompraDoLote()` | grava o custo do lote em `mm.consumo` como "Compra de material para revenda" |
+
+As contas:
+
+```
+material      = custoLote / qtd
+custoUnit     = material + frete + embalagem + outros + taxa
+lucroUnit     = preco − custoUnit
+contribui     = preco − frete − embalagem − outros − taxa   (o que sobra pro material)
+equilibrio    = ceil(custoLote / contribui)                  (null se contribui <= 0)
+```
+
+**`contribui <= 0` tem aviso próprio** ("o preço não cobre nem o envio"): nesse caso
+não existe quantidade que pague o lote, então não adianta mostrar um número de peças.
+Diferente de `lucroUnit < 0` com `contribui > 0`, onde o lote fecha mas o preço está
+abaixo do custo do material.
+
 ### 5.8 Avisos de teto e meta
 
 | Função | O que faz |
@@ -433,7 +473,7 @@ Repetição no bot: aviso de **data** dedupe por dia; aviso de **estado** dedupe
 | Onde | Comando | Cobre |
 |---|---|---|
 | Bot | `node alertas.test.js` | 39 casos: conteúdo dos avisos, dedupe, janelas de horário, fuso |
-| App | Playwright (fora do repo) | perfis (58), fonte (13), avisos (24), notificações (20) |
+| App | Playwright (fora do repo) | perfis (58), beta (57), UX (37), landing (36), lote (36), avisos (24), notificações (20), fonte (13) |
 
 O app não tem suíte versionada. Os testes foram escritos em `playwright-core` apontando para o `index.html` local, injetando dados no `localStorage` e chamando `entrarOffline()` para pular o login.
 
@@ -446,3 +486,4 @@ O app não tem suíte versionada. Os testes foram escritos em `playwright-core` 
 - `firestore.rules` é publicado à mão no console do Firebase, não por deploy.
 - `usuarios/{uid}/alertas/**` é gravável pelo cliente (a regra `{documento=**}` cobre). O prejuízo possível é a própria pessoa silenciar os próprios avisos.
 - A barra de progresso não é mascarada pelo olho — só o número.
+- **`qtd` na venda é decorativo.** O campo é gravado e aparece na lista ("3 un."), mas `valor` nunca é multiplicado por ele: `calcVendas` soma `valor` cru. Quem vende 3 peças por R$ 289,90 cada precisa digitar R$ 869,70 no valor. A calculadora de lote não depende disso — ela trabalha por peça. Mudar a semântica agora alteraria em silêncio os dados já lançados, então fica como decisão do dono.
