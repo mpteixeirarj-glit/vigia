@@ -621,6 +621,54 @@ button{font-family:inherit;}
 #bannerSessao button{background:none;border:none;color:var(--yellow);font-family:monospace;
   font-size:.74rem;font-weight:700;cursor:pointer;margin-left:8px;text-decoration:underline;
   -webkit-tap-highlight-color:transparent;}
+/* PENDÊNCIAS, DICA E TOAST */
+#bannerPend{display:none;align-items:center;gap:12px;margin:0 16px 12px;padding:12px 14px;
+  border-radius:10px;background:var(--yellow-d);border:1px solid var(--yellow);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;}
+#bannerPend.on{display:flex;}
+.bp-txt{flex:1;min-width:0;}
+.bp-txt b{display:block;font-size:.86rem;color:var(--text);margin-bottom:2px;}
+.bp-txt span{font-size:.74rem;color:var(--muted);line-height:1.4;}
+.bp-btn{flex-shrink:0;background:var(--yellow);border:none;color:#241f00;
+  font-family:monospace;font-size:.7rem;font-weight:700;padding:9px 14px;
+  border-radius:8px;cursor:pointer;}
+
+#dicaConfirmar{display:none;position:relative;margin:0 16px 12px;padding:16px 16px 14px;
+  border-radius:12px;background:var(--surf2);border:1px solid var(--border);}
+#dicaConfirmar.on{display:block;}
+.dica-x{position:absolute;top:8px;right:8px;background:none;border:none;
+  color:var(--muted);font-size:.9rem;cursor:pointer;padding:4px 8px;}
+.dica-t{font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:8px;padding-right:24px;}
+.dica-p{font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:8px;}
+.dica-p:last-child{margin-bottom:0;}
+
+/* Fica acima de tudo, inclusive dos modais: o aviso de "salvou" aparece no
+   instante em que um modal ainda está fechando. */
+#toast{position:fixed;left:50%;transform:translate(-50%,20px);
+  bottom:calc(var(--BOT) + 22px);z-index:1200;max-width:calc(100% - 32px);
+  background:var(--surf2);border:1px solid var(--green);border-radius:10px;
+  padding:12px 18px;font-size:.82rem;color:var(--text);text-align:center;
+  box-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;pointer-events:none;
+  transition:opacity .22s ease,transform .22s ease;}
+#toast.on{opacity:1;transform:translate(-50%,0);}
+@media (min-width:768px){ body.logado #toast{bottom:28px;} }
+
+/* Item cujo dia já passou e continua sem confirmação. A pulsação é discreta
+   de propósito: chamar atenção sem parecer erro. */
+.tg.atrasado{background:var(--red-d);color:var(--red);
+  animation:pulsaAtraso 2s ease-in-out infinite;}
+@keyframes pulsaAtraso{0%,100%{opacity:1}50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){ .tg.atrasado{animation:none;} }
+
+/* Mês de destino no modal de lançamento */
+/* Linha própria, fora do .md-t: aquele é um flex de dois filhos (título e ✕)
+   e um terceiro elemento cairia entre eles. */
+.md-mes{margin:-8px 0 16px;padding:7px 11px;border-radius:7px;
+  background:var(--yellow-d);border-left:3px solid var(--yellow);
+  font-family:monospace;font-size:.72rem;letter-spacing:.04em;color:var(--yellow);}
+.md-fora{margin:0 0 14px;padding:10px 12px;border-radius:8px;background:var(--yellow-d);
+  border-left:3px solid var(--yellow);font-size:.78rem;color:var(--text);line-height:1.5;}
+
 #bannerPerfil{background:var(--yellow-d);border-left:3px solid var(--yellow);
   padding:10px 14px;margin:0 16px 12px;border-radius:8px;font-size:.8rem;
   color:var(--text);display:none;cursor:pointer;-webkit-tap-highlight-color:transparent;}
@@ -1297,6 +1345,23 @@ onAuthStateChanged(auth, function(user){
     <div class="tc"><div class="tc-v pp" id="tcC">—</div><div class="tc-l">Cofrinhos</div></div>
     <div class="tc"><div class="tc-v blu" id="tcI">—</div><div class="tc-l">Carteira</div></div>
   </div>
+  <!-- Pendências: o item lançado só entra no saldo depois de confirmado, e
+       sem este aviso ele parecia ter sumido dentro de uma seção fechada. -->
+  <div id="bannerPend" onclick="irParaPendencias()">
+    <div class="bp-txt"><b id="bpTitulo">—</b><span id="bpSub">—</span></div>
+    <button class="bp-btn">Ver agora →</button>
+  </div>
+
+  <div id="dicaConfirmar">
+    <button class="dica-x" onclick="dispensarDica()" title="Dispensar">✕</button>
+    <div class="dica-t">💡 Por que preciso confirmar?</div>
+    <div class="dica-p">Conta fixa e salário entram todo mês, mas nem sempre no
+      valor previsto. O Vigia espera você dizer <b>"já paguei"</b> ou
+      <b>"já recebi"</b> antes de somar no saldo — assim o número da tela é o
+      que aconteceu de verdade, não o que estava planejado.</div>
+    <div class="dica-p">Dá para ajustar o valor na hora de confirmar.</div>
+  </div>
+
   <div class="barra">
     <div class="barra-l"><span>Comprometimento da renda</span><span id="pctL">—</span></div>
     <div class="track"><div class="fill" id="barF" style="width:0%"></div></div>
@@ -1490,6 +1555,7 @@ onAuthStateChanged(auth, function(user){
 <div class="ov" id="ovL" onclick="fecharFora(event,'ovL')">
   <div class="md" onclick="event.stopPropagation()">
     <div class="md-t"><span id="lTit">Novo lançamento</span><button class="md-x" onclick="fechar('ovL')">✕</button></div>
+    <div class="md-mes" id="lMes">—</div>
     <div class="tgl">
       <button class="rd on" id="btD" onclick="setTipo('despesa')">− DESPESA</button>
       <button class="gr" id="btR" onclick="setTipo('receita')">+ RECEITA</button>
@@ -1618,6 +1684,7 @@ onAuthStateChanged(auth, function(user){
 
     <!-- CONFIRMAÇÃO -->
     <div class="stp" id="cf1">
+      <div class="md-fora" id="cForaDoMes" style="display:none"></div>
       <div class="cbx" id="cBox"></div>
       <button class="bok" id="btCf" onclick="confirmar()">✓ Confirmar e salvar</button>
     </div>
@@ -2091,6 +2158,10 @@ async function instalarApp(){
 
 var MES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 var MESL=['jan.','fev.','mar.','abr.','mai.','jun.','jul.','ago.','set.','out.','nov.','dez.'];
+/* Por extenso, para as frases em que o mês precisa ficar sem dúvida — "ago."
+   num aviso de "você está em outro mês" não chama atenção o bastante. */
+var MESN=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto',
+  'setembro','outubro','novembro','dezembro'];
 var MESF=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 var DOW=['DOM.','SEG.','TER.','QUA.','QUI.','SEX.','SÁB.'];
 var DOWL=['dom.','seg.','ter.','qua.','qui.','sex.','sáb.'];
@@ -2654,10 +2725,17 @@ function itemTipo2(kind,item,cor,conf){
   var confirmado=!!(cf&&cf.confirmado);
   var valor=confirmado?(cf.valor!=null?cf.valor:item.valor):item.valor;
   if(!confirmado){
+    /* "PENDENTE" não dizia pendente de quê, e "Confirmar" não dizia confirmar
+       o quê. O rótulo agora é a frase que a pessoa diria. */
+    var ehReceita=kind==='receitasFixas';
+    var atrasado=itemAtrasado(item,curM,curA);
+    var etiqueta=atrasado
+      ? '<span class="tg atrasado">JÁ VENCEU</span>'
+      : '<span class="tg cat">AGUARDANDO CONFIRMAÇÃO</span>';
     return '<div class="it '+cor+'" style="opacity:.42"><div class="it-t"><div class="it-n"><span class="dia">'+
-      String(item.dia).padStart(2,'0')+'</span>'+item.nome+'<span class="tg cat">PENDENTE</span></div>'+
+      String(item.dia).padStart(2,'0')+'</span>'+item.nome+etiqueta+'</div>'+
       '<div class="it-v dim">'+fmt(item.valor)+'</div></div>'+
-      '<div class="it-a"><button class="ba" style="flex:2;color:var(--text)" onclick="abrirConfirmacao(\''+kind+'\',\''+item.id+'\')">✓ Confirmar</button>'+
+      '<div class="it-a"><button class="ba" style="flex:2;color:var(--green);border-color:var(--green)" onclick="abrirConfirmacao(\''+kind+'\',\''+item.id+'\')">✓ Já '+(ehReceita?'recebi':'paguei')+'</button>'+
       '<button class="ba" onclick="edit(\''+kind+'\',\''+item.id+'\')">✎</button>'+
       '<button class="ba del" onclick="del(\''+kind+'\',\''+item.id+'\')">✕</button></div></div>';
   }
@@ -2667,6 +2745,92 @@ function itemTipo2(kind,item,cor,conf){
     '<div class="it-a"><button class="ba" onclick="abrirConfirmacao(\''+kind+'\',\''+item.id+'\')">✎ Ajustar</button>'+
     '<button class="ba" onclick="desfazerConfirmacao(\''+item.id+'\')">↺ Desfazer</button>'+
     '<button class="ba del" onclick="del(\''+kind+'\',\''+item.id+'\')">✕</button></div></div>';
+}
+
+/* ══════ PENDÊNCIAS DE CONFIRMAÇÃO ══════
+   Conta fixa e receita fixa só entram no saldo depois de confirmadas. Era o
+   ponto onde o app perdia gente: a pessoa lançava, o item caía numa seção
+   fechada marcada "PENDENTE", o saldo não mudava, e parecia que sumiu. */
+function pendenciasDoMes(c){
+  var conf=c.conf, r=[], d=[];
+  c.d.receitasFixas.forEach(function(x){ if(!(conf[x.id]&&conf[x.id].confirmado)) r.push(x); });
+  c.despesasConfirmaveis.forEach(function(x){ if(!(conf[x.id]&&conf[x.id].confirmado)) d.push(x); });
+  return {receitas:r,despesas:d,total:r.length+d.length,
+    valor:r.concat(d).reduce(function(s,x){return s+(Number(x.valor)||0);},0)};
+}
+
+/* Só faz sentido chamar de atrasado no mês corrente: num mês passado tudo já
+   venceu, e num futuro nada venceu ainda. */
+function itemAtrasado(item,m,a){
+  if(m!==HOJE.getMonth()||a!==HOJE.getFullYear()) return false;
+  return (Number(item.dia)||0)<HOJE.getDate();
+}
+
+function renderBannerPendencias(c){
+  var b=document.getElementById('bannerPend');
+  if(!b) return;
+  var p=pendenciasDoMes(c);
+  b.classList.toggle('on',p.total>0);
+  if(!p.total) return;
+  var atrasados=p.receitas.concat(p.despesas)
+    .filter(function(x){ return itemAtrasado(x,curM,curA); }).length;
+  document.getElementById('bpTitulo').textContent=
+    p.total===1?'1 item aguardando você confirmar':p.total+' itens aguardando você confirmar';
+  document.getElementById('bpSub').textContent=
+    (atrasados?atrasados+(atrasados===1?' já passou da data · ':' já passaram da data · '):'')+
+    'Só entram no saldo depois de confirmados';
+}
+
+/* Abre as seções que têm pendência e rola até a primeira delas. */
+function irParaPendencias(){
+  var c=calcMes(curM,curA), p=pendenciasDoMes(c), alvo=null;
+  if(p.despesas.length){ abrirSec('sFixas'); alvo='sFixas'; }
+  if(p.receitas.length){ abrirSec('sReceitas'); if(!alvo) alvo='sReceitas'; }
+  renderTudo();
+  if(!alvo) return;
+  var el=document.getElementById(alvo);
+  var cab=el&&el.previousElementSibling;
+  if(cab) setTimeout(function(){
+    window.scrollTo({top:cab.getBoundingClientRect().top+window.scrollY-70,behavior:'smooth'});
+  },60);
+}
+
+/* Abre sozinha, uma vez por sessão, toda seção com pendência. Repetir a cada
+   render impediria a pessoa de fechar a seção. */
+var pendenciasJaAbertas=false;
+function abrirSecoesComPendencia(c){
+  if(pendenciasJaAbertas) return;
+  pendenciasJaAbertas=true;
+  var p=pendenciasDoMes(c);
+  if(p.despesas.length) abrirSec('sFixas');
+  if(p.receitas.length) abrirSec('sReceitas');
+}
+
+/* Explicação que aparece só até a pessoa confirmar o primeiro item. */
+var DICA_KEY='vigia_dica_confirmar';
+function dicaVista(){
+  try{ return localStorage.getItem(DICA_KEY)==='1'; }catch(e){ return true; }
+}
+function dispensarDica(){
+  try{ localStorage.setItem(DICA_KEY,'1'); }catch(e){}
+  var el=document.getElementById('dicaConfirmar');
+  if(el) el.classList.remove('on');
+}
+function renderDica(c){
+  var el=document.getElementById('dicaConfirmar');
+  if(!el) return;
+  el.classList.toggle('on',!dicaVista()&&pendenciasDoMes(c).total>0);
+}
+
+/* ══════ TOAST ══════ */
+var toastTimer=null;
+function mostrarToast(msg){
+  var el=document.getElementById('toast');
+  if(!el) return;
+  el.textContent=msg;
+  el.classList.add('on');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){ el.classList.remove('on'); },3200);
 }
 
 function getSaudacao(){
@@ -2795,6 +2959,10 @@ function renderReceitasParceladas(c){
 
 function renderInicio(){
   var c=calcMes(curM,curA), d=c.d, mm=c.mm, conf=c.conf;
+
+  abrirSecoesComPendencia(c);
+  renderBannerPendencias(c);
+  renderDica(c);
 
   var primeiroNome=d.nome?d.nome.split(' ')[0]:'';
   document.getElementById('heroSaudacao').textContent=
@@ -3629,7 +3797,10 @@ function abrirLanc(){
   var cs=document.querySelectorAll('#ovL .chip');
   for(var i=0;i<cs.length;i++) cs[i].classList.remove('on');
   setTipo('despesa');
-  document.getElementById('lTit').textContent='Novo lançamento · '+MES[curM]+'/'+curA;
+  document.getElementById('lTit').textContent='Novo lançamento';
+  /* Em destaque e por extenso: o beta tester lançou achando que ia para o mês
+     atual e estava com a tela em outro mês. */
+  document.getElementById('lMes').textContent='Vai ser salvo em '+MESN[curM]+' de '+curA;
   document.getElementById('ovL').classList.add('on');
 }
 
@@ -3657,6 +3828,22 @@ function stp(id){
   var ss=document.querySelectorAll('#ovL .stp');
   for(var i=0;i<ss.length;i++) ss[i].classList.remove('on');
   document.getElementById(id).classList.add('on');
+  if(id==='cf1') avisarSeForaDoMes();
+}
+
+/* Lançar com a tela em outro mês é legítimo (registrar algo de julho em
+   agosto), mas raramente é o que a pessoa queria. O aviso aparece na revisão,
+   quando ainda dá para voltar. */
+function avisarSeForaDoMes(){
+  var el=document.getElementById('cForaDoMes');
+  if(!el) return;
+  var atual=curM===HOJE.getMonth()&&curA===HOJE.getFullYear();
+  el.style.display=atual?'none':'block';
+  if(atual) return;
+  var passado=(curA<HOJE.getFullYear())||(curA===HOJE.getFullYear()&&curM<HOJE.getMonth());
+  el.innerHTML='⚠️ Você está vendo <b>'+MESN[curM]+' de '+curA+'</b>, '+
+    (passado?'um mês que já passou':'um mês que ainda não chegou')+
+    '. É nele que este lançamento vai entrar, não em '+MESN[HOJE.getMonth()]+'.';
 }
 function pick(el,campo,val){
   var g=el.parentNode.querySelectorAll('.chip');
@@ -3835,6 +4022,20 @@ function confirmar(){
     }
   }
   salvar(d); fechar('ovL'); renderTudo();
+  mostrarToast(mensagemDoLancamento());
+}
+
+/* Diz onde o item foi parar, porque nem tudo aparece no saldo na hora: conta
+   fixa e receita fixa ficam esperando confirmação. */
+function mensagemDoLancamento(){
+  var mes=MES[curM]+'/'+curA;
+  if(L.tipo==='receita' && L.rec && L.rec.fixa)
+    return '✅ Receita fixa criada. Confirme quando receber.';
+  if(L.subtipoDespesa==='fixa')
+    return '✅ Conta fixa criada. Confirme quando pagar.';
+  if(L.subtipoDespesa==='parcelamento') return '✅ Parcelamento criado em '+mes+'.';
+  if(L.subtipoDespesa==='cofrinho') return '✅ Cofrinho criado.';
+  return '✅ Salvo em '+mes+'.';
 }
 
 /* ══════ EDITAR / DELETAR ══════ */
@@ -3906,7 +4107,11 @@ async function salvarConfirmacao(){
   if(isNaN(v)||v<0){ await vAlert('Informe um valor válido.'); return; }
   var d=getD(), mm=getMes(d,curM,curA);
   mm.confirmacoes[confCtx.id]={confirmado:true,valor:v};
-  salvar(d); fechar('ovC'); confCtx=null; renderTudo();
+  salvar(d); fechar('ovC'); confCtx=null;
+  /* quem confirmou uma vez já entendeu o mecanismo */
+  try{ localStorage.setItem(DICA_KEY,'1'); }catch(e){}
+  renderTudo();
+  mostrarToast('✅ Confirmado. Já entrou no saldo do mês.');
 }
 function desfazerConfirmacao(id){
   var d=getD(), mm=getMes(d,curM,curA);
@@ -4311,6 +4516,7 @@ function confirmarVenda(){
   salvar(d);
   fechar('ovVenda');
   renderTudo();
+  mostrarToast('✅ Venda registrada em '+MES[curM]+'/'+curA+'.');
 }
 async function excluirVenda(id){
   var ok=await vConfirm('A venda sai do faturamento e do lucro do mês.','Excluir venda?','var(--red)','Excluir');
@@ -4434,6 +4640,9 @@ function confirmarRecebimento(){
   salvar(d);
   fechar('ovRecebimento');
   renderTudo();
+  mostrarToast(rvState.forma==='parcelado'
+    ? '✅ Serviço parcelado registrado. As parcelas caem sozinhas todo mês.'
+    : '✅ Recebimento registrado em '+MES[curM]+'/'+curA+'.');
 }
 /* Encerrar não apaga: marca o mês em que parou. Apagar faria as parcelas já
    recebidas sumirem dos meses passados, mudando um histórico que aconteceu. */
@@ -5171,5 +5380,7 @@ function onbPular(){
   }
 })();
 </script>
+<div id="toast" role="status" aria-live="polite"></div>
+
 </body>
 </html>

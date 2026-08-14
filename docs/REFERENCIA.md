@@ -3,7 +3,7 @@
 > Documento de contexto para retomar o desenvolvimento em outra sessão de IA.
 > Descreve **o que existe**, **onde está** e **o que não pode ser quebrado**.
 >
-> Última atualização: agosto/2026 · `schemaVersion: 8` · versão `1.0.0-beta` · service worker `vigia-v24`
+> Última atualização: agosto/2026 · `schemaVersion: 8` · versão `1.0.0-beta` · service worker `vigia-v25`
 
 ---
 
@@ -88,7 +88,7 @@ A conversa chega como `<lid>@lid` e o número real vai em `key.senderPn` / `key.
 
 ### 2.7 Bump do service worker a cada deploy
 
-`sw.js` é cache-first. Sem trocar `const CACHE = 'vigia-vNN'`, o usuário continua com a versão velha. **Está em `vigia-v24`.**
+`sw.js` é cache-first. Sem trocar `const CACHE = 'vigia-vNN'`, o usuário continua com a versão velha. **Está em `vigia-v25`.**
 
 ### 2.8 Migração encadeada
 
@@ -106,7 +106,15 @@ deixa o `dataset.valor` antigo e o campo grava o valor do lançamento anterior.
 
 O clone local desta máquina já perdeu commits duas vezes. Sempre `git fetch` e compare com o remoto antes.
 
-### 2.11 O perfil decide o que é OFERECIDO, não o que é ocultado
+### 2.11 Fixa só entra no saldo depois de confirmada
+
+`receitasFixas` e `despesasFixas` não somam nada até existir
+`mm.confirmacoes[id].confirmado`. É de propósito — o valor previsto raramente
+é o cobrado — mas foi o que fez um beta tester achar que o lançamento tinha
+sumido. Quem mexer nas seções da tela Início precisa manter os três avisos:
+banner de pendências, abertura automática da seção e o toast do lançamento.
+
+### 2.12 O perfil decide o que é OFERECIDO, não o que é ocultado
 
 Trocar de perfil nunca esconde nem apaga dado já cadastrado. Quem tem receita fixa continua vendo no perfil autônomo.
 
@@ -176,6 +184,7 @@ Trocar de perfil nunca esconde nem apaga dado já cadastrado. Quem tem receita f
 | `vigia_ultimo_uid` | última conta logada, para o modo offline |
 | `vigia_onboarding_visto` | intro de 3 slides já vista |
 | `vigia_fonte` | escala do texto: `n`, `g` ou `gg` |
+| `vigia_dica_confirmar` | explicação de "por que confirmar" já dispensada |
 
 E em `sessionStorage` (morre ao fechar o app): `vigia_saiu_em`, hora em que o app
 foi para segundo plano, usada para conferir o tempo real de inatividade na volta.
