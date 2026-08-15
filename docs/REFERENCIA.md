@@ -3,7 +3,7 @@
 > Documento de contexto para retomar o desenvolvimento em outra sessão de IA.
 > Descreve **o que existe**, **onde está** e **o que não pode ser quebrado**.
 >
-> Última atualização: agosto/2026 · `schemaVersion: 8` · versão `1.0.0-beta` · service worker `vigia-v25`
+> Última atualização: agosto/2026 · `schemaVersion: 9` · versão `1.0.0-beta` · service worker `vigia-v27`
 
 ---
 
@@ -88,7 +88,7 @@ A conversa chega como `<lid>@lid` e o número real vai em `key.senderPn` / `key.
 
 ### 2.7 Bump do service worker a cada deploy
 
-`sw.js` é cache-first. Sem trocar `const CACHE = 'vigia-vNN'`, o usuário continua com a versão velha. **Está em `vigia-v25`.**
+`sw.js` é cache-first. Sem trocar `const CACHE = 'vigia-vNN'`, o usuário continua com a versão velha. **Está em `vigia-v27`.**
 
 ### 2.8 Migração encadeada
 
@@ -96,7 +96,7 @@ Toda mudança de formato precisa de `migrarVNparaVN+1` chamada em sequência den
 
 ### 2.9 Campo de dinheiro nunca é lido com `parseFloat(.value)`
 
-Os 23 campos de `MOEDA_INPUTS` formatam enquanto a pessoa digita: "7785" vira
+Os 31 campos de `MOEDA_INPUTS` formatam enquanto a pessoa digita: "7785" vira
 "77,85". Depois disso `parseFloat("1.111.111,11")` devolve **1.111**. Toda
 leitura passa por `obterValorInput()`, toda escrita por `setValorInput()` e
 toda limpeza por `limparValorInput()`/`limparCampos()` — limpar só o `.value`
@@ -118,15 +118,41 @@ banner de pendências, abertura automática da seção e o toast do lançamento.
 
 Trocar de perfil nunca esconde nem apaga dado já cadastrado. Quem tem receita fixa continua vendo no perfil autônomo.
 
+A exceção é a **aba Negócio**, que só existe no perfil vendedor — mas ela não
+esconde dado nenhum, é atalho para o que já está em `d.estoque` e `mm.vendas`.
+Se o perfil mudar com a tela aberta, `renderPerfilUI` devolve para o Início:
+tela sem botão de acesso é tela órfã.
+
+### 2.13 Material do estoque não pode ser cobrado duas vezes
+
+O app é **regime de caixa**: a compra de material vira despesa no mês em que
+foi paga (`comprasEstoqueNoMes` entra em `calcMes`). Por isso a venda de uma
+peça daquele lote **não** pode descontar o custo de novo.
+
+Quem separa os dois é o campo `estoqueId` da venda:
+
+| Venda | `custo` entra em despesas? | Entra no `lucro`? |
+|---|---|---|
+| com `estoqueId` | **não** — já pago na compra | sim |
+| sem `estoqueId` | sim | sim |
+
+`calcVendas` faz essa conta em `custoJaPago`. Vendas anteriores a esta versão
+não têm `estoqueId`, então continuam somando o custo como sempre somaram —
+é o que mantém o histórico de quem já usava o app intacto.
+
+**`lucro` e `saida` respondem perguntas diferentes:** `lucro` é "valeu a pena
+esta venda" e sempre desconta o custo real; `saida` é "quanto saiu do caixa
+neste mês". Mexer num sem pensar no outro quebra o saldo ou a margem.
+
 ---
 
 ## 3. Modelo de dados
 
-### 3.1 `usuarios/{uid}/dados/principal` — schemaVersion 8
+### 3.1 `usuarios/{uid}/dados/principal` — schemaVersion 9
 
 ```js
 {
-  schemaVersion: 8,
+  schemaVersion: 9,
   nome: "Marcos Paulo",
   perfil: null | "clt" | "autonomo" | "misto" | "vendedor",
   subPerfil: null | "marketplace" | "direto" | "misto_vendedor",  // só vendedor
@@ -147,12 +173,17 @@ Trocar de perfil nunca esconde nem apaga dado já cadastrado. Quem tem receita f
 
   avisosSilenciados: { "<chave>": <timestampAte> },
 
+  // Compras de material do vendedor. Vive fora de `meses` porque um lote
+  // comprado em março continua vendendo em julho; o mês da DESPESA é o que
+  // está gravado em mes/ano.
+  estoque: [{ id, produto, fornecedor, valor, qtd, dia, mes, ano }],
+
   meses: {
     "2026-08": {
       receitas:  [{ id, nome, valor, dia, cat, tipo }],
       consumo:   [{ id, nome, valor, dia, cat, cartao, fonte }],
       reserva:   [{ id, nome, valor, dia }],
-      vendas:    [{ id, desc, valor, custo, taxa, taxaPct, frete, embalagem, qtd, dia, canal, forma }],
+      vendas:    [{ id, desc, valor, custo, taxa, taxaPct, frete, embalagem, estoqueId, qtd, dia, canal, forma }],
       cofres:    [{ id, nome, valor, dia, cofrinhoId }],
       confirmacoes: { "<idDoItemFixo>": { confirmado: true, valor: 1850 } }
     }
@@ -205,6 +236,11 @@ bootSplash → onVigiaAuthChange
 `.logado` no `<body>` é o que liga o layout de computador: acima de 768px troca
 a navegação de baixo (`.botnav`) pelo menu lateral (`.sidebar`) e limita o
 conteúdo a 920px. A landing e o login nunca têm essa classe.
+
+**As abas:** Início, Agenda, Cartões, **Negócio**, Histórico. A de Negócio fica
+escondida (`display:none` nos dois menus) e só aparece no perfil vendedor —
+quem liga e desliga é `renderPerfilUI`. O `+` aparece em Início, Cartões e
+Negócio.
 
 As capturas da landing NÃO são feitas à mão: `screenshots/gerar-lp.js` abre o
 app com um conjunto de dados fictício e coerente e fotografa cada tela. Mudou a
@@ -267,7 +303,7 @@ Módulo ES separado no topo do arquivo. O resto do app é script clássico e só
 
 | Função | O que faz |
 |---|---|
-| `calcMes(m,a)` | **o coração.** Devolve receitas, despesas, saldo, cofres, parcelamentos ativos, `recExt`, `recParc`, `receitasParcAtivas`, `despesasConfirmaveis` etc. |
+| `calcMes(m,a)` | **o coração.** Devolve receitas, despesas, saldo, cofres, parcelamentos ativos, `recExt`, `recParc`, `receitasParcAtivas`, `despesasConfirmaveis`, `comprasEstoque` etc. |
 | `valorConfirmado(conf,item)` | fixa só conta depois de confirmada no mês |
 | `parcelaNoMes(p,m,a)` | qual parcela cai neste mês |
 | `calcParcelaReceitaNoMes(rp,m,a)` | idem para receita parcelada; respeita `mesEncerrado` |
@@ -276,6 +312,7 @@ Módulo ES separado no topo do arquivo. O resto do app é script clássico e só
 | `faturaMes(cartao,m,a)` | parcelamentos ativos + compras avulsas do cartão |
 | `carteiraCalc(d)` | total e percentual de cada investimento |
 | `difMeses(m1,a1,m2,a2)` | meses entre duas datas |
+| `comprasEstoqueNoMes(d,m,a)` | compras de material pagas naquele mês (viram despesa) |
 
 ### 5.4 Formatação
 
@@ -304,30 +341,67 @@ Modal `#ovRecebimento` em 3 passos. `abrirRecebimento()`, `pickRv(el,campo,val)`
 
 **Encerrar não apaga:** grava `ativo:false` + `mesEncerrado`/`anoEncerrado`. Os meses anteriores continuam valendo.
 
-### 5.7b Vendas e planejamento de lote (perfil vendedor)
+### 5.7b Tela Negócio: vendas, estoque e calculadora (perfil vendedor)
 
-**Registrar uma venda que já aconteceu** — modal `#ovVenda`, 2 passos:
-`abrirVenda()`, `pickVd(el,campo,val)`, `vd1ok()`, `confirmarVenda()`, `excluirVenda(id)`.
+Tudo mora em `#t-negocio`, renderizada por `renderNegocio()`. Quatro cartões no
+topo (faturamento, lucro, comprado no mês, parado em estoque) e três seções:
+estoque, vendas do mês e a calculadora.
+
+**Registrar uma venda** — modal `#ovVenda`, 2 passos:
+`abrirVenda()`, `pickVd(el,campo,val)`, `pickLoteVenda(el,id)`, `vd1ok()`,
+`confirmarVenda()`, `excluirVenda(id)`.
 
 | Função | O que faz |
 |---|---|
 | `taxaDaVenda(valor,pct)` | taxa do marketplace em reais, arredondada ao centavo |
 | `lucroDaVenda(v)` | `valor − custo − taxa − frete − embalagem` |
-| `calcVendas(mm)` | totais do mês: `bruto`, `custo`, `taxa`, `extras` (frete+embalagem), `saida`, `lucro`, `margem` |
+| `calcVendas(mm)` | totais do mês: `bruto`, `custo`, `custoJaPago`, `taxa`, `extras` (frete+embalagem), `saida`, `lucro`, `margem` |
 
-`saida` (custo + taxa + frete + embalagem) entra nas despesas do mês; só o `lucro`
-entra no saldo. Vender R$ 35 não deixa o usuário R$ 35 mais rico.
+`saida` entra nas despesas do mês; só o `lucro` entra no saldo. Vender R$ 35 não
+deixa o usuário R$ 35 mais rico. A diferença entre `saida` e `lucro` está na
+regra 2.13 — leia antes de mexer em qualquer uma das duas.
 
-**Planejar um lote antes de comprar** — modal `#ovLote`, tudo recalculado a cada
-tecla, nada é gravado enquanto o usuário não mandar:
+`vd1ok()` barra venda com quantidade maior que o que resta no lote escolhido.
+
+**Estoque** — modal `#ovEstoque`. `abrirEstoque()`, `avaliarPrecoEstoque()`,
+`salvarEstoque()`, `excluirEstoque(id)`, `usarChipEstoque(el,alvo,valor)`.
 
 | Função | O que faz |
 |---|---|
-| `abrirLote()` | limpa os campos e liga `oninput` → `calcularLote` |
-| `lerLote()` | lê os 7 campos; `taxaPct` é limitada a 0–100 |
+| `precoUnitEstoque(e)` | `valor / qtd` — é o preço que a comparação usa |
+| `compraAnterior(d,item)` | a compra anterior **do mesmo produto**, não a do mês passado |
+| `compararPreco(d,item)` | `{dif, pct, precoAntes, precoAgora, anterior, igual}` ou `null` |
+| `vendidasDoLote(d,id)` / `restanteDoLote(d,item)` | varre todos os meses — lote de março vende em julho |
+| `lotesDisponiveis(d)` | lotes com peça sobrando, recentes primeiro |
+| `comprasEstoqueNoMes(d,m,a)` | as compras que viram despesa naquele mês |
+| `normProduto(s)` / `ordemCompra(e)` | comparação de nome e ordenação por data |
+
+Três decisões que parecem detalhe e não são:
+
+- **A comparação é por peça, nunca pelo total.** R$ 250 por 20 peças é mais
+  barato que R$ 300 por 30; comparar o total diria o contrário.
+- **Compara com a compra anterior do mesmo produto**, com a data junto
+  ("mais caro que em jun/2026"). Pode fazer meio ano que ele não repõe aquilo.
+- **Primeira compra não gera comparação** (`compararPreco` devolve `null`).
+  Sem histórico não é "manteve o preço", é "não dá para saber". Diferenças
+  abaixo de meio centavo por peça contam como `igual`.
+
+`excluirEstoque` **recusa** apagar lote com venda vinculada: sem o lote, o
+`estoqueId` daquelas vendas aponta para o vazio e o custo volta a ser
+descontado no mês da venda (regra 2.13).
+
+**Calculadora de lote** — não é modal, é a seção `#sCalc` da tela. HTML fixo, e
+`renderNegocio` nunca a reescreve: se reescrevesse, apagaria o que a pessoa
+está digitando no meio da conta.
+
+| Função | O que faz |
+|---|---|
+| `prepararCalculadora()` | liga `oninput` → `calcularLote` uma vez, no boot |
+| `lerLote()` | lê os 7 campos; `taxaPct` limitada a 0–100 |
 | `calcularLote()` | pinta os três cartões de resultado |
+| `limparLote()` / `irParaCalculadora()` | limpar; e a ponte vinda da tela Início |
 | `usarLoteNaVenda()` | leva preço, custo unitário, frete, embalagem e taxa para `#ovVenda` |
-| `lancarCompraDoLote()` | grava o custo do lote em `mm.consumo` como "Compra de material para revenda" |
+| `lancarCompraDoLote()` | abre `#ovEstoque` com custo e quantidade preenchidos |
 
 As contas:
 
@@ -374,6 +448,15 @@ Níveis: `estouro` (vermelho) · `atencao` (amarelo) · `meta` (verde). Só `est
 ### 5.11 Lançamento (botão `+`)
 
 `abrirLanc()` monta os chips **conforme o perfil**. Fluxo: `setTipo(t)` → `setSubtipoDespesa(tipo)` → `stp(id)` (navega os passos) → `dp1ok()`/`dp2ok()`/`dfOk()`/`pcOk()`/`cofreOk()`/`rc1ok()` → `confirmar()` grava. Seleção: `pick(el,campo,val)`, `pickCat(el,id)`, `setCartaoParc`, `setNomeCofre`. Estado no objeto `L`.
+
+**Todo lançamento começa aqui, em todo perfil.** Vendedor ganha o botão
+`#btV` (VENDA) e o chip `#chipMaterial` (compra de material); os dois têm
+modal próprio, então `setTipo('venda')` e `setSubtipoDespesa('material')`
+fecham o `#ovL` e abrem `#ovVenda` / `#ovEstoque` em vez de navegar passos.
+
+Os botões contextuais ("+ Registrar venda" na lista de vendas, "+ Recebi hoje"
+nas receitas, "+ Comprei material" no estoque) **continuam existindo** — são
+atalho para a ação mais frequente de cada tela, não substitutos do `+`.
 
 ### 5.12 Edição e confirmação
 
@@ -473,7 +556,7 @@ Repetição no bot: aviso de **data** dedupe por dia; aviso de **estado** dedupe
 | Onde | Comando | Cobre |
 |---|---|---|
 | Bot | `node alertas.test.js` | 39 casos: conteúdo dos avisos, dedupe, janelas de horário, fuso |
-| App | Playwright (fora do repo) | perfis (58), beta (57), UX (37), landing (36), lote (36), avisos (24), notificações (20), fonte (13) |
+| App | Playwright (fora do repo) | negócio/estoque (56), perfis (58), beta (57), lote (38), UX (37), landing (36), avisos (24), notificações (20), fonte (13) |
 
 O app não tem suíte versionada. Os testes foram escritos em `playwright-core` apontando para o `index.html` local, injetando dados no `localStorage` e chamando `entrarOffline()` para pular o login.
 
@@ -486,4 +569,4 @@ O app não tem suíte versionada. Os testes foram escritos em `playwright-core` 
 - `firestore.rules` é publicado à mão no console do Firebase, não por deploy.
 - `usuarios/{uid}/alertas/**` é gravável pelo cliente (a regra `{documento=**}` cobre). O prejuízo possível é a própria pessoa silenciar os próprios avisos.
 - A barra de progresso não é mascarada pelo olho — só o número.
-- **`qtd` na venda é decorativo.** O campo é gravado e aparece na lista ("3 un."), mas `valor` nunca é multiplicado por ele: `calcVendas` soma `valor` cru. Quem vende 3 peças por R$ 289,90 cada precisa digitar R$ 869,70 no valor. A calculadora de lote não depende disso — ela trabalha por peça. Mudar a semântica agora alteraria em silêncio os dados já lançados, então fica como decisão do dono.
+- **`valor` na venda é o TOTAL, não o preço da peça.** `calcVendas` soma `valor` cru, sem multiplicar por `qtd` — quem vende 3 peças a R$ 289,90 digita R$ 869,70. O `qtd` deixou de ser decorativo nesta versão: dá baixa no estoque (`vendidasDoLote`) e multiplica o custo quando a venda vem de um lote (`atualizarCustoDoLote`). Falta o rótulo do campo dizer isso — hoje é só "Valor da venda", que alguém pode ler como preço unitário.

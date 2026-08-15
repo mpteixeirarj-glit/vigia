@@ -702,6 +702,29 @@ button{font-family:inherit;}
 .sec-subtitle{font-family:monospace;font-size:.66rem;letter-spacing:.1em;
   text-transform:uppercase;color:var(--muted);margin:8px 0 10px;}
 
+/* TELA NEGÓCIO (perfil vendedor) */
+.neg-topo{padding:18px 16px 4px;}
+.neg-tit{font-family:monospace;font-size:1.1rem;color:var(--text);letter-spacing:.04em;}
+.neg-sub{font-size:.76rem;color:var(--muted);margin-top:3px;}
+.neg-cards{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:12px 16px 4px;}
+.neg-card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:12px;}
+.neg-c-l{font-family:monospace;font-size:.63rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);}
+.neg-c-v{font-family:monospace;font-size:1.02rem;margin-top:5px;color:var(--text);}
+.neg-c-v.gr{color:var(--green);} .neg-c-v.rd{color:var(--red);} .neg-c-v.yl{color:var(--yellow);}
+.neg-c-s{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.calc-in{padding:2px 0 4px;}
+/* Chips de lote mostram quanto resta e a que preço, sem virar duas linhas */
+.chip-sub{display:block;font-size:.66rem;color:var(--muted);margin-top:2px;}
+/* Comparação de preço com a compra anterior do mesmo produto */
+.est-cmp{border-radius:10px;padding:11px 12px;font-size:.76rem;line-height:1.5;
+  margin:-4px 0 16px;border:1px solid var(--border);background:var(--surf2);color:var(--muted);}
+.est-cmp b{color:var(--text);font-family:monospace;}
+.est-cmp.caro{border-color:rgba(255,90,90,.4);background:rgba(255,90,90,.08);}
+.est-cmp.caro b{color:var(--red);}
+.est-cmp.barato{border-color:rgba(0,229,160,.4);background:rgba(0,229,160,.08);}
+.est-cmp.barato b{color:var(--green);}
+
 /* CONFIGURAÇÕES / VÍNCULO DO WHATSAPP */
 .cfg-sec{margin-bottom:22px;}
 .cfg-t{font-family:monospace;font-size:.7rem;letter-spacing:.11em;text-transform:uppercase;
@@ -1318,6 +1341,7 @@ onAuthStateChanged(auth, function(user){
     <button class="sb-item" data-tela="inicio"    onclick="irDesktop('inicio')"><span>⌂</span>Início</button>
     <button class="sb-item" data-tela="agenda"    onclick="irDesktop('agenda')"><span>▤</span>Agenda</button>
     <button class="sb-item" data-tela="cartoes"   onclick="irDesktop('cartoes')"><span>▤</span>Cartões</button>
+    <button class="sb-item" data-tela="negocio"   id="sbNegocio" onclick="irDesktop('negocio')" style="display:none"><span>◎</span>Negócio</button>
     <button class="sb-item" data-tela="historico" onclick="irDesktop('historico')"><span>◈</span>Histórico</button>
   </nav>
 
@@ -1535,6 +1559,81 @@ onAuthStateChanged(auth, function(user){
   </div>
 </div>
 
+<!-- ═══ NEGÓCIO (só perfil vendedor) ═══
+     Calculadora, estoque e vendas moram juntos porque é um ciclo só: compra o
+     material, calcula o preço, vende, e a próxima compra se compara com esta. -->
+<div class="tela" id="t-negocio">
+  <div class="neg-topo">
+    <div class="neg-tit">Meu negócio</div>
+    <div class="neg-sub" id="negSub">—</div>
+  </div>
+
+  <div class="neg-cards" id="negResumo"></div>
+
+  <div class="sec">
+    <div class="sec-h" onclick="toggleSec('sEstoque',this)">
+      <div class="sec-t" style="color:var(--yellow)"><span class="chev">▾</span>Estoque</div>
+      <div class="sec-tot" id="totEstoque">—</div>
+    </div>
+    <div class="sec-body" id="sEstoque"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h" onclick="toggleSec('sVendasMes',this)">
+      <div class="sec-t gr"><span class="chev">▾</span>Vendas do mês</div>
+      <div class="sec-tot" id="totVendasMes">—</div>
+    </div>
+    <div class="sec-body" id="sVendasMes"></div>
+  </div>
+
+  <!-- A calculadora é HTML fixo, não innerHTML: se renderTudo a redesenhasse,
+       apagaria o que a pessoa está digitando no meio da conta. -->
+  <div class="sec">
+    <div class="sec-h" onclick="toggleSec('sCalc',this)">
+      <div class="sec-t bl"><span class="chev">▾</span>🧮 Quanto vou lucrar?</div>
+    </div>
+    <div class="sec-body" id="sCalc">
+      <div class="calc-in">
+        <div class="cfg-d" style="margin:0 0 14px">Comprei um lote de material e
+          quero saber quanto sobra em cada peça e no total.</div>
+
+        <div class="fd2">
+          <div class="fd"><label>Custo do lote (R$)</label>
+            <input type="tel" id="loteCusto" inputmode="numeric" placeholder="0,00"></div>
+          <div class="fd"><label>Rende quantas peças</label>
+            <input type="number" id="loteQtd" min="1" inputmode="numeric" placeholder="Ex: 20"></div>
+        </div>
+
+        <div class="fd"><label>Preço de venda de cada peça (R$)</label>
+          <input type="tel" id="lotePreco" inputmode="numeric" placeholder="0,00"></div>
+
+        <div class="sec-subtitle">Custo de cada venda</div>
+        <div class="fd2">
+          <div class="fd"><label>Frete (R$)</label>
+            <input type="tel" id="loteFrete" inputmode="numeric" placeholder="0,00"></div>
+          <div class="fd"><label>Embalagem (R$)</label>
+            <input type="tel" id="loteEmbalagem" inputmode="numeric" placeholder="0,00"></div>
+        </div>
+        <div class="fd2">
+          <div class="fd"><label>Outros (R$)</label>
+            <input type="tel" id="loteOutros" inputmode="numeric" placeholder="0,00"></div>
+          <div class="fd"><label>Taxa da plataforma (%)</label>
+            <input type="number" id="loteTaxa" min="0" max="100" step="0.1" inputmode="decimal" placeholder="Ex: 12"></div>
+        </div>
+
+        <div id="loteResultado"></div>
+
+        <button class="bok gr" id="loteBtnEstoque" onclick="lancarCompraDoLote()"
+          style="display:none">Comprei este lote — lançar no estoque</button>
+        <button class="ba" id="loteBtnVenda" onclick="usarLoteNaVenda()"
+          style="width:100%;margin-top:8px;display:none">Registrar uma venda com estes números</button>
+        <button class="ba" id="loteBtnLimpar" onclick="limparLote()"
+          style="width:100%;margin-top:8px">Limpar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ HISTÓRICO ═══ -->
 <div class="tela" id="t-historico">
   <div class="anu">
@@ -1574,6 +1673,7 @@ onAuthStateChanged(auth, function(user){
   <button class="bn active" onclick="ir('inicio',this)"><span class="bn-i">⌂</span>início</button>
   <button class="bn" onclick="ir('agenda',this)"><span class="bn-i">◫</span>agenda</button>
   <button class="bn" onclick="ir('cartoes',this)"><span class="bn-i">▤</span>cartões</button>
+  <button class="bn" id="bnNegocio" onclick="ir('negocio',this)" style="display:none"><span class="bn-i">◎</span>negócio</button>
   <button class="bn" onclick="ir('historico',this)"><span class="bn-i">◈</span>histórico</button>
 </div>
 
@@ -1585,6 +1685,7 @@ onAuthStateChanged(auth, function(user){
     <div class="tgl">
       <button class="rd on" id="btD" onclick="setTipo('despesa')">− DESPESA</button>
       <button class="gr" id="btR" onclick="setTipo('receita')">+ RECEITA</button>
+      <button class="gr" id="btV" onclick="setTipo('venda')" style="display:none">◎ VENDA</button>
     </div>
 
     <!-- DESPESA step 0: tipo -->
@@ -1595,6 +1696,8 @@ onAuthStateChanged(auth, function(user){
           <div class="chip" onclick="setSubtipoDespesa('fixa')">Despesa fixa</div>
           <div class="chip" onclick="setSubtipoDespesa('parcelamento')">Parcelamento</div>
           <div class="chip" onclick="setSubtipoDespesa('cofrinho')">Cofrinho</div>
+          <div class="chip" id="chipMaterial" style="display:none"
+            onclick="setSubtipoDespesa('material')">Compra de material</div>
         </div>
       </div>
     </div>
@@ -1865,6 +1968,14 @@ onAuthStateChanged(auth, function(user){
           <input type="tel" id="vdCusto" inputmode="numeric" placeholder="0,00"></div>
       </div>
 
+      <!-- Só aparece quando há lote com peça sobrando. Escolher preenche o
+           custo sozinho e evita que o material seja contado duas vezes. -->
+      <div class="fd" id="vdLoteWrap" style="display:none"><label>Saiu de qual lote?</label>
+        <div class="chips" id="vdLoteChips"></div>
+        <div class="cfg-d" style="margin:6px 0 0">O custo vem do lote, e o material
+          não é cobrado de novo — ele já entrou como gasto no dia da compra.</div>
+      </div>
+
       <div class="fd" id="vdCanalWrap" style="display:none"><label>Canal de venda</label>
         <div class="chips" id="vdCanalChips"></div>
       </div>
@@ -1907,43 +2018,36 @@ onAuthStateChanged(auth, function(user){
   </div>
 </div>
 
-<!-- CALCULADORA DE LOTE (perfil vendedor) -->
-<div class="ov" id="ovLote" onclick="fecharFora(event,'ovLote')">
+<!-- COMPRA DE MATERIAL / ESTOQUE (perfil vendedor) -->
+<div class="ov" id="ovEstoque" onclick="fecharFora(event,'ovEstoque')">
   <div class="md" onclick="event.stopPropagation()">
-    <div class="md-t">Quanto vou lucrar?<button class="md-x" onclick="fechar('ovLote')">✕</button></div>
-    <div class="cfg-d" style="margin:-8px 0 14px">Comprei um lote de material e
-      quero saber quanto sobra em cada peça e no total.</div>
+    <div class="md-t"><span id="estTit">Comprei material</span><button class="md-x" onclick="fechar('ovEstoque')">✕</button></div>
+    <div class="md-mes" id="estMes">—</div>
+
+    <div class="fd"><label>O que você comprou</label>
+      <div class="chips" id="estProdutoChips" style="margin-bottom:8px"></div>
+      <input type="text" id="estProduto" placeholder="Ex: tecido, base de sabonete..." oninput="avaliarPrecoEstoque()">
+    </div>
 
     <div class="fd2">
-      <div class="fd"><label>Custo do lote (R$)</label>
-        <input type="tel" id="loteCusto" inputmode="numeric" placeholder="0,00"></div>
+      <div class="fd"><label>Quanto pagou no total (R$)</label>
+        <input type="tel" id="estValor" inputmode="numeric" placeholder="0,00"></div>
       <div class="fd"><label>Rende quantas peças</label>
-        <input type="number" id="loteQtd" min="1" inputmode="numeric" placeholder="Ex: 20"></div>
+        <input type="number" id="estQtd" min="1" inputmode="numeric" placeholder="Ex: 20" oninput="avaliarPrecoEstoque()"></div>
     </div>
 
-    <div class="fd"><label>Preço de venda de cada peça (R$)</label>
-      <input type="tel" id="lotePreco" inputmode="numeric" placeholder="0,00"></div>
+    <!-- Onde o app diz se a compra saiu mais cara ou mais barata que a anterior -->
+    <div id="estComparacao"></div>
 
-    <div class="sec-subtitle">Custo de cada venda</div>
-    <div class="fd2">
-      <div class="fd"><label>Frete (R$)</label>
-        <input type="tel" id="loteFrete" inputmode="numeric" placeholder="0,00"></div>
-      <div class="fd"><label>Embalagem (R$)</label>
-        <input type="tel" id="loteEmbalagem" inputmode="numeric" placeholder="0,00"></div>
-    </div>
-    <div class="fd2">
-      <div class="fd"><label>Outros (R$)</label>
-        <input type="tel" id="loteOutros" inputmode="numeric" placeholder="0,00"></div>
-      <div class="fd"><label>Taxa da plataforma (%)</label>
-        <input type="number" id="loteTaxa" min="0" max="100" step="0.1" inputmode="decimal" placeholder="Ex: 12"></div>
+    <div class="fd"><label>Fornecedor (opcional)</label>
+      <div class="chips" id="estFornChips" style="margin-bottom:8px"></div>
+      <input type="text" id="estFornecedor" placeholder="De quem você comprou">
     </div>
 
-    <div id="loteResultado"></div>
+    <div class="fd"><label>Dia da compra</label>
+      <input type="number" id="estDia" min="1" max="31" inputmode="numeric"></div>
 
-    <button class="bok gr" id="loteBtnVenda" onclick="usarLoteNaVenda()"
-      style="display:none">Registrar uma venda com estes números</button>
-    <button class="ba" id="loteBtnDespesa" onclick="lancarCompraDoLote()"
-      style="width:100%;margin-top:8px;display:none">Lançar a compra do lote como despesa</button>
+    <button class="bok rd" onclick="salvarEstoque()">✓ Lançar compra</button>
   </div>
 </div>
 
@@ -2290,12 +2394,13 @@ function arquivoCor(k){ return 'cartoes/'+corCartao(k).arquivo; }
 /* Dados de exemplo genéricos — usados só até o usuário logar e ter dados
    próprios no Firestore (ou como fallback offline). Nenhum dado real. */
 var INIT={
-  schemaVersion:8,
+  schemaVersion:9,
   perfil:null,
   subPerfil:null,
   metaRendaMensal:0,
   receitasParceladas:[],
   avisosSilenciados:{},
+  estoque:[],
   receitasFixas:[
     {id:'rf1',dia:5, nome:'Salário', valor:5000.00},
     {id:'rf2',dia:15,nome:'Renda extra', valor:800.00}
@@ -2431,6 +2536,19 @@ function migrarV7paraV8(d){
   return d;
 }
 
+/* v8 → v9: estoque do vendedor. Cada compra guarda o que foi pago, quantas
+   peças rendeu e de quem — o preço por peça sai da divisão, e é ele que diz
+   se a compra de agora saiu mais cara que a anterior do mesmo produto.
+
+   Vendas antigas continuam sem `estoqueId`, e é isso que mantém a conta delas
+   igual à de antes: sem vínculo, o custo da peça segue entrando nas despesas
+   do mês da venda (ver calcVendas). */
+function migrarV8paraV9(d){
+  if(!d.estoque) d.estoque=[];
+  d.schemaVersion=9;
+  return d;
+}
+
 function getD(){
   var raw=localStorage.getItem(chaveLocal(uidAtual));
   if(!raw){ var d=JSON.parse(JSON.stringify(INIT)); salvar(d); return d; }
@@ -2443,6 +2561,7 @@ function getD(){
     if(d.schemaVersion===5){ d=migrarV5paraV6(d); salvar(d); }
     if(d.schemaVersion===6){ d=migrarV6paraV7(d); salvar(d); }
     if(d.schemaVersion===7){ d=migrarV7paraV8(d); salvar(d); }
+    if(d.schemaVersion===8){ d=migrarV8paraV9(d); salvar(d); }
     if(!d.meses)d.meses={};
     if(!d.historico)d.historico=[];
     if(!d.parcelamentos)d.parcelamentos=[];
@@ -2451,6 +2570,7 @@ function getD(){
     if(!d.investimentos)d.investimentos=[];
     if(!d.cartoes)d.cartoes=[];
     if(!d.receitasParceladas)d.receitasParceladas=[];
+    if(!d.estoque)d.estoque=[];
     if(!d.avisosSilenciados)d.avisosSilenciados={};
     if(d.subPerfil===undefined)d.subPerfil=null;
     if(d.perfil===undefined)d.perfil=null;
@@ -2489,7 +2609,7 @@ function cap(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):s; }
 var MOEDA_INPUTS=['dVal','pVal','dfVal','pcVal','cofreTeto','cofreValorMensal',
   'rVal','cfVal','eVal','epV','ecTeto','ecValorMensal','ivPreco','rvValor',
   'rvTotal','metaValor','cartTeto','vdValor','vdCusto','vdFrete','vdEmbalagem',
-  'loteCusto','lotePreco','loteFrete','loteEmbalagem','loteOutros',
+  'loteCusto','lotePreco','loteFrete','loteEmbalagem','loteOutros','estValor',
   'onbRendaValor','onbRendaExtraValor','onbDespValor','onbParcValor'];
 
 function elMoeda(x){ return typeof x==='string'?document.getElementById(x):x; }
@@ -2623,9 +2743,22 @@ function calcVendas(mm){
   /* frete e embalagem são de vendas gravadas depois desta versão; nas antigas
      o campo não existe e vira 0, sem migração. */
   var extras=soma('frete')+soma('embalagem');
+
+  /* Peça que veio de um lote do estoque já teve o material pago no dia da
+     compra, e aquele dia já lançou a despesa. Descontar o custo outra vez aqui
+     contaria o mesmo material duas vezes e afundaria o saldo do mês.
+
+     Venda sem `estoqueId` — todas as de antes desta versão, e as de quem não
+     usa estoque — continua entrando com o custo, exatamente como antes. */
+  var custoJaPago=vendas.reduce(function(s,v){
+    return s+(v.estoqueId?(Number(v.custo)||0):0);},0);
+
+  /* O lucro sempre desconta o custo real da peça: ele responde "valeu a pena
+     esta venda", não "quanto saiu do caixa este mês". São perguntas diferentes
+     e é por isso que `lucro` e `saida` usam contas diferentes. */
   var lucro=bruto-custo-taxa-extras;
-  return {vendas:vendas,bruto:bruto,custo:custo,taxa:taxa,extras:extras,
-    saida:custo+taxa+extras,lucro:lucro,
+  return {vendas:vendas,bruto:bruto,custo:custo,custoJaPago:custoJaPago,taxa:taxa,extras:extras,
+    saida:(custo-custoJaPago)+taxa+extras,lucro:lucro,
     margem:bruto>0?(lucro/bruto*100):0};
 }
 
@@ -2663,7 +2796,10 @@ function acumuladoExtraCofrinho(d,cfId){
 var HOJE=new Date();
 var curM=HOJE.getMonth(), curA=HOJE.getFullYear();
 var telaAtual='inicio', tabAtual='', anoHist=HOJE.getFullYear();
-var secFechadas={sPrestacoes:true,sReceitas:true,sReceitasParc:true,sFixas:true,sConsumo:true,sCarteira:true,sCofres:true,sAlertas:true};
+/* A tela Negócio é dedicada: estoque e vendas já abrem, a calculadora não —
+   ela é ferramenta, só ocupa espaço enquanto ninguém pediu por ela. */
+var secFechadas={sPrestacoes:true,sReceitas:true,sReceitasParc:true,sFixas:true,sConsumo:true,
+  sCarteira:true,sCofres:true,sAlertas:true,sCalc:true};
 var uidAtual=null;
 
 /* ══════ NAVEGAÇÃO ══════ */
@@ -2676,7 +2812,8 @@ function ir(t,btn){
   if(btn) btn.classList.add('active');
   telaAtual=t;
   marcarItemLateral(t);
-  document.getElementById('fab').style.display=(t==='inicio'||t==='cartoes')?'flex':'none';
+  document.getElementById('fab').style.display=
+    (t==='inicio'||t==='cartoes'||t==='negocio')?'flex':'none';
   renderTudo();
   window.scrollTo(0,0);
 }
@@ -2736,6 +2873,73 @@ function aplicarFechadas(){
   }
 }
 
+/* ══════ ESTOQUE (perfil vendedor) ══════
+   Regime de caixa: a compra do material é despesa no dia em que foi paga, não
+   conforme as peças vão saindo. É o que o bolso sente — e é como o resto do
+   app funciona. A consequência está em calcVendas: peça vinda do estoque não
+   pode ter o custo descontado outra vez na venda. */
+function normProduto(s){
+  return String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
+}
+/* O preço que interessa é o da peça, não o do lote: R$ 250 por 20 peças é mais
+   barato que R$ 300 por 30 — comparar só o total diria o contrário. */
+function precoUnitEstoque(e){
+  var q=Number(e.qtd)||0;
+  return q>0 ? (Number(e.valor)||0)/q : 0;
+}
+function ordemCompra(e){ return (Number(e.ano)||0)*10000+(Number(e.mes)||0)*100+(Number(e.dia)||0); }
+
+/* A compra anterior DO MESMO PRODUTO, que não é necessariamente a do mês
+   passado — pode fazer meio ano que ele não repõe aquele item. */
+function compraAnterior(d,item){
+  var alvo=normProduto(item.produto), ref=ordemCompra(item);
+  var antes=(d.estoque||[]).filter(function(e){
+    return e.id!==item.id && normProduto(e.produto)===alvo && ordemCompra(e)<ref;
+  }).sort(function(a,b){ return ordemCompra(b)-ordemCompra(a); });
+  return antes[0]||null;
+}
+/* null quando não há com o que comparar — primeira compra do produto não
+   "manteve o preço", ela simplesmente não tem histórico. */
+function compararPreco(d,item){
+  var ant=compraAnterior(d,item);
+  if(!ant) return null;
+  var agora=precoUnitEstoque(item), antes=precoUnitEstoque(ant);
+  if(!antes) return null;
+  var dif=agora-antes;
+  return {anterior:ant, precoAntes:antes, precoAgora:agora, dif:dif,
+    pct:antes>0?(dif/antes*100):0,
+    /* meio centavo de diferença por peça não é notícia */
+    igual:Math.abs(dif)<0.005};
+}
+function itemEstoque(d,id){
+  return (d.estoque||[]).filter(function(e){return e.id===id;})[0]||null;
+}
+/* Quantas peças daquele lote já foram vendidas — varre todos os meses, porque
+   um lote comprado em março pode continuar vendendo em julho. */
+function vendidasDoLote(d,estoqueId){
+  var n=0;
+  for(var k in (d.meses||{})){
+    ((d.meses[k]||{}).vendas||[]).forEach(function(v){
+      if(v.estoqueId===estoqueId) n+=Math.max(1,Number(v.qtd)||1);
+    });
+  }
+  return n;
+}
+function restanteDoLote(d,item){
+  return Math.max(0,(Number(item.qtd)||0)-vendidasDoLote(d,item.id));
+}
+function comprasEstoqueNoMes(d,m,a){
+  return (d.estoque||[]).filter(function(e){
+    return Number(e.mes)===m && Number(e.ano)===a;
+  });
+}
+/* Lotes que ainda têm peça para vender, mais recentes primeiro. É o que o
+   registro de venda oferece na hora de dizer de onde saiu a peça. */
+function lotesDisponiveis(d){
+  return (d.estoque||[]).filter(function(e){ return restanteDoLote(d,e)>0; })
+    .sort(function(a,b){ return ordemCompra(b)-ordemCompra(a); });
+}
+
 /* ══════ CÁLCULO DO MÊS ══════ */
 function valorConfirmado(conf,item){
   var c=conf[item.id];
@@ -2792,8 +2996,13 @@ function calcMes(m,a){
   var cofresLegado=mm.cofres.filter(function(x){return !x.cofrinhoId;}).reduce(function(s,x){return s+x.valor;},0);
   var cofres=totalCofrinhosMes+cofresLegado;
 
-  var despesas=totalParcelamentos+despFixConf+consumo+cartAvulso+reserva+cofres+vd.saida;
+  /* Compra de material entra como despesa no mês em que foi paga. */
+  var estoqueMes=comprasEstoqueNoMes(d,m,a);
+  var comprasEstoque=estoqueMes.reduce(function(s,e){return s+(Number(e.valor)||0);},0);
+
+  var despesas=totalParcelamentos+despFixConf+consumo+cartAvulso+reserva+cofres+vd.saida+comprasEstoque;
   return {receitas:receitas,recFixConf:recFixConf,recExt:recExt,vd:vd,
+    estoqueMes:estoqueMes,comprasEstoque:comprasEstoque,
     recParc:recParc,receitasParc:receitasParc,receitasParcAtivas:receitasParcAtivas,
     despFixConf:despFixConf,
     despesasConfirmaveis:despesasConfirmaveis,despesasFonte:despesasFonte,
@@ -2994,7 +3203,7 @@ function renderSecaoVendedor(c,d,mm,conf){
   var rotulo={marketplace:'+ Registrar venda (marketplace)',
     direto:'+ Registrar venda',misto_vendedor:'+ Registrar venda'}[sub]||'+ Registrar venda';
   var h='<button class="btn-recebi-hoje" onclick="abrirVenda()">'+rotulo+'</button>'+
-    '<button class="btn-calc" onclick="abrirLote()">🧮 Quanto vou lucrar? Calcular um lote</button>';
+    '<button class="btn-calc" onclick="irParaCalculadora()">🧮 Quanto vou lucrar? Calcular um lote</button>';
   h+=renderLucroDoMes(c);
   h+=itensVendas(c);
   /* Nada é escondido: quem tem salário ou recebimento avulso cadastrado
@@ -3863,6 +4072,10 @@ function abrirLanc(){
   document.getElementById('rDesc').placeholder=PLACEHOLDER_REC[perfilAtual]||PLACEHOLDER_REC.clt;
   document.getElementById('rcAtalhoParc').style.display=
     (perfilAtual==='autonomo'||perfilAtual==='misto')?'block':'none';
+  /* Vendedor lança venda e compra de material pelo mesmo `+` de todo mundo. */
+  var vend=perfilAtual==='vendedor';
+  document.getElementById('btV').style.display=vend?'block':'none';
+  document.getElementById('chipMaterial').style.display=vend?'block':'none';
   document.getElementById('rcFixaLabel').textContent=
     (perfilAtual==='autonomo')?'Vai se repetir todo mês?':'Repetir todo mês?';
   document.getElementById('cofreNomeChips').innerHTML=COFRE_PRESETS.map(function(n){
@@ -3892,13 +4105,18 @@ function abrirLanc(){
   document.getElementById('ovL').classList.add('on');
 }
 
+/* Venda e compra de material têm modal próprio (com passos e regras que não
+   cabem aqui), mas o caminho até eles começa no `+`, como todo lançamento. */
 function setTipo(t){
+  if(t==='venda'){ fechar('ovL'); abrirVenda(); return; }
   L.tipo=t;
   document.getElementById('btD').className='rd'+(t==='despesa'?' on':'');
   document.getElementById('btR').className='gr'+(t==='receita'?' on':'');
+  document.getElementById('btV').className='gr';
   stp(t==='despesa'?'dp0':'rc1');
 }
 function setSubtipoDespesa(tipo){
+  if(tipo==='material'){ fechar('ovL'); abrirEstoque(); return; }
   L.subtipoDespesa=tipo;
   if(tipo==='gasto') stp('dp1');
   else if(tipo==='fixa') stp('dpFixa');
@@ -4551,7 +4769,7 @@ function lerLote(){
 }
 function calcularLote(){
   var L=lerLote(), el=document.getElementById('loteResultado');
-  var btnV=document.getElementById('loteBtnVenda'), btnD=document.getElementById('loteBtnDespesa');
+  var btnV=document.getElementById('loteBtnVenda'), btnD=document.getElementById('loteBtnEstoque');
   if(!L.qtd||!L.preco){
     el.innerHTML='<div class="vazio">Preencha quantas peças o lote rende e por '+
       'quanto você vende cada uma.</div>';
@@ -4599,48 +4817,163 @@ function calcularLote(){
   btnD.style.display=L.custoLote>0?'block':'none';
   return L;
 }
-function abrirLote(){
-  limparCampos(['loteCusto','loteQtd','lotePreco','loteFrete','loteEmbalagem','loteOutros','loteTaxa']);
-  ['loteCusto','loteQtd','lotePreco','loteFrete','loteEmbalagem','loteOutros','loteTaxa']
-    .forEach(function(id){
-      var el=document.getElementById(id);
-      if(el) el.oninput=calcularLote;   // o formatador de moeda já roda antes
-    });
+var CAMPOS_LOTE=['loteCusto','loteQtd','lotePreco','loteFrete','loteEmbalagem','loteOutros','loteTaxa'];
+
+/* A calculadora vive dentro da tela Negócio, não num modal: ligar os `oninput`
+   uma vez na carga basta, e o que a pessoa digitou continua lá quando ela vai
+   olhar o estoque e volta. Por isso renderNegocio nunca reescreve estes campos. */
+function prepararCalculadora(){
+  CAMPOS_LOTE.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.oninput=calcularLote;   // o formatador de moeda já roda antes
+  });
   calcularLote();
-  document.getElementById('ovLote').classList.add('on');
+}
+function limparLote(){
+  limparCampos(CAMPOS_LOTE);
+  calcularLote();
+}
+/* Ponte para quem chega pelos botões da tela Início. */
+function irParaCalculadora(){
+  ir('negocio',document.getElementById('bnNegocio'));
+  abrirSec('sCalc');
+  setTimeout(function(){
+    var el=document.getElementById('loteCusto');
+    if(el) el.focus();
+  },120);
 }
 /* Leva os números da calculadora para o registro de uma venda de uma peça. */
 function usarLoteNaVenda(){
   var L=lerLote();
   if(!L) return;
-  fechar('ovLote');
-  setTimeout(function(){
-    abrirVenda();
-    setValorInput('vdValor',L.preco);
-    setValorInput('vdCusto',L.qtd?L.custoLote/L.qtd:0);
-    setValorInput('vdFrete',L.frete);
-    setValorInput('vdEmbalagem',L.embalagem);
-    if(L.taxaPct>0){
-      document.getElementById('vdTaxaWrap').style.display='block';
-      document.getElementById('vdTaxa').value=L.taxaPct;
-    }
-  },160);
+  abrirVenda();
+  setValorInput('vdValor',L.preco);
+  setValorInput('vdCusto',L.qtd?L.custoLote/L.qtd:0);
+  setValorInput('vdFrete',L.frete);
+  setValorInput('vdEmbalagem',L.embalagem);
+  if(L.taxaPct>0){
+    document.getElementById('vdTaxaWrap').style.display='block';
+    document.getElementById('vdTaxa').value=L.taxaPct;
+  }
 }
-/* A compra do material é dinheiro que saiu de verdade — sem lançar, o lucro
-   da calculadora não bate com o saldo do mês. */
-async function lancarCompraDoLote(){
+/* Da conta para o estoque: leva custo e quantidade já preenchidos, e deixa a
+   pessoa dizer o que é e de quem comprou. */
+function lancarCompraDoLote(){
   var L=lerLote();
-  if(!L.custoLote){ await vAlert('Informe o custo do lote.'); return; }
-  var ok=await vConfirm('Vai entrar como gasto de '+fmt(L.custoLote)+' em '+
-    MESN[curM]+' de '+curA+'.','Lançar a compra do material?','var(--green)','Lançar');
-  if(!ok) return;
-  var d=getD(), mm=getMes(d,curM,curA);
-  mm.consumo.push({id:idNovo('c'),nome:'Compra de material para revenda',
-    valor:L.custoLote,dia:HOJE.getDate(),cat:'Outros'});
+  abrirEstoque();
+  setValorInput('estValor',L.custoLote);
+  document.getElementById('estQtd').value=L.qtd||'';
+  avaliarPrecoEstoque();
+}
+
+/* ── Estoque ──
+   Guardar a compra serve para duas coisas: lançar o gasto no dia certo e ter
+   com o que comparar na próxima vez que ele repuser o mesmo material. */
+function chipsDeHistorico(campo,alvo){
+  var d=getD(), vistos={}, lista=[];
+  (d.estoque||[]).slice().sort(function(a,b){ return ordemCompra(b)-ordemCompra(a); })
+    .forEach(function(e){
+      var v=String(e[campo]||'').trim();
+      if(!v || vistos[v.toLowerCase()]) return;
+      vistos[v.toLowerCase()]=1;
+      lista.push(v);
+    });
+  return lista.slice(0,6).map(function(v){
+    return '<div class="chip" onclick="usarChipEstoque(this,\''+alvo+'\','+
+      JSON.stringify(v).replace(/"/g,'&quot;')+')">'+v+'</div>';
+  }).join('');
+}
+function usarChipEstoque(el,alvo,valor){
+  var g=el.parentNode.querySelectorAll('.chip');
+  for(var i=0;i<g.length;i++) g[i].classList.remove('on');
+  el.classList.add('on');
+  document.getElementById(alvo).value=valor;
+  avaliarPrecoEstoque();
+}
+function abrirEstoque(){
+  limparCampos(['estProduto','estValor','estQtd','estFornecedor']);
+  document.getElementById('estDia').value=
+    (curM===HOJE.getMonth()&&curA===HOJE.getFullYear())?HOJE.getDate():1;
+  document.getElementById('estProdutoChips').innerHTML=chipsDeHistorico('produto','estProduto');
+  document.getElementById('estFornChips').innerHTML=chipsDeHistorico('fornecedor','estFornecedor');
+  document.getElementById('estMes').textContent='Vai ser salvo em '+MESN[curM]+' de '+curA;
+  document.getElementById('estComparacao').innerHTML='';
+  /* o formatador de moeda roda no oninput; encadeamos a comparação depois dele */
+  var v=document.getElementById('estValor');
+  if(v) v.oninput=avaliarPrecoEstoque;
+  document.getElementById('ovEstoque').classList.add('on');
+}
+/* Mostra ao vivo se a compra está mais cara que a anterior do mesmo produto.
+   Enquanto faltar produto ou quantidade não há preço por peça, e sem preço por
+   peça a comparação mentiria. */
+function avaliarPrecoEstoque(){
+  var el=document.getElementById('estComparacao');
+  if(!el) return;
+  var produto=document.getElementById('estProduto').value.trim();
+  var qtd=Math.max(0,parseInt(document.getElementById('estQtd').value,10)||0);
+  var valor=obterValorInput('estValor');
+  if(!produto||!qtd||!valor){ el.innerHTML=''; return; }
+
+  var d=getD();
+  var provisorio={id:null,produto:produto,valor:valor,qtd:qtd,
+    dia:HOJE.getDate(),mes:curM,ano:curA};
+  var unit=precoUnitEstoque(provisorio);
+  var cmp=compararPreco(d,provisorio);
+
+  if(!cmp){
+    el.innerHTML='<div class="est-cmp neutro">Sai a <b>'+fmt(unit)+'</b> por peça.<br>'+
+      'Primeira compra de "'+produto+'" — a próxima vai se comparar com esta.</div>';
+    return;
+  }
+  var a=cmp.anterior, quando=MES[Number(a.mes)||0]+'/'+a.ano;
+  var deQuem=a.fornecedor?(' com '+a.fornecedor):'';
+  if(cmp.igual){
+    el.innerHTML='<div class="est-cmp neutro">Sai a <b>'+fmt(unit)+'</b> por peça — '+
+      'mesmo preço da compra de '+quando+deQuem+'.</div>';
+    return;
+  }
+  var caro=cmp.dif>0;
+  el.innerHTML='<div class="est-cmp '+(caro?'caro':'barato')+'">'+
+    (caro?'⚠️ ':'✅ ')+'Sai a <b>'+fmt(unit)+'</b> por peça, '+
+    '<b>'+fmt(Math.abs(cmp.dif))+' mais '+(caro?'caro':'barato')+'</b> que em '+quando+deQuem+'.<br>'+
+    'Naquela vez foi '+fmt(cmp.precoAntes)+' por peça ('+(caro?'+':'−')+fmtPct(Math.abs(cmp.pct),1)+').'+
+    '</div>';
+}
+async function salvarEstoque(){
+  var produto=document.getElementById('estProduto').value.trim();
+  if(!produto){ await vAlert('Diga o que você comprou.'); return; }
+  var valor=obterValorInput('estValor');
+  if(!valor||valor<=0){ await vAlert('Informe quanto você pagou.'); return; }
+  var qtd=Math.max(0,parseInt(document.getElementById('estQtd').value,10)||0);
+  if(!qtd){ await vAlert('Informe quantas peças o material rende.'); return; }
+  var dia=Math.min(31,Math.max(1,parseInt(document.getElementById('estDia').value,10)||1));
+
+  var d=getD();
+  d.estoque.push({id:idNovo('es'),produto:produto,
+    fornecedor:document.getElementById('estFornecedor').value.trim(),
+    valor:valor,qtd:qtd,dia:dia,mes:curM,ano:curA});
   salvar(d);
-  fechar('ovLote');
+  fechar('ovEstoque');
   renderTudo();
-  mostrarToast('✅ Compra de '+fmt(L.custoLote)+' lançada em '+MES[curM]+'/'+curA+'.');
+  mostrarToast('✅ Compra de '+fmt(valor)+' lançada no estoque e nos gastos de '+
+    MES[curM]+'/'+curA+'.');
+}
+async function excluirEstoque(id){
+  var d=getD(), item=itemEstoque(d,id);
+  if(!item) return;
+  var vendidas=vendidasDoLote(d,id);
+  /* Apagar o lote deixaria as vendas dele apontando para o vazio, e aí o custo
+     daquelas peças voltaria a ser descontado no mês da venda. Melhor barrar. */
+  if(vendidas>0){
+    await vAlert('Este lote já tem '+vendidas+' peça'+(vendidas===1?'':'s')+
+      ' vendida'+(vendidas===1?'':'s')+'. Exclua as vendas primeiro.');
+    return;
+  }
+  var ok=await vConfirm('O gasto de '+fmt(item.valor)+' sai de '+
+    MES[Number(item.mes)||0]+'/'+item.ano+'.','Excluir esta compra?','var(--red)','Excluir');
+  if(!ok) return;
+  d.estoque=d.estoque.filter(function(x){return x.id!==id;});
+  salvar(d); renderTudo();
 }
 
 var vdState={forma:null,canal:null};
@@ -4652,8 +4985,14 @@ function pickVd(el,campo,val){
 }
 function abrirVenda(){
   var d=getD(), sub=d.subPerfil||'direto';
-  vdState={forma:null,canal:null};
+  vdState={forma:null,canal:null,estoqueId:null};
   limparCampos(['vdDesc','vdValor','vdCusto','vdFrete','vdEmbalagem','vdTaxa','vdQtd']);
+  var lotes=lotesDisponiveis(d);
+  document.getElementById('vdLoteWrap').style.display=lotes.length?'block':'none';
+  document.getElementById('vdLoteChips').innerHTML=lotes.map(function(e){
+    return '<div class="chip" onclick="pickLoteVenda(this,\''+e.id+'\')">'+e.produto+
+      ' <span class="chip-sub">'+restanteDoLote(d,e)+' un. · '+fmt(precoUnitEstoque(e))+'</span></div>';
+  }).join('')+'<div class="chip" onclick="pickLoteVenda(this,null)">Não é do estoque</div>';
   document.getElementById('vdDia').value=
     (curM===HOJE.getMonth()&&curA===HOJE.getFullYear())?HOJE.getDate():'';
   document.querySelectorAll('#ovVenda .chip').forEach(function(c){ c.classList.remove('on'); });
@@ -4666,9 +5005,34 @@ function abrirVenda(){
       return '<div class="chip" onclick="pickCanalVenda(this,\''+k+'\')">'+CANAIS[k]+'</div>';
     }).join('');
   }
+  document.getElementById('vdQtd').oninput=atualizarCustoDoLote;
   document.querySelectorAll('#ovVenda .stp').forEach(function(s){ s.classList.remove('on'); });
   document.getElementById('vd1').classList.add('on');
   document.getElementById('ovVenda').classList.add('on');
+}
+/* Escolher o lote preenche o custo e, se o campo estiver vazio, sugere o nome
+   do produto — quem vende do estoque não deveria redigitar nada disso. */
+function pickLoteVenda(el,id){
+  var g=el.parentNode.querySelectorAll('.chip');
+  for(var i=0;i<g.length;i++) g[i].classList.remove('on');
+  el.classList.add('on');
+  vdState.estoqueId=id;
+  if(!id) return;
+  var d=getD(), item=itemEstoque(d,id);
+  if(!item) return;
+  var desc=document.getElementById('vdDesc');
+  if(!desc.value.trim()) desc.value=item.produto;
+  atualizarCustoDoLote();
+}
+/* `valor` é sempre o total da venda, então `custo` também precisa ser o total:
+   vender 3 peças a R$ 12,50 custou R$ 37,50, não R$ 12,50. Sem multiplicar,
+   o estoque baixa 3 e o lucro conta como se tivesse saído uma peça só. */
+function atualizarCustoDoLote(){
+  if(!vdState.estoqueId) return;
+  var item=itemEstoque(getD(),vdState.estoqueId);
+  if(!item) return;
+  var qtd=Math.max(1,parseInt(document.getElementById('vdQtd').value,10)||1);
+  setValorInput('vdCusto',precoUnitEstoque(item)*qtd);
 }
 var CANAIS_COM_TAXA=['ml','shopee','amazon','magalu'];
 function pickCanalVenda(el,k){
@@ -4697,21 +5061,34 @@ async function vd1ok(){
   var desc=document.getElementById('vdDesc').value.trim()||'Venda';
   var lucro=valor-custo-taxa-frete-embalagem;
 
+  /* Vender mais peças do que restam no lote deixaria o estoque negativo. */
+  var lote=vdState.estoqueId?itemEstoque(d,vdState.estoqueId):null;
+  if(lote){
+    var resta=restanteDoLote(d,lote);
+    if(qtd>resta){
+      await vAlert('Sobra'+(resta===1?'':'m')+' '+resta+' peça'+(resta===1?'':'s')+
+        ' de "'+lote.produto+'". Ajuste a quantidade ou lance uma nova compra.');
+      return;
+    }
+  }
+
   vdState.venda={desc:desc,valor:valor,custo:custo,taxa:taxa,taxaPct:mostraTaxa?pct:0,
-    frete:frete,embalagem:embalagem,
+    frete:frete,embalagem:embalagem,estoqueId:vdState.estoqueId||null,
     qtd:qtd,dia:dia,canal:vdState.canal||(sub==='marketplace'?'plataforma':'direto'),
     forma:vdState.forma};
 
   document.getElementById('vdConfirmBox').innerHTML=
     '<b>'+desc+'</b>'+(qtd>1?' · '+qtd+' un.':'')+'<br>'+
     'Venda: <b style="color:var(--green)">'+fmt(valor)+'</b><br>'+
-    (custo>0?'Custo do produto: '+fmt(custo)+'<br>':'')+
+    (custo>0?'Custo do produto: '+fmt(custo)+
+      (lote?' <span style="color:var(--muted)">(já pago na compra)</span>':'')+'<br>':'')+
     (frete>0?'Frete: '+fmt(frete)+'<br>':'')+
     (embalagem>0?'Embalagem: '+fmt(embalagem)+'<br>':'')+
     (taxa>0?'Taxa ('+fmtPct(pct,1)+'): '+fmt(taxa)+'<br>':'')+
     'Lucro: <b style="color:'+(lucro>=0?'var(--green)':'var(--red)')+'">'+fmt(lucro)+'</b>'+
     (valor>0?' · margem '+fmtPct(lucro/valor*100,1):'')+'<br>'+
-    'Dia '+dia+' · '+(CANAIS[vdState.canal]||'Venda direta');
+    'Dia '+dia+' · '+(CANAIS[vdState.canal]||'Venda direta')+
+    (lote?'<br>Baixa no estoque: '+qtd+' de '+lote.produto:'');
   document.querySelectorAll('#ovVenda .stp').forEach(function(s){ s.classList.remove('on'); });
   document.getElementById('vd2').classList.add('on');
 }
@@ -4730,6 +5107,69 @@ async function excluirVenda(id){
   var d=getD(), mm=getMes(d,curM,curA);
   mm.vendas=(mm.vendas||[]).filter(function(x){return x.id!==id;});
   salvar(d); renderTudo();
+}
+
+/* ══════ TELA NEGÓCIO ══════ */
+function itensEstoque(c,d){
+  var lista=(d.estoque||[]).slice().sort(function(a,b){ return ordemCompra(b)-ordemCompra(a); });
+  if(!lista.length) return '<div class="vazio">Nenhuma compra de material registrada.<br>'+
+    'Toque em <b>+ Comprei material</b> para lançar a primeira.</div>';
+  return lista.map(function(e){
+    var resta=restanteDoLote(d,e), vendidas=vendidasDoLote(d,e.id);
+    var cmp=compararPreco(d,e);
+    var pct=(Number(e.qtd)||0)>0?(resta/e.qtd*100):0;
+    var esteMes=(Number(e.mes)===curM&&Number(e.ano)===curA);
+    return '<div class="it '+(resta?'yl':'')+'"><div class="it-t"><div class="it-n">'+
+      '<span class="dia">'+String(e.dia||'--').padStart(2,'0')+'</span>'+e.produto+
+      (esteMes?'':'<span class="tg cat">'+MES[Number(e.mes)||0]+'/'+e.ano+'</span>')+'</div>'+
+      '<div class="it-v">'+fmt(e.valor)+'</div></div>'+
+      '<div class="it-m">'+fmt(precoUnitEstoque(e))+' por peça'+
+        (e.fornecedor?' · '+e.fornecedor:'')+
+        ' · '+resta+' de '+e.qtd+' na mão'+
+        (vendidas?' ('+vendidas+' vendida'+(vendidas===1?'':'s')+')':'')+'</div>'+
+      (cmp&&!cmp.igual
+        ? '<div class="it-m" style="color:var(--'+(cmp.dif>0?'red':'green')+')">'+
+          (cmp.dif>0?'▲ ':'▼ ')+fmt(Math.abs(cmp.dif))+' por peça vs. '+
+          MES[Number(cmp.anterior.mes)||0]+'/'+cmp.anterior.ano+
+          ' ('+(cmp.dif>0?'+':'−')+fmtPct(Math.abs(cmp.pct),1)+')</div>'
+        : '')+
+      '<div class="pp"><div class="pp-tr"><div class="pp-f" style="width:'+pct+
+        '%;background:var(--yellow)"></div></div></div>'+
+      '<div class="it-a"><button class="ba del" onclick="excluirEstoque(\''+e.id+'\')">✕ Excluir</button></div></div>';
+  }).join('');
+}
+function renderNegocio(){
+  var c=calcMes(curM,curA), d=c.d, v=c.vd;
+  var lotes=(d.estoque||[]);
+  var pecas=lotes.reduce(function(s,e){return s+restanteDoLote(d,e);},0);
+  /* Quanto ainda está parado em material: é dinheiro que já saiu e ainda não
+     voltou. O vendedor sente falta dele no saldo e não sabe explicar por quê. */
+  var parado=lotes.reduce(function(s,e){return s+precoUnitEstoque(e)*restanteDoLote(d,e);},0);
+
+  document.getElementById('negSub').textContent=
+    MESN[curM]+' de '+curA+' · '+v.vendas.length+' venda'+(v.vendas.length===1?'':'s');
+
+  document.getElementById('negResumo').innerHTML=
+    '<div class="neg-card"><div class="neg-c-l">Faturamento</div>'+
+      '<div class="neg-c-v gr">'+fmt(v.bruto)+'</div></div>'+
+    '<div class="neg-card"><div class="neg-c-l">Lucro</div>'+
+      '<div class="neg-c-v '+(v.lucro>=0?'gr':'rd')+'">'+fmt(v.lucro)+'</div>'+
+      '<div class="neg-c-s">margem '+fmtPct(v.margem,1)+'</div></div>'+
+    '<div class="neg-card"><div class="neg-c-l">Comprado no mês</div>'+
+      '<div class="neg-c-v rd">'+fmt(c.comprasEstoque)+'</div></div>'+
+    '<div class="neg-card"><div class="neg-c-l">Parado em estoque</div>'+
+      '<div class="neg-c-v yl">'+fmt(parado)+'</div>'+
+      '<div class="neg-c-s">'+pecas+' peça'+(pecas===1?'':'s')+'</div></div>';
+
+  document.getElementById('sEstoque').innerHTML=
+    '<button class="btn-recebi-hoje" onclick="abrirEstoque()">+ Comprei material</button>'+
+    itensEstoque(c,d);
+  document.getElementById('totEstoque').textContent=fmt(parado);
+
+  document.getElementById('sVendasMes').innerHTML=
+    '<button class="btn-recebi-hoje" onclick="abrirVenda()">+ Registrar venda</button>'+
+    itensVendas(c);
+  document.getElementById('totVendasMes').textContent=fmt(v.bruto);
 }
 
 function abrirMetaRenda(){
@@ -5130,6 +5570,17 @@ function renderPerfilUI(){
     :'⚠️ Nenhum perfil escolhido · toque para escolher';
   var bm=document.getElementById('btnMetaRenda');
   if(bm) bm.style.display=(d.perfil==='autonomo'||d.perfil==='misto')?'block':'none';
+
+  /* A aba Negócio é do vendedor. Dar a quinta aba a todo mundo apertaria a
+     barra num perfil que nunca vai usá-la. */
+  var vend=d.perfil==='vendedor';
+  ['bnNegocio','sbNegocio'].forEach(function(id){
+    var b=document.getElementById(id);
+    if(b) b.style.display=vend?'flex':'none';   // os dois são flex no CSS
+  });
+  /* Trocou de perfil estando na tela: sai dela, senão fica uma tela órfã
+     sem botão para voltar. */
+  if(!vend && telaAtual==='negocio') ir('inicio',document.querySelector('.bn'));
 }
 
 /* Abre o painel sozinho uma vez por sessão quando algo estourou de verdade —
@@ -5152,6 +5603,7 @@ function renderTudo(){
   if(telaAtual==='inicio') renderInicio();
   else if(telaAtual==='agenda') renderAgenda();
   else if(telaAtual==='cartoes') renderCartoes();
+  else if(telaAtual==='negocio') renderNegocio();
   else if(telaAtual==='historico') renderHist();
   aplicarFechadas();
 }
@@ -5373,6 +5825,7 @@ window.onLoginErro=onLoginErro;
 function iniciarApp(){
   getD();
   prepararInputsMoeda();
+  prepararCalculadora();
   verificarResetMensal();
   document.getElementById('fab').style.display='flex';
   atualizarDataAtual();
