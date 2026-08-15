@@ -52,7 +52,10 @@ button{font-family:inherit;}
 .sp-logo{display:flex;flex-direction:column;align-items:center;cursor:pointer;
   -webkit-tap-highlight-color:transparent;}
 .sp-nome{font-family:monospace;font-size:2.4rem;font-weight:700;color:var(--green);letter-spacing:.1em;}
-.sp-sub{font-family:monospace;font-size:.68rem;color:var(--muted);letter-spacing:.1em;margin-top:4px;margin-bottom:44px;}
+.sp-sub{font-family:monospace;font-size:.68rem;color:var(--muted);letter-spacing:.1em;margin-top:4px;}
+/* A versão vem sempre logo abaixo da frase — a folga que era da frase é dela */
+.sp-versao{font-family:monospace;font-size:.6rem;letter-spacing:.14em;
+  color:var(--muted);opacity:.55;margin-top:5px;margin-bottom:40px;}
 .sp-btn{width:100%;max-width:320px;border-radius:12px;font-family:monospace;
   font-size:.82rem;letter-spacing:.06em;padding:16px;cursor:pointer;
   -webkit-tap-highlight-color:transparent;border:none;margin-bottom:11px;}
@@ -69,6 +72,7 @@ button{font-family:inherit;}
 #bootNome{font-family:monospace;font-size:2rem;font-weight:700;color:var(--green);
   letter-spacing:.15em;opacity:0;}
 #bootSub{font-size:.82rem;color:var(--muted);letter-spacing:.1em;opacity:0;}
+#bootSplash .sp-versao{opacity:0;margin:0;}
 @keyframes splashGrow{from{transform:scale(.4);opacity:0;} to{transform:scale(1);opacity:1;}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);}}
 
@@ -962,6 +966,7 @@ onAuthStateChanged(auth, function(user){
   <img id="bootIco" src="icon-192.png" alt="Vigia">
   <div id="bootNome">VIGIA</div>
   <div id="bootSub">seu copiloto financeiro</div>
+  <div class="sp-versao" id="bootVersao">—</div>
 </div>
 
 <!-- ═══ INTRO (só no primeiro acesso) ═══ -->
@@ -1111,7 +1116,8 @@ onAuthStateChanged(auth, function(user){
 <div id="login">
   <img src="icon-192.png" alt="Vigia" style="width:88px;height:88px;border-radius:20px;margin-bottom:18px;box-shadow:0 8px 40px rgba(0,229,160,.18);">
   <div class="sp-nome" style="font-size:1.9rem;">VIGIA</div>
-  <div class="sp-sub" style="margin-bottom:30px;">seu copiloto financeiro</div>
+  <div class="sp-sub">seu copiloto financeiro</div>
+  <div class="sp-versao" id="loginVersao">—</div>
 
   <div id="loginCarregando">Carregando…</div>
 
@@ -1321,6 +1327,7 @@ onAuthStateChanged(auth, function(user){
     <div class="sp-nome">VIGIA</div>
   </div>
   <div class="sp-sub">seu copiloto financeiro</div>
+  <div class="sp-versao" id="splashVersao">—</div>
   <button class="sp-btn p" onclick="spAcao('lancar')">+ Novo lançamento</button>
   <button class="sp-btn s" onclick="spAcao('painel')">→ Abrir painel</button>
 </div>
@@ -1683,9 +1690,9 @@ onAuthStateChanged(auth, function(user){
     <div class="md-t"><span id="lTit">Novo lançamento</span><button class="md-x" onclick="fechar('ovL')">✕</button></div>
     <div class="md-mes" id="lMes">—</div>
     <div class="tgl">
-      <button class="rd on" id="btD" onclick="setTipo('despesa')">− DESPESA</button>
-      <button class="gr" id="btR" onclick="setTipo('receita')">+ RECEITA</button>
-      <button class="gr" id="btV" onclick="setTipo('venda')" style="display:none">◎ VENDA</button>
+      <button class="rd on" id="btD" onclick="setTipo('despesa')">DESPESA</button>
+      <button class="gr" id="btR" onclick="setTipo('receita')">RECEITA</button>
+      <button class="gr" id="btV" onclick="setTipo('venda')" style="display:none">VENDA</button>
     </div>
 
     <!-- DESPESA step 0: tipo -->
@@ -4591,6 +4598,7 @@ function mostrarSplash(){
   },800);
   setTimeout(function(){
     document.getElementById('bootSub').style.animation='fadeIn .5s ease forwards';
+    document.getElementById('bootVersao').style.animation='fadeIn .5s ease forwards';
   },1300);
   setTimeout(verificarPrimeiroAcesso,2500);
 }
@@ -5331,7 +5339,6 @@ function textoPlano(a){
 
 function abrirConfig(){
   document.getElementById('ovConfig').classList.add('on');
-  document.getElementById('cfgVersao').textContent=VERSAO;
   renderFonteUI();
   esconderCodigo();
   carregarStatusWhatsApp();
@@ -5614,7 +5621,28 @@ function atualizarDataAtual(){
 }
 
 /* ══════ VERSÃO ══════ */
-var VERSAO='1.0.0-beta';
+/* ══════ VERSÃO ══════
+   Um número só para o app inteiro, no formato UNIDADE.DÉCIMO:
+     · mudança pequena (ajuste, correção, texto) → sobe o décimo  27.1 → 27.2
+     · mudança grande (recurso novo, tela nova)  → sobe a unidade 27.2 → 28.0
+
+   O cache do service worker usa ESTE mesmo número ('vigia-v'+VERSAO). Manter
+   os dois iguais é de propósito: eram dois números para lembrar e o do sw já
+   ficou para trás uma vez, o que deixa o usuário preso na versão velha.
+   Subiu a versão aqui, sobe em sw.js — os dois na mesma linha de raciocínio. */
+var VERSAO='27.1';
+
+/* Todo lugar que mostra a versão é preenchido daqui, no boot. Antes cada tela
+   preenchia a sua na hora de abrir, e a do login nunca chegou a existir. */
+function pintarVersao(){
+  ['bootVersao','loginVersao','splashVersao'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.textContent='v'+VERSAO;
+  });
+  var lp=document.getElementById('lpVersao'); if(lp) lp.textContent=VERSAO;
+  var sb=document.getElementById('sbVersao'); if(sb) sb.textContent=VERSAO;
+  var cf=document.getElementById('cfgVersao'); if(cf) cf.textContent=VERSAO;
+}
 
 /* ══════ LANDING E MENU LATERAL ══════
    A landing é para quem ainda não conhece o app. Quem já entrou alguma vez
@@ -5625,11 +5653,11 @@ function abrirLanding(){
   /* A landing conta a mesma história que a intro de 3 slides, com telas reais.
      Marcar a intro como vista evita as duas seguidas no primeiro acesso. */
   try{ localStorage.setItem(INTRO_KEY,'1'); }catch(e){}
-  document.getElementById('intro').style.display='none';
+  var intro=document.getElementById('intro');
+  if(intro) intro.style.display='none';
   var lp=document.getElementById('landing');
   lp.classList.add('on');
   document.getElementById('login').style.display='none';
-  var v=document.getElementById('lpVersao'); if(v) v.textContent=VERSAO;
   var a=document.getElementById('lpAno'); if(a) a.textContent=new Date().getFullYear();
   /* quem rola é a própria landing (position:fixed), não a janela */
   lp.scrollTop=0;
@@ -5672,7 +5700,6 @@ function renderSidebar(user){
   var foto=(user&&user.photoURL)||'';
   document.getElementById('sbNome').textContent=nome||email.split('@')[0]||'Minha conta';
   document.getElementById('sbEmail').textContent=email||'conta local';
-  document.getElementById('sbVersao').textContent=VERSAO;
   var av=document.getElementById('sbAvatar');
   /* referrerpolicy: sem ela o Google recusa a foto quando o referrer é o
      domínio do GitHub Pages e o avatar fica quebrado. */
@@ -6032,6 +6059,7 @@ function onbPular(){
 
 /* ══════ INIT (independente de login) ══════ */
 (function(){
+  pintarVersao();
   mostrarSplash();
   setInterval(atualizarDataAtual, 60000);
   if('serviceWorker' in navigator){

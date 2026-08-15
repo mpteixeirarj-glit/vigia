@@ -3,7 +3,7 @@
 > Documento de contexto para retomar o desenvolvimento em outra sessão de IA.
 > Descreve **o que existe**, **onde está** e **o que não pode ser quebrado**.
 >
-> Última atualização: agosto/2026 · `schemaVersion: 9` · versão `1.0.0-beta` · service worker `vigia-v27`
+> Última atualização: agosto/2026 · `schemaVersion: 9` · versão **27.1** (app e service worker usam o mesmo número)
 
 ---
 
@@ -86,9 +86,31 @@ Erro de leitura de assinatura, de config ou de registro de alertas **nega**, nun
 
 A conversa chega como `<lid>@lid` e o número real vai em `key.senderPn` / `key.participantPn`. Por isso `processarMensagem` recebe a `key` inteira, não só o `remoteJid`.
 
-### 2.7 Bump do service worker a cada deploy
+### 2.7 Toda mudança sobe a versão — e ela é UMA só
 
-`sw.js` é cache-first. Sem trocar `const CACHE = 'vigia-vNN'`, o usuário continua com a versão velha. **Está em `vigia-v27`.**
+Formato **UNIDADE.DÉCIMO**:
+
+| Mudança | Sobe | Exemplo |
+|---|---|---|
+| pequena — correção, ajuste visual, texto | o décimo | `27.1` → `27.2` |
+| grande — recurso novo, tela nova | a unidade, zerando o décimo | `27.2` → `28.0` |
+
+**Está em `27.1`.**
+
+O número vive em `var VERSAO` (index.html) e o cache do service worker usa
+**exatamente o mesmo**: `const CACHE = 'vigia-v' + VERSAO`, escrito à mão em
+`sw.js` porque o service worker não enxerga o index.
+
+Eram dois números para lembrar e o do `sw.js` já ficou para trás uma vez — e
+`sw.js` é cache-first, então quem não sobe o cache deixa o usuário preso na
+versão velha, sem erro nenhum aparecendo. Mantê-los iguais transforma dois
+passos que se esquecem em um só que não se esquece: **subiu `VERSAO`, subiu
+`CACHE`, na mesma linha de raciocínio.**
+
+Onde a versão aparece (tudo preenchido por `pintarVersao()` no boot, um lugar
+só): splash de abertura, tela de login, splash interna — as três logo abaixo de
+"seu copiloto financeiro" — mais o rodapé da landing, o menu lateral e as
+Configurações.
 
 ### 2.8 Migração encadeada
 
@@ -247,8 +269,10 @@ app com um conjunto de dados fictício e coerente e fotografa cada tela. Mudou a
 interface, roda de novo — assim a landing nunca mostra uma versão que não
 existe mais.
 
-`VERSAO` (`1.0.0-beta`) aparece em três lugares: rodapé da landing, menu
-lateral e ⚙ Configurações → Aplicativo.
+`VERSAO` (`27.1`) aparece em seis lugares, todos preenchidos por
+`pintarVersao()` no boot: splash de abertura, tela de login e splash interna
+(as três logo abaixo de "seu copiloto financeiro"), rodapé da landing, menu
+lateral e ⚙ Configurações → Aplicativo. Ver regra 2.7.
 
 | Tela | id | Renderizador |
 |---|---|---|
@@ -556,7 +580,7 @@ Repetição no bot: aviso de **data** dedupe por dia; aviso de **estado** dedupe
 | Onde | Comando | Cobre |
 |---|---|---|
 | Bot | `node alertas.test.js` | 39 casos: conteúdo dos avisos, dedupe, janelas de horário, fuso |
-| App | Playwright (fora do repo) | negócio/estoque (56), perfis (58), beta (57), lote (38), UX (37), landing (36), avisos (24), notificações (20), fonte (13) |
+| App | Playwright (fora do repo) | negócio/estoque (59), perfis (58), beta (57), lote (38), UX (37), landing (36), avisos (24), versão (20), notificações (20), fonte (13) |
 
 O app não tem suíte versionada. Os testes foram escritos em `playwright-core` apontando para o `index.html` local, injetando dados no `localStorage` e chamando `entrarOffline()` para pular o login.
 
