@@ -3,7 +3,7 @@
 > Documento de contexto para retomar o desenvolvimento em outra sessão de IA.
 > Descreve **o que existe**, **onde está** e **o que não pode ser quebrado**.
 >
-> Última atualização: agosto/2026 · `schemaVersion: 9` · versão **27.1** (app e service worker usam o mesmo número)
+> Última atualização: agosto/2026 · `schemaVersion: 9` · versão **27.2** (app e service worker usam o mesmo número)
 
 ---
 
@@ -92,10 +92,10 @@ Formato **UNIDADE.DÉCIMO**:
 
 | Mudança | Sobe | Exemplo |
 |---|---|---|
-| pequena — correção, ajuste visual, texto | o décimo | `27.1` → `27.2` |
-| grande — recurso novo, tela nova | a unidade, zerando o décimo | `27.2` → `28.0` |
+| pequena — correção, ajuste visual, texto | o décimo | `27.2` → `27.3` |
+| grande — recurso novo, tela nova | a unidade, zerando o décimo | `27.3` → `28.0` |
 
-**Está em `27.1`.**
+**Está em `27.2`.**
 
 O número vive em `var VERSAO` (index.html) e o cache do service worker usa
 **exatamente o mesmo**: `const CACHE = 'vigia-v' + VERSAO`, escrito à mão em
@@ -111,6 +111,32 @@ Onde a versão aparece (tudo preenchido por `pintarVersao()` no boot, um lugar
 só): splash de abertura, tela de login, splash interna — as três logo abaixo de
 "seu copiloto financeiro" — mais o rodapé da landing, o menu lateral e as
 Configurações.
+
+### 2.7b Arquivo que a primeira tela precisa vai em `FILES`
+
+`FILES` guardava só `index.html` e `manifest.json`, então o **logo do app vinha
+da rede a cada abertura**. Como o `fetch` devolve `Response.error()` quando a
+rede falha, um tropeço de conexão virava o ícone quebrado do navegador na tela
+de login, com o `alt` transbordando por cima do layout. Foi exatamente o que um
+beta tester viu no celular.
+
+Regra: **o que a primeira tela precisa para não aparecer quebrada entra em
+`FILES`** — hoje os dois ícones e as quatro imagens do olho.
+
+Dois detalhes do `sw.js` que parecem estilo e não são:
+
+- **Instala um a um (`FILES.map(f => c.add(f).catch(...))`), nunca `addAll`.**
+  `addAll` é atômico: um único 404 derruba a instalação e o usuário fica sem
+  service worker nenhum. Um a um, o que faltar apenas não entra no cache.
+- **O `fetch` guarda o que deu certo**, mas só `resp.ok && resp.type==='basic'`.
+  Resposta `opaque` ou com erro entupiria o cache com o que não dá para
+  reaproveitar, e prender uma resposta de terceiro (o SDK do Firebase) num
+  cache que só troca junto com a versão do app deixaria o usuário com um SDK
+  velho preso.
+
+Além disso, todo `<img>` do ícone tem `onerror` que o esconde. Some é melhor que
+virar glifo quebrado — a palavra VIGIA ao lado já identifica o app.
+
 
 ### 2.8 Migração encadeada
 
@@ -269,7 +295,7 @@ app com um conjunto de dados fictício e coerente e fotografa cada tela. Mudou a
 interface, roda de novo — assim a landing nunca mostra uma versão que não
 existe mais.
 
-`VERSAO` (`27.1`) aparece em seis lugares, todos preenchidos por
+`VERSAO` (`27.2`) aparece em seis lugares, todos preenchidos por
 `pintarVersao()` no boot: splash de abertura, tela de login e splash interna
 (as três logo abaixo de "seu copiloto financeiro"), rodapé da landing, menu
 lateral e ⚙ Configurações → Aplicativo. Ver regra 2.7.
@@ -580,7 +606,7 @@ Repetição no bot: aviso de **data** dedupe por dia; aviso de **estado** dedupe
 | Onde | Comando | Cobre |
 |---|---|---|
 | Bot | `node alertas.test.js` | 39 casos: conteúdo dos avisos, dedupe, janelas de horário, fuso |
-| App | Playwright (fora do repo) | negócio/estoque (59), perfis (58), beta (57), lote (38), UX (37), landing (36), avisos (24), versão (20), notificações (20), fonte (13) |
+| App | Playwright (fora do repo) | negócio/estoque (59), perfis (58), beta (57), lote (38), UX (37), landing (36), avisos (24), versão (20), notificações (20), assets/service worker (17), fonte (13) |
 
 O app não tem suíte versionada. Os testes foram escritos em `playwright-core` apontando para o `index.html` local, injetando dados no `localStorage` e chamando `entrarOffline()` para pular o login.
 

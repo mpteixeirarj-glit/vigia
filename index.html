@@ -963,7 +963,7 @@ onAuthStateChanged(auth, function(user){
 
 <!-- ═══ BOOT SPLASH (2,5s) ═══ -->
 <div id="bootSplash">
-  <img id="bootIco" src="icon-192.png" alt="Vigia">
+  <img id="bootIco" src="icon-192.png" onerror="this.style.display='none'" alt="Vigia">
   <div id="bootNome">VIGIA</div>
   <div id="bootSub">seu copiloto financeiro</div>
   <div class="sp-versao" id="bootVersao">—</div>
@@ -1114,7 +1114,7 @@ onAuthStateChanged(auth, function(user){
 </div>
 
 <div id="login">
-  <img src="icon-192.png" alt="Vigia" style="width:88px;height:88px;border-radius:20px;margin-bottom:18px;box-shadow:0 8px 40px rgba(0,229,160,.18);">
+  <img src="icon-192.png" onerror="this.style.display='none'" alt="Vigia" style="width:88px;height:88px;border-radius:20px;margin-bottom:18px;box-shadow:0 8px 40px rgba(0,229,160,.18);">
   <div class="sp-nome" style="font-size:1.9rem;">VIGIA</div>
   <div class="sp-sub">seu copiloto financeiro</div>
   <div class="sp-versao" id="loginVersao">—</div>
@@ -1150,7 +1150,7 @@ onAuthStateChanged(auth, function(user){
 <div id="landing">
   <header class="lp-nav">
     <div class="lp-nav-in">
-      <div class="lp-logo"><img src="icon-192.png" alt=""><span>VIGIA</span></div>
+      <div class="lp-logo"><img src="icon-192.png" onerror="this.style.display='none'" alt=""><span>VIGIA</span></div>
       <button class="lp-btn-nav" onclick="irParaLogin()">Entrar</button>
     </div>
   </header>
@@ -1314,7 +1314,7 @@ onAuthStateChanged(auth, function(user){
 
   <footer class="lp-rodape">
     <div class="lp-logo" style="justify-content:center;margin-bottom:12px;">
-      <img src="icon-192.png" alt=""><span>VIGIA</span>
+      <img src="icon-192.png" onerror="this.style.display='none'" alt=""><span>VIGIA</span>
     </div>
     <p class="lp-rodape-v">Versão <span id="lpVersao">—</span></p>
     <p class="lp-rodape-c">© <span id="lpAno">2026</span> Marcos Paulo Teixeira. Todos os direitos reservados.</p>
@@ -1323,7 +1323,7 @@ onAuthStateChanged(auth, function(user){
 
 <div id="splash">
   <div class="sp-logo" onclick="instalarApp()">
-    <img src="icon-192.png" alt="Vigia">
+    <img src="icon-192.png" onerror="this.style.display='none'" alt="Vigia">
     <div class="sp-nome">VIGIA</div>
   </div>
   <div class="sp-sub">seu copiloto financeiro</div>
@@ -1334,7 +1334,7 @@ onAuthStateChanged(auth, function(user){
 
 <!-- ═══ MENU LATERAL (só no computador, com usuário logado) ═══ -->
 <aside class="sidebar" id="sidebar">
-  <div class="sb-logo"><img src="icon-192.png" alt=""><span>VIGIA</span></div>
+  <div class="sb-logo"><img src="icon-192.png" onerror="this.style.display='none'" alt=""><span>VIGIA</span></div>
 
   <div class="sb-user" onclick="abrirConfig()" title="Configurações">
     <div class="sb-avatar" id="sbAvatar">—</div>
@@ -1361,7 +1361,7 @@ onAuthStateChanged(auth, function(user){
 
 <div class="topnav">
   <div class="topnav-esq">
-    <div class="logo" onclick="instalarApp()"><img src="icon-192.png" alt=""><span class="logo-txt">VIGIA</span></div>
+    <div class="logo" onclick="instalarApp()"><img src="icon-192.png" onerror="this.style.display='none'" alt=""><span class="logo-txt">VIGIA</span></div>
     <button class="data-atual" id="dataAtual" onclick="voltarHoje()">—</button>
     <button class="sessao-timer" id="sessaoTimer" onclick="continuarSessao()"
       title="Tempo restante da sessão. Clique para renovar.">—</button>
@@ -5630,7 +5630,7 @@ function atualizarDataAtual(){
    os dois iguais é de propósito: eram dois números para lembrar e o do sw já
    ficou para trás uma vez, o que deixa o usuário preso na versão velha.
    Subiu a versão aqui, sobe em sw.js — os dois na mesma linha de raciocínio. */
-var VERSAO='27.1';
+var VERSAO='27.2';
 
 /* Todo lugar que mostra a versão é preenchido daqui, no boot. Antes cada tela
    preenchia a sua na hora de abrir, e a do login nunca chegou a existir. */
