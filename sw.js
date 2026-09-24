@@ -1,5 +1,5 @@
 /* Mesmo número da constante VERSAO em index.html — ver a nota lá. */
-const CACHE = 'vigia-v27.2';
+const CACHE = 'vigia-v28.0';
 
 /* O app não pode depender da rede para desenhar o próprio logo. Estes são os
    arquivos sem os quais a primeira tela já aparece quebrada — foi o que
@@ -14,6 +14,11 @@ const FILES = [
   './olho-fechado.png',
   './olho-aberto-lg.png',
   './olho-fechado-lg.png',
+  /* As fontes são do app, não de CDN, justamente para caberem aqui: resposta
+     de terceiro é `cors` e o handler abaixo não a guarda, então offline o app
+     trocaria de tipografia. */
+  './fontes/space-grotesk.woff2',
+  './fontes/jetbrains-mono.woff2',
 ];
 
 self.addEventListener('install', e => {

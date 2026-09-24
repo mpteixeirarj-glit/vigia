@@ -3,7 +3,7 @@
 > Documento de contexto para retomar o desenvolvimento em outra sessão de IA.
 > Descreve **o que existe**, **onde está** e **o que não pode ser quebrado**.
 >
-> Última atualização: agosto/2026 · `schemaVersion: 9` · versão **27.2** (app e service worker usam o mesmo número)
+> Última atualização: setembro/2026 · `schemaVersion: 9` · versão **28.0** (app e service worker usam o mesmo número)
 
 ---
 
@@ -27,6 +27,7 @@ vigia/
 ├── manifest.json       manifesto do PWA
 ├── firestore.rules     regras de segurança (publicadas à mão no console)
 ├── cartoes/            10 PNGs base dos cartões
+├── fontes/             Space Grotesk + JetBrains Mono (variáveis, subset latin)
 ├── screenshots/        capturas do app
 │   ├── lp/             as 20 usadas na landing (geradas)
 │   └── gerar-lp.js     refaz as capturas dirigindo o app
@@ -92,10 +93,10 @@ Formato **UNIDADE.DÉCIMO**:
 
 | Mudança | Sobe | Exemplo |
 |---|---|---|
-| pequena — correção, ajuste visual, texto | o décimo | `27.2` → `27.3` |
-| grande — recurso novo, tela nova | a unidade, zerando o décimo | `27.3` → `28.0` |
+| pequena — correção, ajuste visual, texto | o décimo | `28.0` → `28.1` |
+| grande — recurso novo, tela nova | a unidade, zerando o décimo | `28.1` → `29.0` |
 
-**Está em `27.2`.**
+**Está em `28.0`.**
 
 O número vive em `var VERSAO` (index.html) e o cache do service worker usa
 **exatamente o mesmo**: `const CACHE = 'vigia-v' + VERSAO`, escrito à mão em
@@ -121,7 +122,13 @@ de login, com o `alt` transbordando por cima do layout. Foi exatamente o que um
 beta tester viu no celular.
 
 Regra: **o que a primeira tela precisa para não aparecer quebrada entra em
-`FILES`** — hoje os dois ícones e as quatro imagens do olho.
+`FILES`** — hoje os dois ícones, as quatro imagens do olho e as duas fontes.
+
+É por isso que as fontes são **hospedadas em `fontes/`, não puxadas do CDN do
+Google**: resposta de terceiro é `type:'cors'`, o `fetch` abaixo não a guarda, e
+o app trocaria de tipografia toda vez que abrisse sem rede. São variáveis (um
+arquivo por família cobre todos os pesos) e o subconjunto é o `latin`, que já
+traz á ê õ ç — 54 KB as duas juntas, menos que o logo.
 
 Dois detalhes do `sw.js` que parecem estilo e não são:
 
@@ -295,7 +302,7 @@ app com um conjunto de dados fictício e coerente e fotografa cada tela. Mudou a
 interface, roda de novo — assim a landing nunca mostra uma versão que não
 existe mais.
 
-`VERSAO` (`27.2`) aparece em seis lugares, todos preenchidos por
+`VERSAO` (`28.0`) aparece em seis lugares, todos preenchidos por
 `pintarVersao()` no boot: splash de abertura, tela de login e splash interna
 (as três logo abaixo de "seu copiloto financeiro"), rodapé da landing, menu
 lateral e ⚙ Configurações → Aplicativo. Ver regra 2.7.
@@ -495,6 +502,29 @@ Níveis: `estouro` (vermelho) · `atencao` (amarelo) · `meta` (verde). Só `est
 
 `renderCartoes()`, `renderCardVisual(cartao)` (PNG base + texto sobreposto por CSS), `aplicarTextoCartao`, `corDestaqueCartao`, `renderAbasCartoes()`, `setTab(t)`, `abrirModalCartao(id)`, `salvarCartao()`, `menuCartao(id)`, `excluirCartao(id)`, `renderBandChips()`, `selecionarBandeira`, `renderCoresGrid()`, `selecionarCor(k)`, `atualizarPreviewCartao()`, `cartaoPorId(d,id)`. Constantes `CORES_CARTAO`, `BANDEIRAS`, `corCartao(k)`, `arquivoCor(k)`.
 
+**As abas rolam na horizontal.** Eram `display:flex` com `.tab{flex:1}`: a linha
+se dividia em partes iguais e, do quarto cartão em diante, "Itaú Click" ganhava
+45px e o nome vazava por cima do vizinho. Agora cada aba tem a largura do
+próprio nome, a faixa rola, e cada uma leva a bolinha `CORES_CARTAO[k].ponto` —
+que é o que separa dois cartões de nome parecido.
+
+| Função | O que faz |
+|---|---|
+| `centralizarAbaAtiva()` | traz a aba `.on` para o meio da faixa |
+| `atualizarFadesAbas()` | liga/desliga os gradientes das bordas conforme o scroll |
+| `prepararAbasCartoes()` | liga o listener de scroll — **uma vez, no boot** |
+
+Dois cuidados que não são estilo:
+
+- **`prepararAbasCartoes` roda no boot, nunca dentro de `renderCartoes`.**
+  `renderCartoes` é chamada por todo `renderTudo()`; ligar o listener ali
+  empilharia um handler novo a cada render.
+- **A centralização acontece no fim de `renderAbasCartoes`, não no clique.**
+  `setTab` refaz o `innerHTML` da faixa, então o elemento clicado já saiu do
+  documento quando o clique termina de borbulhar — `scrollIntoView` nele seria
+  no vazio. Ela também não faz nada quando a tela de cartões não está aberta,
+  senão rolaria a página inteira.
+
 ### 5.11 Lançamento (botão `+`)
 
 `abrirLanc()` monta os chips **conforme o perfil**. Fluxo: `setTipo(t)` → `setSubtipoDespesa(tipo)` → `stp(id)` (navega os passos) → `dp1ok()`/`dp2ok()`/`dfOk()`/`pcOk()`/`cofreOk()`/`rc1ok()` → `confirmar()` grava. Seleção: `pick(el,campo,val)`, `pickCat(el,id)`, `setCartaoParc`, `setNomeCofre`. Estado no objeto `L`.
@@ -606,9 +636,15 @@ Repetição no bot: aviso de **data** dedupe por dia; aviso de **estado** dedupe
 | Onde | Comando | Cobre |
 |---|---|---|
 | Bot | `node alertas.test.js` | 39 casos: conteúdo dos avisos, dedupe, janelas de horário, fuso |
-| App | Playwright (fora do repo) | negócio/estoque (59), perfis (58), beta (57), lote (38), UX (37), landing (36), avisos (24), versão (20), notificações (20), assets/service worker (17), fonte (13) |
+| App | Playwright (fora do repo) | abas+acabamento (57), negócio/estoque (59), perfis (58), beta (57), lote (38), UX (37), landing (36), avisos (24), versão (20), notificações (20), assets/service worker (17), fonte (13) |
 
-O app não tem suíte versionada. Os testes foram escritos em `playwright-core` apontando para o `index.html` local, injetando dados no `localStorage` e chamando `entrarOffline()` para pular o login.
+O app não tem suíte versionada. Os testes foram escritos em Playwright apontando para o `index.html` local, injetando dados no `localStorage` e chamando `entrarOffline()` para pular o login.
+
+**O app é só escuro.** Não há nenhuma regra `prefers-color-scheme`: com o
+sistema em claro ele renderiza idêntico. Não existe modo claro para testar — o
+contraste a verificar é sempre o do tema escuro (todos os acentos passam em
+AA sobre `--bg` e `--surf`; `--muted` fica em 3.1, abaixo de AA, e é anterior a
+esta versão).
 
 ---
 
