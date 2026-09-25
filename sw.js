@@ -1,5 +1,5 @@
 /* Mesmo número da constante VERSAO em index.html — ver a nota lá. */
-const CACHE = 'vigia-v28.0';
+const CACHE = 'vigia-v28.1';
 
 /* O app não pode depender da rede para desenhar o próprio logo. Estes são os
    arquivos sem os quais a primeira tela já aparece quebrada — foi o que

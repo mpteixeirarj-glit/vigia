@@ -1823,7 +1823,7 @@ onAuthStateChanged(auth, function(user){
     <!-- DESPESA step 1 (gasto do mês) -->
     <div class="stp" id="dp1">
       <div class="fd"><label>Categoria</label><div class="chips" id="catChips"></div></div>
-      <div class="fd"><label>Descrição (opcional)</label><input type="text" id="dDesc" placeholder="Ex: pão, feira da semana..."></div>
+      <div class="fd"><label>Descrição (opcional)</label><input type="text" id="dDesc" maxlength="60" placeholder="Ex: pão, feira da semana..."></div>
       <div class="fd2">
         <div class="fd"><label>Valor (R$)</label><input type="number" id="dVal" placeholder="0.00" step="0.01" inputmode="decimal"></div>
         <div class="fd"><label>Dia</label><input type="number" id="dDia" placeholder="dia" min="1" max="31" inputmode="numeric"></div>
@@ -1858,7 +1858,7 @@ onAuthStateChanged(auth, function(user){
 
     <!-- DESPESA FIXA -->
     <div class="stp" id="dpFixa">
-      <div class="fd"><label>Nome da despesa</label><input type="text" id="dfNome" placeholder="Ex: Aluguel, plano de saúde..."></div>
+      <div class="fd"><label>Nome da despesa</label><input type="text" id="dfNome" maxlength="60" placeholder="Ex: Aluguel, plano de saúde..."></div>
       <div class="fd2">
         <div class="fd"><label>Valor padrão (R$)</label><input type="number" id="dfVal" step="0.01" inputmode="decimal"></div>
         <div class="fd"><label>Dia de vencimento</label><input type="number" id="dfDia" min="1" max="31" inputmode="numeric"></div>
@@ -1874,7 +1874,7 @@ onAuthStateChanged(auth, function(user){
 
     <!-- PARCELAMENTO -->
     <div class="stp" id="dpParc">
-      <div class="fd"><label>Nome</label><input type="text" id="pcNome" placeholder="Ex: Prestação da obra, Geladeira, Carro..."></div>
+      <div class="fd"><label>Nome</label><input type="text" id="pcNome" maxlength="60" placeholder="Ex: Prestação da obra, Geladeira, Carro..."></div>
       <div class="fd2">
         <div class="fd"><label>Valor da parcela (R$)</label><input type="number" id="pcVal" step="0.01" inputmode="decimal"></div>
         <div class="fd"><label>Total de parcelas</label><input type="number" id="pcTot" min="1" inputmode="numeric"></div>
@@ -1888,7 +1888,7 @@ onAuthStateChanged(auth, function(user){
       <div class="fd" id="pcFdAtual" style="display:none"><label>Qual parcela é a atual?</label><input type="number" id="pcAt" min="1" inputmode="numeric"></div>
       <div class="fd"><label>Cartão ou banco (opcional)</label>
         <div class="chips" id="pcCartaoChips" style="margin-bottom:8px;"></div>
-        <input type="text" id="pcCartao" placeholder="Ou digite outro banco...">
+        <input type="text" id="pcCartao" maxlength="60" placeholder="Ou digite outro banco...">
       </div>
       <div class="fd"><label>Dia de vencimento</label><input type="number" id="pcDia" min="1" max="31" inputmode="numeric" value="20"></div>
       <button class="bok rd" onclick="pcOk()">Revisar →</button>
@@ -1898,7 +1898,7 @@ onAuthStateChanged(auth, function(user){
     <div class="stp" id="dpCofre">
       <div class="fd"><label>Nome do cofrinho</label>
         <div class="chips" id="cofreNomeChips" style="margin-bottom:8px;"></div>
-        <input type="text" id="cofreNome" placeholder="Ou digite um nome livre...">
+        <input type="text" id="cofreNome" maxlength="60" placeholder="Ou digite um nome livre...">
       </div>
       <div class="fd2">
         <div class="fd"><label>Meta / teto (R$)</label><input type="number" id="cofreTeto" step="0.01" inputmode="decimal"></div>
@@ -1915,7 +1915,7 @@ onAuthStateChanged(auth, function(user){
       <div class="fd"><label>Tipo de receita</label>
         <div class="chips" id="recChips"></div>
       </div>
-      <div class="fd"><label>Descrição</label><input type="text" id="rDesc" placeholder="Ex: plantão extra..."></div>
+      <div class="fd"><label>Descrição</label><input type="text" id="rDesc" maxlength="60" placeholder="Ex: plantão extra..."></div>
       <div class="fd2">
         <div class="fd"><label>Valor (R$)</label><input type="number" id="rVal" placeholder="0.00" step="0.01" inputmode="decimal"></div>
         <div class="fd"><label>Dia</label><input type="number" id="rDia" placeholder="dia" min="1" max="31" inputmode="numeric"></div>
@@ -1974,7 +1974,7 @@ onAuthStateChanged(auth, function(user){
       <div class="fd"><label>Parcela atual (neste mês)</label><input type="number" id="epA" min="1" inputmode="numeric"></div>
       <div class="fd"><label>Dia de vencimento</label><input type="number" id="epDia" min="1" max="31" inputmode="numeric"></div>
     </div>
-    <div class="fd"><label>Cartão ou banco (opcional)</label><input type="text" id="epCartao" placeholder="Ex: Nubank, Santander, Caixa..."></div>
+    <div class="fd"><label>Cartão ou banco (opcional)</label><input type="text" id="epCartao" maxlength="60" placeholder="Ex: Nubank, Santander, Caixa..."></div>
     <button class="bok" onclick="salvarParc()">✓ Salvar</button>
   </div>
 </div>
@@ -1999,9 +1999,9 @@ onAuthStateChanged(auth, function(user){
     <div class="md-t" id="ivTit">Novo investimento<button class="md-x" onclick="fechar('ovInvest')">✕</button></div>
     <div class="fd"><label>Tipo</label>
       <div class="chips" id="ivTipoChips" style="margin-bottom:8px;"></div>
-      <input type="text" id="ivTipo" placeholder="Ou digite um tipo livre...">
+      <input type="text" id="ivTipo" maxlength="60" placeholder="Ou digite um tipo livre...">
     </div>
-    <div class="fd"><label>Nome do ativo</label><input type="text" id="ivNome" placeholder="Ex: Tesouro Selic 2029, PETR4..."></div>
+    <div class="fd"><label>Nome do ativo</label><input type="text" id="ivNome" maxlength="60" placeholder="Ex: Tesouro Selic 2029, PETR4..."></div>
     <div class="fd2">
       <div class="fd"><label>Quantidade de cotas</label><input type="number" id="ivCotas" step="0.000001" inputmode="decimal"></div>
       <div class="fd"><label>Preço da cota (R$)</label><input type="number" id="ivPreco" step="0.01" inputmode="decimal"></div>
@@ -2027,7 +2027,7 @@ onAuthStateChanged(auth, function(user){
 
     <div class="stp on" id="rv1">
       <div class="fd"><label>Descrição (opcional)</label>
-        <input type="text" id="rvDesc" placeholder="Ex: Consulta João, Serviço Maria...">
+        <input type="text" id="rvDesc" maxlength="60" placeholder="Ex: Consulta João, Serviço Maria...">
       </div>
       <div class="fd"><label>Forma de recebimento</label>
         <div class="chips">
@@ -2077,7 +2077,7 @@ onAuthStateChanged(auth, function(user){
 
     <div class="stp on" id="vd1">
       <div class="fd"><label>O que você vendeu</label>
-        <input type="text" id="vdDesc" placeholder="Ex: Camiseta G, kit skincare...">
+        <input type="text" id="vdDesc" maxlength="60" placeholder="Ex: Camiseta G, kit skincare...">
       </div>
       <div class="fd2">
         <div class="fd"><label>Valor da venda (R$)</label>
@@ -2144,7 +2144,7 @@ onAuthStateChanged(auth, function(user){
 
     <div class="fd"><label>O que você comprou</label>
       <div class="chips" id="estProdutoChips" style="margin-bottom:8px"></div>
-      <input type="text" id="estProduto" placeholder="Ex: tecido, base de sabonete..." oninput="avaliarPrecoEstoque()">
+      <input type="text" id="estProduto" maxlength="60" placeholder="Ex: tecido, base de sabonete..." oninput="avaliarPrecoEstoque()">
     </div>
 
     <div class="fd2">
@@ -2159,7 +2159,7 @@ onAuthStateChanged(auth, function(user){
 
     <div class="fd"><label>Fornecedor (opcional)</label>
       <div class="chips" id="estFornChips" style="margin-bottom:8px"></div>
-      <input type="text" id="estFornecedor" placeholder="De quem você comprou">
+      <input type="text" id="estFornecedor" maxlength="60" placeholder="De quem você comprou">
     </div>
 
     <div class="fd"><label>Dia da compra</label>
@@ -2282,11 +2282,11 @@ onAuthStateChanged(auth, function(user){
     <div class="md-t"><span id="cartaoModalTit">Novo cartão</span><button class="md-x" onclick="fechar('ovCartao')">✕</button></div>
     <div class="fd">
       <label>Nome do cartão</label>
-      <input type="text" id="cartNome" placeholder="Ex: Nubank, Inter, C6..." oninput="atualizarPreviewCartao()">
+      <input type="text" id="cartNome" maxlength="60" placeholder="Ex: Nubank, Inter, C6..." oninput="atualizarPreviewCartao()">
     </div>
     <div class="fd">
       <label>Nome do titular</label>
-      <input type="text" id="cartTitular" placeholder="Ex: MARCOS PAULO" oninput="atualizarPreviewCartao()">
+      <input type="text" id="cartTitular" maxlength="60" placeholder="Ex: MARCOS PAULO" oninput="atualizarPreviewCartao()">
     </div>
     <div class="fd">
       <label>Bandeira</label>
@@ -2434,6 +2434,28 @@ onAuthStateChanged(auth, function(user){
 
 <script>
 'use strict';
+
+/* ══════ ESCAPE DE TEXTO DO USUÁRIO ══════
+   Quase toda a interface é montada com innerHTML. Sem isto, um cartão chamado
+   <img src=x onerror="..."> executa o onerror toda vez que a lista é
+   redesenhada — e o dado chega ao DOM vindo do Firestore, não só do formulário
+   desta máquina.
+
+   Regra: TODO texto que a pessoa digitou passa por esc() antes de virar
+   innerHTML. O que o próprio código gera — fmt(), datas, rótulos fixos — não
+   precisa, e escapar duas vezes faria aparecer "&amp;lt;" na tela.
+
+   O & vem primeiro de propósito: trocá-lo depois reescaparia os & das
+   entidades recém-criadas. */
+function esc(v){
+  if(v===null||v===undefined) return '';
+  return String(v)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
 
 /* ══════ INSTALAÇÃO DO APP (PWA) ══════ */
 var deferredInstall=null;
@@ -2955,7 +2977,7 @@ function renderAbasCartoes(){
   var h=d.cartoes.map(function(c){
     return '<div class="tab'+(c.id===tabAtual?' on':'')+'" onclick="setTab(\''+c.id+'\')">'+
       '<span class="tab-dot" style="background:'+corCartao(c.corBase).ponto+'"></span>'+
-      c.nome+'</div>';
+      esc(c.nome)+'</div>';
   }).join('');
   h+='<div class="tab-add" onclick="abrirModalCartao()">+ Cartão</div>';
   tabs.innerHTML=h;
@@ -3183,14 +3205,14 @@ function itemTipo2(kind,item,cor,conf){
       ? '<span class="tg atrasado">JÁ VENCEU</span>'
       : '<span class="tg cat">AGUARDANDO CONFIRMAÇÃO</span>';
     return '<div class="it '+cor+'" style="opacity:.42"><div class="it-t"><div class="it-n"><span class="dia">'+
-      String(item.dia).padStart(2,'0')+'</span>'+item.nome+etiqueta+'</div>'+
+      String(item.dia).padStart(2,'0')+'</span>'+esc(item.nome)+etiqueta+'</div>'+
       '<div class="it-v dim">'+fmt(item.valor)+'</div></div>'+
       '<div class="it-a"><button class="ba" style="flex:2;color:var(--green);border-color:var(--green)" onclick="abrirConfirmacao(\''+kind+'\',\''+item.id+'\')">✓ Já '+(ehReceita?'recebi':'paguei')+'</button>'+
       '<button class="ba" onclick="edit(\''+kind+'\',\''+item.id+'\')">✎</button>'+
       '<button class="ba del" onclick="del(\''+kind+'\',\''+item.id+'\')">✕</button></div></div>';
   }
   return '<div class="it '+cor+'"><div class="it-t"><div class="it-n"><span class="dia">'+
-    String(item.dia).padStart(2,'0')+'</span>'+item.nome+'<span class="tg ok">CONFIRMADO</span></div>'+
+    String(item.dia).padStart(2,'0')+'</span>'+esc(item.nome)+'<span class="tg ok">CONFIRMADO</span></div>'+
     '<div class="it-v '+cor+'">'+fmt(valor)+'</div></div>'+
     '<div class="it-a"><button class="ba" onclick="abrirConfirmacao(\''+kind+'\',\''+item.id+'\')">✎ Ajustar</button>'+
     '<button class="ba" onclick="desfazerConfirmacao(\''+item.id+'\')">↺ Desfazer</button>'+
@@ -3299,9 +3321,9 @@ function itensReceitasFixas(d,conf){
 function itensRecebimentos(mm){
   return mm.receitas.map(function(r){
     return '<div class="it gr"><div class="it-t"><div class="it-n"><span class="dia">'+
-      (r.dia?String(r.dia).padStart(2,'0'):'—')+'</span>'+r.nome+'</div>'+
+      (r.dia?String(r.dia).padStart(2,'0'):'—')+'</span>'+esc(r.nome)+'</div>'+
       '<div class="it-v gr">'+fmt(r.valor)+'</div></div>'+
-      (r.cat?'<div class="it-m">'+r.cat+'</div>':'')+
+      (r.cat?'<div class="it-m">'+esc(r.cat)+'</div>':'')+
       '<div class="it-a"><button class="ba" onclick="editM(\'receitas\',\''+r.id+'\')">✎ Editar</button>'+
       '<button class="ba del" onclick="delM(\'receitas\',\''+r.id+'\')">✕ Remover</button></div></div>';
   }).join('');
@@ -3343,7 +3365,7 @@ function itensVendas(c){
   return vendas.slice().sort(function(a,b){return (b.dia||0)-(a.dia||0);}).map(function(v){
     var lucro=lucroDaVenda(v), extras=(Number(v.frete)||0)+(Number(v.embalagem)||0);
     return '<div class="it gr"><div class="it-t"><div class="it-n"><span class="dia">'+
-      String(v.dia||'--').padStart(2,'0')+'</span>'+v.desc+
+      String(v.dia||'--').padStart(2,'0')+'</span>'+esc(v.desc)+
       (v.qtd>1?'<span class="tg cat">'+v.qtd+' un.</span>':'')+'</div>'+
       '<div class="it-v gr">'+fmt(v.valor)+'</div></div>'+
       '<div class="it-m">'+(CANAIS[v.canal]||'Venda direta')+
@@ -3398,7 +3420,7 @@ function renderReceitasParceladas(c){
     'Use <b>+ Recebi hoje</b> → Parcelado para registrar um serviço.</div>';
   return ativas.map(function(x){
     var rp=x.rp, st=x.st, pct=(st.num/rp.total*100).toFixed(0);
-    return '<div class="it gr"><div class="it-t"><div class="it-n">'+rp.descricao+
+    return '<div class="it gr"><div class="it-t"><div class="it-n">'+esc(rp.descricao)+
       (st.ultima?'<span class="tg ult">ÚLTIMA</span>':'<span class="tg ok">'+st.num+'/'+rp.total+'</span>')+
       '</div><div class="it-v gr">'+fmt(rp.valorParcela)+'</div></div>'+
       '<div class="it-m">Receber todo dia '+rp.diaRecebimento+' · '+
@@ -3454,12 +3476,12 @@ function renderInicio(){
   var h='';
   c.parcelamentosAtivos.forEach(function(x){
     var p=x.p, st=x.st, pct2=(st.num/p.total*100);
-    h+='<div class="it yl"><div class="it-t"><div class="it-n">'+p.nome+
+    h+='<div class="it yl"><div class="it-t"><div class="it-n">'+esc(p.nome)+
       (st.ultima?'<span class="tg ult">ÚLTIMA</span>':'')+'</div>'+
       '<div class="it-v yl">'+fmt(p.valor)+'</div></div>'+
       '<div class="pp"><div class="pp-l"><span>'+st.num+'/'+p.total+'</span><span>'+fmtPct(pct2)+' pago</span></div>'+
       '<div class="pp-tr"><div class="pp-f" style="width:'+pct2+'%;background:var(--yellow)"></div></div></div>'+
-      '<div class="it-m">'+st.restam+' restantes · dia '+p.dia+(p.cartao?' · '+cap(p.cartao):'')+
+      '<div class="it-m">'+st.restam+' restantes · dia '+p.dia+(p.cartao?' · '+esc(cap(p.cartao)):'')+
       ' · '+fmt(st.restam*p.valor)+' remanescente</div>'+
       '<div class="it-a"><button class="ba" onclick="editParc(\''+p.id+'\')">✎ Editar</button>'+
       '<button class="ba del" onclick="delParc(\''+p.id+'\')">✕ Excluir</button></div></div>';
@@ -3472,7 +3494,7 @@ function renderInicio(){
   c.despesasConfirmaveis.forEach(function(f){ h+=itemTipo2('despesasFixas',f,'rd',conf); });
   c.despesasFonte.forEach(function(f){
     h+='<div class="it" style="border-left-color:var(--muted);opacity:.75;"><div class="it-t">'+
-      '<div class="it-n"><span class="dia">'+String(f.dia).padStart(2,'0')+'</span>'+f.nome+
+      '<div class="it-n"><span class="dia">'+String(f.dia).padStart(2,'0')+'</span>'+esc(f.nome)+
       '<span class="tg cat">FONTE</span></div><div class="it-v dim">'+fmt(f.valor)+'</div></div>'+
       '<div class="it-m">Descontado na fonte — não afeta o saldo.</div>'+
       '<div class="it-a"><button class="ba" onclick="edit(\'despesasFixas\',\''+f.id+'\')">✎ Editar</button>'+
@@ -3488,10 +3510,10 @@ function renderInicio(){
   } else {
     mm.consumo.forEach(function(x){
       var cartaoTag=x.cartao?cartaoPorId(d,x.cartao):null;
-      var cart=x.cartao?'<span class="tg cat">'+(cartaoTag?cartaoTag.nome.toUpperCase():cap(x.cartao))+'</span>':'';
+      var cart=x.cartao?'<span class="tg cat">'+esc(cartaoTag?cartaoTag.nome.toUpperCase():cap(x.cartao))+'</span>':'';
       h+='<div class="it rd"><div class="it-t"><div class="it-n"><span class="dia">'+
-        (x.dia?String(x.dia).padStart(2,'0'):'—')+'</span>'+(x.nome||x.cat)+
-        '<span class="tg cat">'+x.cat+'</span>'+cart+'</div>'+
+        (x.dia?String(x.dia).padStart(2,'0'):'—')+'</span>'+esc(x.nome||x.cat)+
+        '<span class="tg cat">'+esc(x.cat)+'</span>'+cart+'</div>'+
         '<div class="it-v rd">'+fmt(x.valor)+'</div></div>'+
         '<div class="it-a"><button class="ba" onclick="editM(\'consumo\',\''+x.id+'\')">✎ Editar</button>'+
         '<button class="ba del" onclick="delM(\'consumo\',\''+x.id+'\')">✕ Remover</button></div></div>';
@@ -3516,15 +3538,15 @@ function renderInicio(){
       '<div class="leg" style="flex:1;min-width:140px;padding:0;">'+
       carteira.itens.map(function(x,i){
         var cor=CORES_CARTEIRA[i%CORES_CARTEIRA.length];
-        return '<div class="leg-i"><div class="leg-d" style="background:'+cor+'"></div>'+x.inv.nome+' · '+fmtPct(x.pct)+'</div>';
+        return '<div class="leg-i"><div class="leg-d" style="background:'+cor+'"></div>'+esc(x.inv.nome)+' · '+fmtPct(x.pct)+'</div>';
       }).join('')+
       '</div></div>';
   }
   carteira.itens.forEach(function(x,i){
     var inv=x.inv, cor=CORES_CARTEIRA[i%CORES_CARTEIRA.length];
     var temMeta=inv.metaPercentual>0, diff=x.pct-inv.metaPercentual;
-    h+='<div class="it pp" style="border-left-color:'+cor+'"><div class="it-t"><div class="it-n">'+inv.nome+
-      '<span class="tg cat">'+inv.tipo+'</span></div><div class="it-v pp" style="color:'+cor+'">'+fmt(x.valorAtual)+'</div></div>'+
+    h+='<div class="it pp" style="border-left-color:'+cor+'"><div class="it-t"><div class="it-n">'+esc(inv.nome)+
+      '<span class="tg cat">'+esc(inv.tipo)+'</span></div><div class="it-v pp" style="color:'+cor+'">'+fmt(x.valorAtual)+'</div></div>'+
       '<div class="it-m">'+inv.cotas+' cotas × '+fmt(inv.precoCota)+'</div>'+
       '<div class="pp"><div class="pp-l"><span>'+fmtPct(x.pct,1)+' da carteira</span>'+
       (temMeta?'<span>meta '+inv.metaPercentual.toFixed(0)+'%</span>':'')+'</div>'+
@@ -3540,7 +3562,7 @@ function renderInicio(){
     h+='<div class="vazio" style="text-align:left;padding:10px 4px;">Aportes antigos deste mês (não entram na carteira):</div>';
     mm.reserva.forEach(function(x){
       h+='<div class="it bl"><div class="it-t"><div class="it-n"><span class="dia">'+
-        (x.dia?String(x.dia).padStart(2,'0'):'—')+'</span>'+(x.nome||'Investimento')+'</div>'+
+        (x.dia?String(x.dia).padStart(2,'0'):'—')+'</span>'+esc(x.nome||'Investimento')+'</div>'+
         '<div class="it-v bl">'+fmt(x.valor)+'</div></div>'+
         '<div class="it-a"><button class="ba" onclick="editM(\'reserva\',\''+x.id+'\')">✎ Editar</button>'+
         '<button class="ba del" onclick="delM(\'reserva\',\''+x.id+'\')">✕ Remover</button></div></div>';
@@ -3558,7 +3580,7 @@ function renderInicio(){
     var cf=x.cf, acumulado=x.acumulado;
     var pct=cf.teto>0?Math.min(acumulado/cf.teto*100,100):0;
     var atingiu=acumulado>=cf.teto;
-    h+='<div class="it pp"><div class="it-t"><div class="it-n">'+cf.nome+
+    h+='<div class="it pp"><div class="it-t"><div class="it-n">'+esc(cf.nome)+
       (atingiu?'<span class="tg ult" style="background:var(--purple-d,rgba(168,115,240,.15));color:var(--purple);">META ATINGIDA</span>':'')+
       '</div><div class="it-v pp">'+fmt(cf.valorMensal)+'/mês</div></div>'+
       '<div class="pp"><div class="pp-l"><span>'+fmt(acumulado)+' de '+fmt(cf.teto)+'</span><span>'+fmtPct(pct)+'</span></div>'+
@@ -3775,8 +3797,8 @@ function renderAvisos(){
       var ch=x.chave.replace(/'/g,'');
       return '<div class="avi '+x.nivel+'">'+
         '<div class="avi-t"><span class="al-i">'+x.icone+'</span>'+
-        '<span class="avi-n">'+x.titulo+'</span></div>'+
-        '<div class="avi-x">'+x.texto+'</div>'+
+        '<span class="avi-n">'+esc(x.titulo)+'</span></div>'+
+        '<div class="avi-x">'+esc(x.texto)+'</div>'+
         '<div class="avi-a">'+
         '<button onclick="adiarAviso(\''+ch+'\')">⏰ Adiar '+AVISO_ADIAR_DIAS+' dias</button>'+
         '<button onclick="adiarAvisoAteProximoMes(\''+ch+'\')">📅 Só mês que vem</button>'+
@@ -3883,9 +3905,9 @@ function renderAgenda(){
     tl+='<div class="tl-g"><div class="tl-d">DIA '+String(dd).padStart(2,'0')+'</div>';
     ev[dd].forEach(function(x){
       tl+='<div class="it '+CLS[x.t]+'" style="opacity:'+(x.pend?.5:1)+'"><div class="it-t"><div class="it-n">'+
-        '<span class="tg cat">'+LBL[x.t]+'</span>'+x.n+(x.pend?'<span class="tg cat">PENDENTE</span>':'')+'</div>'+
+        '<span class="tg cat">'+LBL[x.t]+'</span>'+esc(x.n)+(x.pend?'<span class="tg cat">PENDENTE</span>':'')+'</div>'+
         '<div class="it-v '+CLS[x.t]+'" style="color:'+(x.pend?'var(--muted)':'')+'">'+fmt(x.v)+'</div></div>'+
-        '<div class="it-m">'+x.s+'</div></div>';
+        '<div class="it-m">'+esc(x.s)+'</div></div>';
     });
     tl+='</div>';
   });
@@ -3903,7 +3925,7 @@ function abrirDia(dd){
       if(!x.pend && !x.semSaldo){ if(x.t==='rec') tRec+=x.v; else tDesp+=x.v; }
       var tagExtra=x.pend?'<span class="tg cat" style="color:var(--muted)">PENDENTE</span>':'';
       h+='<div class="pop-i" style="opacity:'+(x.pend?.5:1)+'"><div><div class="pop-n"><span class="tg cat">'+LBL[x.t]+
-        '</span>'+x.n+tagExtra+'</div><div class="pop-s">'+x.s+'</div></div>'+
+        '</span>'+esc(x.n)+tagExtra+'</div><div class="pop-s">'+esc(x.s)+'</div></div>'+
         '<div class="pop-v '+CLS[x.t]+'" style="color:'+(x.pend?'var(--muted)':COR[x.t])+'">'+fmt(x.v)+'</div></div>';
     });
     h+='<div class="cbx" style="margin-top:14px">'+
@@ -3975,13 +3997,13 @@ function renderCartoes(){
     h+='<div class="it" style="border-left-color:'+cor+'"><div class="it-t"><div class="it-n"><span class="dia">'+
       (x.dia?String(x.dia).padStart(2,'0'):'—')+'</span>'+(x.nome||x.cat)+
       '<span class="tg cat">AVULSA</span></div><div class="it-v" style="color:'+cor+'">'+fmt(x.valor)+'</div></div>'+
-      '<div class="it-m">'+x.cat+'</div>'+
+      '<div class="it-m">'+esc(x.cat)+'</div>'+
       '<div class="it-a"><button class="ba" onclick="editM(\'consumo\',\''+x.id+'\')">✎ Editar</button>'+
       '<button class="ba del" onclick="delM(\'consumo\',\''+x.id+'\')">✕ Remover</button></div></div>';
   });
   ativas.forEach(function(o){
     var p=o.p, st=o.st, pc=(st.num/p.total*100).toFixed(0);
-    h+='<div class="it" style="border-left-color:'+cor+'"><div class="it-t"><div class="it-n">'+p.nome+
+    h+='<div class="it" style="border-left-color:'+cor+'"><div class="it-t"><div class="it-n">'+esc(p.nome)+
       (st.ultima?'<span class="tg ult">ÚLTIMA</span>':'<span class="tg ok">'+st.num+'/'+p.total+'</span>')+
       '</div><div class="it-v" style="color:'+cor+'">'+fmt(p.valor)+'</div></div>'+
       '<div class="it-m">'+(st.ultima?'Última parcela deste mês':
@@ -4238,10 +4260,10 @@ function abrirLanc(){
     return '<div class="chip" onclick="setNomeCofre(this,\''+n+'\')">'+n+'</div>';}).join('')+
     '<div class="chip" onclick="document.getElementById(\'cofreNome\').focus()">Outro</div>';
   document.getElementById('dp2CartaoChips').innerHTML=getD().cartoes.map(function(c){
-    return '<div class="chip" onclick="pick(this,\'cartao\',\''+c.id+'\')">'+c.nome+'</div>';}).join('')||
+    return '<div class="chip" onclick="pick(this,\'cartao\',\''+c.id+'\')">'+esc(c.nome)+'</div>';}).join('')||
     '<div class="vazio">Nenhum cartão cadastrado. Adicione um na aba Cartões.</div>';
   document.getElementById('pcCartaoChips').innerHTML=getD().cartoes.map(function(c){
-    return '<div class="chip" onclick="setCartaoParc(\''+c.id+'\')">'+c.nome+'</div>';}).join('');
+    return '<div class="chip" onclick="setCartaoParc(\''+c.id+'\')">'+esc(c.nome)+'</div>';}).join('');
   limparCampos(['dDesc','dVal','dDia','pVal','pTot','pAt','rDesc','rVal','rDia',
     'dfNome','dfVal','dfDia','pcNome','pcVal','pcTot','pcAt','pcCartao',
     'cofreNome','cofreTeto','cofreValorMensal']);
@@ -4334,7 +4356,7 @@ async function dp1ok(){
     var desc=document.getElementById('dDesc').value.trim()||L.catObj.nome;
     var dia=parseInt(document.getElementById('dDia').value)||null;
     L.pix={nome:desc,valor:v,dia:dia,cat:L.catObj.nome};
-    document.getElementById('cBox').innerHTML='<b>'+desc+'</b><br>'+
+    document.getElementById('cBox').innerHTML='<b>'+esc(desc)+'</b><br>'+
       'Categoria: '+L.catObj.nome+'<br>Forma: Pix / Dinheiro<br>'+
       'Valor: <b style="color:var(--red)">'+fmt(v)+'</b><br>'+
       (dia?'Dia: '+dia+'<br>':'')+
@@ -4368,9 +4390,9 @@ async function dp2ok(){
   while(fimM>11){ fimM-=12; fimA++; }
   L.cart={nome:desc,valor:pv,total:pt,mesIni:mi,anoIni:ai,cartao:L.cartao,unica:pt===1};
   var cartaoSel=cartaoPorId(getD(),L.cartao);
-  document.getElementById('cBox').innerHTML='<b>'+desc+'</b><br>'+
+  document.getElementById('cBox').innerHTML='<b>'+esc(desc)+'</b><br>'+
     'Categoria: '+L.catObj.nome+'<br>'+
-    'Cartão: '+(cartaoSel?cartaoSel.nome:cap(L.cartao))+' · vence dia '+(cartaoSel?(cartaoSel.diaVencimento||20):20)+'<br>'+
+    'Cartão: '+esc(cartaoSel?cartaoSel.nome:cap(L.cartao))+' · vence dia '+(cartaoSel?(cartaoSel.diaVencimento||20):20)+'<br>'+
     (pt===1?'Pagamento à vista no cartão<br>':'Parcela '+pa+'/'+pt+' · <b>'+fmt(pv)+'/mês</b><br>')+
     'Valor total: <b style="color:var(--red)">'+fmt(pv*pt)+'</b><br>'+
     (pt>1?'Início: '+MES[mi]+'/'+ai+' · Término: <b>'+MES[fimM]+'/'+fimA+'</b>':'');
@@ -4387,7 +4409,7 @@ async function dfOk(){
   if(!dia||dia<1||dia>31){ await vAlert('Informe o dia de vencimento.'); return; }
   if(L.descontadoNaFonte===null||L.descontadoNaFonte===undefined){ await vAlert('Informe se é descontado na fonte.'); return; }
   L.despFixa={nome:nome,valor:val,dia:dia,descontadoNaFonte:!!L.descontadoNaFonte};
-  document.getElementById('cBox').innerHTML='<b>'+nome+'</b><br>'+
+  document.getElementById('cBox').innerHTML='<b>'+esc(nome)+'</b><br>'+
     'Valor padrão: <b>'+fmt(val)+'</b><br>Dia de vencimento: '+dia+'<br>'+
     (L.despFixa.descontadoNaFonte?'Descontado na fonte — <b>não entra no saldo</b>':
       'Entra no saldo depois de confirmada todo mês');
@@ -4415,8 +4437,8 @@ async function pcOk(){
   var fimM=mi+(tot-1), fimA=ai;
   while(fimM>11){ fimM-=12; fimA++; }
   L.parcelamento={nome:nome,valor:val,total:tot,mesIni:mi,anoIni:ai,cartao:cartao?cartao.toLowerCase():null,dia:dia};
-  document.getElementById('cBox').innerHTML='<b>'+nome+'</b><br>'+
-    (cartao?'Cartão/banco: '+cap(cartao)+'<br>':'')+
+  document.getElementById('cBox').innerHTML='<b>'+esc(nome)+'</b><br>'+
+    (cartao?'Cartão/banco: '+esc(cap(cartao))+'<br>':'')+
     'Parcela '+pa+'/'+tot+' · <b>'+fmt(val)+'/mês</b><br>'+
     'Valor total: <b style="color:var(--red)">'+fmt(val*tot)+'</b><br>'+
     'Início: '+MES[mi]+'/'+ai+' · Término: <b>'+MES[fimM]+'/'+fimA+'</b>';
@@ -4434,7 +4456,7 @@ async function cofreOk(){
   if(!vm||vm<=0){ await vAlert('Informe o valor do depósito mensal.'); return; }
   var meses=Math.ceil(teto/vm);
   L.cofrinho={nome:nome,teto:teto,valorMensal:vm,dia:dia};
-  document.getElementById('cBox').innerHTML='<b>'+nome+'</b><br>'+
+  document.getElementById('cBox').innerHTML='<b>'+esc(nome)+'</b><br>'+
     'Meta: <b>'+fmt(teto)+'</b><br>Depósito mensal: <b>'+fmt(vm)+'</b><br>'+
     'Tempo estimado até a meta: <b>'+meses+' '+(meses===1?'mês':'meses')+'</b>';
   document.getElementById('btCf').className='bok rd';
@@ -4449,8 +4471,8 @@ async function rc1ok(){
   var dia=parseInt(document.getElementById('rDia').value)||null;
   if(L.fixa===null||L.fixa===undefined) L.fixa=false;
   L.rec={nome:desc,valor:v,dia:dia,cat:L.recTipo||'',fixa:L.fixa};
-  document.getElementById('cBox').innerHTML='<b>'+desc+'</b><br>'+
-    (L.recTipo?'Tipo: '+L.recTipo+'<br>':'')+
+  document.getElementById('cBox').innerHTML='<b>'+esc(desc)+'</b><br>'+
+    (L.recTipo?'Tipo: '+esc(L.recTipo)+'<br>':'')+
     'Valor: <b>'+fmt(v)+'</b><br>'+(dia?'Dia: '+dia+'<br>':'')+
     (L.fixa?'Repetição: <b>todo mês (fixa)</b>':'Somente em <b>'+MES[curM]+'/'+curA+'</b>');
   document.getElementById('btCf').className='bok gr';
@@ -4655,7 +4677,7 @@ function mostrarParabensCofrinho(cf,acumulado,pct){
   document.getElementById('parabensTexto').innerHTML=
     '<div style="font-size:2.2rem;text-align:center;margin-bottom:10px;">🎉</div>'+
     '<div style="text-align:center;font-size:.9rem;line-height:1.6;">'+
-    'Você está quase lá no cofrinho <b>'+cf.nome+'</b>!<br>'+
+    'Você está quase lá no cofrinho <b>'+esc(cf.nome)+'</b>!<br>'+
     'Já são <b>'+fmtPct(pct)+'</b> da meta — falta só <b>'+fmt(falta)+'</b>.<br><br>'+
     'Continue assim, você está mandando muito bem! 💪</div>';
   document.getElementById('ovParabens').classList.add('on');
@@ -5036,8 +5058,11 @@ function chipsDeHistorico(campo,alvo){
       lista.push(v);
     });
   return lista.slice(0,6).map(function(v){
+    /* O valor entra num atributo onclick, então o JSON inteiro passa por esc():
+       trocar só as aspas deixava passar um nome contendo "&quot;", que o
+       navegador decodifica de volta para aspas de verdade e fecha a string. */
     return '<div class="chip" onclick="usarChipEstoque(this,\''+alvo+'\','+
-      JSON.stringify(v).replace(/"/g,'&quot;')+')">'+v+'</div>';
+      esc(JSON.stringify(v))+')">'+esc(v)+'</div>';
   }).join('');
 }
 function usarChipEstoque(el,alvo,valor){
@@ -5079,11 +5104,11 @@ function avaliarPrecoEstoque(){
 
   if(!cmp){
     el.innerHTML='<div class="est-cmp neutro">Sai a <b>'+fmt(unit)+'</b> por peça.<br>'+
-      'Primeira compra de "'+produto+'" — a próxima vai se comparar com esta.</div>';
+      'Primeira compra de "'+esc(produto)+'" — a próxima vai se comparar com esta.</div>';
     return;
   }
   var a=cmp.anterior, quando=MES[Number(a.mes)||0]+'/'+a.ano;
-  var deQuem=a.fornecedor?(' com '+a.fornecedor):'';
+  var deQuem=a.fornecedor?(' com '+esc(a.fornecedor)):'';
   if(cmp.igual){
     el.innerHTML='<div class="est-cmp neutro">Sai a <b>'+fmt(unit)+'</b> por peça — '+
       'mesmo preço da compra de '+quando+deQuem+'.</div>';
@@ -5147,7 +5172,7 @@ function abrirVenda(){
   var lotes=lotesDisponiveis(d);
   document.getElementById('vdLoteWrap').style.display=lotes.length?'block':'none';
   document.getElementById('vdLoteChips').innerHTML=lotes.map(function(e){
-    return '<div class="chip" onclick="pickLoteVenda(this,\''+e.id+'\')">'+e.produto+
+    return '<div class="chip" onclick="pickLoteVenda(this,\''+e.id+'\')">'+esc(e.produto)+
       ' <span class="chip-sub">'+restanteDoLote(d,e)+' un. · '+fmt(precoUnitEstoque(e))+'</span></div>';
   }).join('')+'<div class="chip" onclick="pickLoteVenda(this,null)">Não é do estoque</div>';
   document.getElementById('vdDia').value=
@@ -5235,7 +5260,7 @@ async function vd1ok(){
     forma:vdState.forma};
 
   document.getElementById('vdConfirmBox').innerHTML=
-    '<b>'+desc+'</b>'+(qtd>1?' · '+qtd+' un.':'')+'<br>'+
+    '<b>'+esc(desc)+'</b>'+(qtd>1?' · '+qtd+' un.':'')+'<br>'+
     'Venda: <b style="color:var(--green)">'+fmt(valor)+'</b><br>'+
     (custo>0?'Custo do produto: '+fmt(custo)+
       (lote?' <span style="color:var(--muted)">(já pago na compra)</span>':'')+'<br>':'')+
@@ -5245,7 +5270,7 @@ async function vd1ok(){
     'Lucro: <b style="color:'+(lucro>=0?'var(--green)':'var(--red)')+'">'+fmt(lucro)+'</b>'+
     (valor>0?' · margem '+fmtPct(lucro/valor*100,1):'')+'<br>'+
     'Dia '+dia+' · '+(CANAIS[vdState.canal]||'Venda direta')+
-    (lote?'<br>Baixa no estoque: '+qtd+' de '+lote.produto:'');
+    (lote?'<br>Baixa no estoque: '+qtd+' de '+esc(lote.produto):'');
   document.querySelectorAll('#ovVenda .stp').forEach(function(s){ s.classList.remove('on'); });
   document.getElementById('vd2').classList.add('on');
 }
@@ -5277,11 +5302,11 @@ function itensEstoque(c,d){
     var pct=(Number(e.qtd)||0)>0?(resta/e.qtd*100):0;
     var esteMes=(Number(e.mes)===curM&&Number(e.ano)===curA);
     return '<div class="it '+(resta?'yl':'')+'"><div class="it-t"><div class="it-n">'+
-      '<span class="dia">'+String(e.dia||'--').padStart(2,'0')+'</span>'+e.produto+
+      '<span class="dia">'+String(e.dia||'--').padStart(2,'0')+'</span>'+esc(e.produto)+
       (esteMes?'':'<span class="tg cat">'+MES[Number(e.mes)||0]+'/'+e.ano+'</span>')+'</div>'+
       '<div class="it-v">'+fmt(e.valor)+'</div></div>'+
       '<div class="it-m">'+fmt(precoUnitEstoque(e))+' por peça'+
-        (e.fornecedor?' · '+e.fornecedor:'')+
+        (e.fornecedor?' · '+esc(e.fornecedor):'')+
         ' · '+resta+' de '+e.qtd+' na mão'+
         (vendidas?' ('+vendidas+' vendida'+(vendidas===1?'':'s')+')':'')+'</div>'+
       (cmp&&!cmp.igual
@@ -5393,7 +5418,7 @@ async function rv1ok(){
     var desc=document.getElementById('rvDesc').value.trim()||'Recebimento';
     rvState.simples={desc:desc,valor:v};
     document.getElementById('rvConfirmBox').innerHTML=
-      '<b>'+desc+'</b><br>Forma: Dinheiro / Pix<br>'+
+      '<b>'+esc(desc)+'</b><br>Forma: Dinheiro / Pix<br>'+
       'Valor: <b style="color:var(--green)">'+fmt(v)+'</b><br>'+
       'Data: hoje, '+new Date().toLocaleDateString('pt-BR');
     goStepRv('rv3');
@@ -5421,7 +5446,7 @@ async function rv2ok(){
   rvState.parcelado={desc:desc,total:total,parc:parc,atual:atual,dia:dia,
     valorParc:valorParc,mesIni:mi,anoIni:ai};
   document.getElementById('rvConfirmBox').innerHTML=
-    '<b>'+desc+'</b><br>'+
+    '<b>'+esc(desc)+'</b><br>'+
     'Parcela '+atual+'/'+parc+' · <b style="color:var(--green)">'+fmt(valorParc)+'/mês</b><br>'+
     'Valor total do serviço: '+fmt(total)+'<br>'+
     'Dia de recebimento: todo dia '+dia+'<br>'+
@@ -5779,7 +5804,7 @@ function atualizarDataAtual(){
    os dois iguais é de propósito: eram dois números para lembrar e o do sw já
    ficou para trás uma vez, o que deixa o usuário preso na versão velha.
    Subiu a versão aqui, sobe em sw.js — os dois na mesma linha de raciocínio. */
-var VERSAO='28.0';
+var VERSAO='28.1';
 
 /* Todo lugar que mostra a versão é preenchido daqui, no boot. Antes cada tela
    preenchia a sua na hora de abrir, e a do login nunca chegou a existir. */
@@ -6121,7 +6146,7 @@ function onbSalvarRendaPrincipal(){
 function onbRenderLista(elId,arr,campo){
   document.getElementById(elId).innerHTML=arr.map(function(x,i){
     return '<div class="it" style="padding:9px 12px;margin-bottom:6px;"><div class="it-t">'+
-      '<div class="it-n" style="font-size:.8rem;">'+x.nome+(x.total?' · '+x.total+'x':'')+
+      '<div class="it-n" style="font-size:.8rem;">'+esc(x.nome)+(x.total?' · '+x.total+'x':'')+
       (x.descontadoNaFonte?' · fonte':'')+'</div>'+
       '<div class="it-v" style="font-size:.8rem;">'+fmt(x.valor)+'</div></div>'+
       '<button class="ba del" style="margin-top:6px;" onclick="onbRemover(\''+campo+'\','+i+')">✕ Remover</button></div>';
@@ -6171,11 +6196,11 @@ function onbAdicionarParcela(){
 }
 function onbMontarResumo(){
   var s=onbState;
-  var h='<b>'+s.nome+'</b><br><br>';
+  var h='<b>'+esc(s.nome)+'</b><br><br>';
   h+='Renda principal: '+(s.rendaPrincipal?fmt(s.rendaPrincipal.valor)+' (dia '+s.rendaPrincipal.dia+')':'—')+'<br>';
-  h+='Outras rendas: '+(s.outrasRendas.length?s.outrasRendas.map(function(x){return x.nome+' '+fmt(x.valor);}).join(', '):'nenhuma')+'<br>';
-  h+='Despesas fixas: '+(s.despesas.length?s.despesas.map(function(x){return x.nome+' '+fmt(x.valor);}).join(', '):'nenhuma')+'<br>';
-  h+='Parcelamentos: '+(s.parcelas.length?s.parcelas.map(function(x){return x.nome+' '+x.total+'x '+fmt(x.valor);}).join(', '):'nenhum');
+  h+='Outras rendas: '+(s.outrasRendas.length?s.outrasRendas.map(function(x){return esc(x.nome)+' '+fmt(x.valor);}).join(', '):'nenhuma')+'<br>';
+  h+='Despesas fixas: '+(s.despesas.length?s.despesas.map(function(x){return esc(x.nome)+' '+fmt(x.valor);}).join(', '):'nenhuma')+'<br>';
+  h+='Parcelamentos: '+(s.parcelas.length?s.parcelas.map(function(x){return esc(x.nome)+' '+x.total+'x '+fmt(x.valor);}).join(', '):'nenhum');
   document.getElementById('onbResumo').innerHTML=h;
 }
 function onbConfirmar(){

@@ -3,7 +3,7 @@
 > Documento de contexto para retomar o desenvolvimento em outra sessão de IA.
 > Descreve **o que existe**, **onde está** e **o que não pode ser quebrado**.
 >
-> Última atualização: setembro/2026 · `schemaVersion: 9` · versão **28.0** (app e service worker usam o mesmo número)
+> Última atualização: setembro/2026 · `schemaVersion: 9` · versão **28.1** (app e service worker usam o mesmo número)
 
 ---
 
@@ -93,10 +93,10 @@ Formato **UNIDADE.DÉCIMO**:
 
 | Mudança | Sobe | Exemplo |
 |---|---|---|
-| pequena — correção, ajuste visual, texto | o décimo | `28.0` → `28.1` |
-| grande — recurso novo, tela nova | a unidade, zerando o décimo | `28.1` → `29.0` |
+| pequena — correção, ajuste visual, texto | o décimo | `28.1` → `28.2` |
+| grande — recurso novo, tela nova | a unidade, zerando o décimo | `28.2` → `29.0` |
 
-**Está em `28.0`.**
+**Está em `28.1`.**
 
 O número vive em `var VERSAO` (index.html) e o cache do service worker usa
 **exatamente o mesmo**: `const CACHE = 'vigia-v' + VERSAO`, escrito à mão em
@@ -198,6 +198,37 @@ não têm `estoqueId`, então continuam somando o custo como sempre somaram —
 **`lucro` e `saida` respondem perguntas diferentes:** `lucro` é "valeu a pena
 esta venda" e sempre desconta o custo real; `saida` é "quanto saiu do caixa
 neste mês". Mexer num sem pensar no outro quebra o saldo ou a margem.
+
+### 2.14 Texto do usuário passa por `esc()` antes de virar `innerHTML`
+
+Quase toda a interface é montada com `innerHTML`. Sem escape, um cartão chamado
+`<img src=x onerror="...">` executa o `onerror` **toda vez que a lista é
+redesenhada** — e o dado chega ao DOM vindo do Firestore, não só do formulário
+desta máquina, então o bot e outro aparelho também são caminho de entrada.
+
+Medido antes da correção: **89 execuções do payload em 25 elementos injetados**,
+só abrindo as cinco telas.
+
+A regra tem duas metades, e as duas importam:
+
+- **Escape acontece na fronteira do `innerHTML`, nunca na construção do dado.**
+  Se o nome do cofrinho já fosse escapado dentro de `calcularAvisos`, o
+  `renderAvisos` escaparia de novo e a tela mostraria `&amp;lt;`. Um lugar só.
+- **Nada que vá para `textContent` é escapado.** `vConfirm` e `vAlert` usam
+  `textContent` e já são seguros; passar `esc()` ali faria aparecer `&lt;` como
+  texto literal na caixa de diálogo.
+
+O que o código gera — `fmt()`, datas, rótulos como CONFIRMADO — não precisa.
+
+**Atributo tem regra própria.** Em `chipsDeHistorico` o valor vai dentro de um
+`onclick="..."`. Trocar só as aspas (`.replace(/"/g,'&quot;')`) **não basta**:
+um nome contendo o texto `&quot;` é decodificado pelo navegador de volta para
+aspas de verdade, fecha a string e executa o que vier depois — verificado, era
+explorável. O JSON inteiro passa por `esc()`, que trata o `&` primeiro.
+
+`maxlength="60"` nos 15 campos de texto livre reduz a superfície, mas **não é
+defesa**: o dado também chega pela nuvem, sem passar por input nenhum. Quem
+protege é o `esc()`.
 
 ---
 
@@ -302,7 +333,7 @@ app com um conjunto de dados fictício e coerente e fotografa cada tela. Mudou a
 interface, roda de novo — assim a landing nunca mostra uma versão que não
 existe mais.
 
-`VERSAO` (`28.0`) aparece em seis lugares, todos preenchidos por
+`VERSAO` (`28.1`) aparece em seis lugares, todos preenchidos por
 `pintarVersao()` no boot: splash de abertura, tela de login e splash interna
 (as três logo abaixo de "seu copiloto financeiro"), rodapé da landing, menu
 lateral e ⚙ Configurações → Aplicativo. Ver regra 2.7.
@@ -636,7 +667,7 @@ Repetição no bot: aviso de **data** dedupe por dia; aviso de **estado** dedupe
 | Onde | Comando | Cobre |
 |---|---|---|
 | Bot | `node alertas.test.js` | 39 casos: conteúdo dos avisos, dedupe, janelas de horário, fuso |
-| App | Playwright (fora do repo) | abas+acabamento (57), negócio/estoque (59), perfis (58), beta (57), lote (38), UX (37), landing (36), avisos (24), versão (20), notificações (20), assets/service worker (17), fonte (13) |
+| App | Playwright (fora do repo) | XSS: payload nas telas, nos modais, no atributo e texto normal sem escape duplo (11), abas+acabamento (57), negócio/estoque (59), perfis (58), beta (57), lote (38), UX (37), landing (36), avisos (24), versão (20), notificações (20), assets/service worker (17), fonte (13) |
 
 O app não tem suíte versionada. Os testes foram escritos em Playwright apontando para o `index.html` local, injetando dados no `localStorage` e chamando `entrarOffline()` para pular o login.
 
