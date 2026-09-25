@@ -1,0 +1,20 @@
+{
+  "name": "vigia-bot",
+  "version": "1.0.0",
+  "description": "Bot WhatsApp para o app Vigia de finanças pessoais",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test tests/"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "firebase-admin": "^12.3.0",
+    "qrcode-terminal": "^0.12.0",
+    "pino": "^9.4.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18"
+  }
+}
