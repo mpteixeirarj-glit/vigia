@@ -5646,7 +5646,10 @@ async function alternarTipoNotif(t){
   await gravarNotificacoes();
 }
 function novoCodigo(){
-  return String(Math.floor(Math.random()*900000)+100000); // 6 dígitos, sem começar com 0
+  // crypto.getRandomValues() é CSPRNG — Math.random() não é adequado para código de segurança
+  var buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return String(100000 + (buf[0] % 900000));
 }
 async function gerarCodigoWhatsApp(){
   if(!uidAtual || !window.Vigia){ await vAlert('Entre na sua conta para vincular o WhatsApp.'); return; }
@@ -5804,7 +5807,7 @@ function atualizarDataAtual(){
    os dois iguais é de propósito: eram dois números para lembrar e o do sw já
    ficou para trás uma vez, o que deixa o usuário preso na versão velha.
    Subiu a versão aqui, sobe em sw.js — os dois na mesma linha de raciocínio. */
-var VERSAO='28.1';
+var VERSAO='28.2';
 
 /* Todo lugar que mostra a versão é preenchido daqui, no boot. Antes cada tela
    preenchia a sua na hora de abrir, e a do login nunca chegou a existir. */
