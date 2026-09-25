@@ -7,10 +7,13 @@ let db;
 
 function inicializar() {
   if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
-      databaseURL: process.env.FIREBASE_DATABASE_URL,
-    });
+    // Railway: SERVICE_ACCOUNT_JSON contém o JSON inteiro da service account.
+    // Local: GOOGLE_APPLICATION_CREDENTIALS aponta para o arquivo .json.
+    const credential = process.env.SERVICE_ACCOUNT_JSON
+      ? admin.credential.cert(JSON.parse(process.env.SERVICE_ACCOUNT_JSON))
+      : admin.credential.applicationDefault();
+
+    admin.initializeApp({ credential });
   }
   db = admin.firestore();
 }

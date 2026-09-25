@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "node index.js"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 5
+
+# Volume para persistir a sessão do WhatsApp entre deploys.
+# Configure em: Railway → seu serviço → Volumes → Mount Path: /app/auth_info_baileys
