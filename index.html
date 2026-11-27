@@ -857,6 +857,14 @@ body::before{
 .fonte-chips{margin-bottom:10px;}
 .fonte-chips .chip{display:flex;align-items:center;}
 .cfg-d{font-size:.76rem;color:var(--muted);line-height:1.5;margin-bottom:12px;}
+.nov-lista{max-height:62vh;overflow-y:auto;padding-right:4px;}
+.nov-v{border-top:1px solid var(--border);padding:10px 0;}
+.nov-v:first-child{border-top:0;padding-top:0;}
+.nov-cab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;font-family:var(--font-mono);}
+.nov-cab b{font-size:.82rem;}
+.nov-cab span{font-size:.7rem;color:var(--muted);}
+.nov-v.atual .nov-cab b{color:var(--green);}
+.nov-v ul{margin:0;padding-left:18px;font-size:.78rem;line-height:1.55;color:var(--text);}
 .wa-status{font-size:.8rem;background:var(--surf2);border:1px solid var(--border);
   border-radius:10px;padding:11px 13px;margin-bottom:12px;line-height:1.5;}
 .wa-status.on{border-color:var(--green);color:var(--green);}
@@ -2270,9 +2278,19 @@ onAuthStateChanged(auth, function(user){
     <div class="cfg-sec">
       <div class="cfg-t">Aplicativo</div>
       <div class="wa-status" style="margin-bottom:10px">Vigia <b id="cfgVersao">—</b></div>
+      <button class="ba" style="width:100%;margin-bottom:8px;" onclick="abrirNovidades()">📋 Novidades e versões</button>
       <button class="ba" style="width:100%;margin-bottom:8px;" onclick="instalarApp()">⬇ Instalar app</button>
       <button class="ba del" style="width:100%;" onclick="confirmarSair()">⏻ Sair da conta</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL NOVIDADES E VERSÕES -->
+<div class="ov" id="ovNovidades" onclick="fecharFora(event,'ovNovidades')">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-t"><span>Novidades e versões</span><button class="md-x" onclick="fechar('ovNovidades')">✕</button></div>
+    <div class="cfg-d">Versão instalada: <b id="novAtual">—</b>. Tudo o que mudou no Vigia, da mais nova para a mais antiga.</div>
+    <div id="novLista" class="nov-lista"></div>
   </div>
 </div>
 
@@ -5807,7 +5825,142 @@ function atualizarDataAtual(){
    os dois iguais é de propósito: eram dois números para lembrar e o do sw já
    ficou para trás uma vez, o que deixa o usuário preso na versão velha.
    Subiu a versão aqui, sobe em sw.js — os dois na mesma linha de raciocínio. */
-var VERSAO='28.2';
+var VERSAO='29.0';
+/* Histórico de versões, mostrado em Configurações → Aplicativo → Novidades e versões.
+   A CADA mudança: suba VERSAO (e o CACHE do sw.js) e acrescente uma entrada NO TOPO,
+   em linguagem simples, um item por mudança que quem usa consegue perceber.
+   Até a v27 o número existia só no cache do app (vigia-v2 … vigia-v27); as entradas
+   antigas foram reconstruídas do histórico do git em 27/11/2026. */
+var NOVIDADES=[
+  {v:'29.0', data:'27/11/2026', itens:[
+    'Novidades e versões: o histórico completo do app em Configurações → Aplicativo'
+  ]},
+  {v:'28.2', data:'25/09/2026', itens:[
+    'Segurança: o código de vínculo do WhatsApp agora é sorteado com gerador criptográfico',
+    'Bot do WhatsApp: primeira estrutura, com limpeza do texto recebido',
+    'Bot do WhatsApp: servidor configurado com as credenciais guardadas fora do código'
+  ]},
+  {v:'28.1', data:'25/09/2026', itens:[
+    'Segurança: nada do que você digita (nomes, descrições) consegue mais virar código na tela'
+  ]},
+  {v:'28.0', data:'24/09/2026', itens:[
+    'Abas dos cartões roláveis e acabamento visual'
+  ]},
+  {v:'27.2', data:'17/08/2026', itens:[
+    'O logo deixou de depender da internet'
+  ]},
+  {v:'27.1', data:'15/08/2026', itens:[
+    'Versão do app à vista na tela de login',
+    'Botões do + sem o símbolo repetido'
+  ]},
+  {v:'27', data:'15/08/2026', itens:[
+    'Aba Negócio: estoque com histórico de preço',
+    'Todo lançamento passa a ser feito pelo +'
+  ]},
+  {v:'26', data:'14/08/2026', itens:[
+    'Perfil vendedor: calculadora de lote e custos de venda'
+  ]},
+  {v:'25', data:'14/08/2026', itens:[
+    'Fica visível o que ainda precisa da sua confirmação'
+  ]},
+  {v:'24', data:'13/08/2026', itens:[
+    'Página de apresentação com telas tiradas do app de verdade'
+  ]},
+  {v:'23', data:'13/08/2026', itens:[
+    'Página de apresentação para quem ainda não tem conta',
+    'Menu lateral no computador'
+  ]},
+  {v:'22', data:'13/08/2026', itens:[
+    'Contador do tempo de sessão no computador'
+  ]},
+  {v:'21', data:'13/08/2026', itens:[
+    'Sessão com prazo: sai após 15 minutos sem uso (com aviso 2 minutos antes) e ao fechar o app',
+    'Campo de dinheiro se formata enquanto você digita',
+    'Novo perfil: vendedor'
+  ]},
+  {v:'20', data:'05/08/2026', itens:[
+    'Avisos pelo WhatsApp configuráveis: liga/desliga, horários e tipos de aviso',
+    'Guia do usuário e documentação técnica',
+    'Envio automático dos avisos confirmado em funcionamento (06/08)'
+  ]},
+  {v:'19', data:'05/08/2026', itens:[
+    'Avisos de teto do cartão e de meta do cofrinho, com opção de adiar'
+  ]},
+  {v:'18', data:'05/08/2026', itens:[
+    'Texto maior no app inteiro, com o tamanho ajustável por você'
+  ]},
+  {v:'17', data:'05/08/2026', itens:[
+    'O perfil financeiro aparece no lançamento e no topo; escolher um perfil abre a seção Receitas'
+  ]},
+  {v:'16', data:'05/08/2026', itens:[
+    'Correção: encerrar um recebimento parcelado não apaga mais as parcelas já recebidas',
+    'O botão de ocultar valores também esconde os percentuais'
+  ]},
+  {v:'15', data:'05/08/2026', itens:[
+    'Perfis financeiros: CLT, autônomo e misto'
+  ]},
+  {v:'14', data:'04/08/2026', itens:[
+    'Tela de vínculo mostra o número do bot e abre a conversa no WhatsApp com o código pronto'
+  ]},
+  {v:'13', data:'04/08/2026', itens:[
+    'Plano de assinatura para lançar pelo WhatsApp (o app continua livre)',
+    'Regras de segurança da nuvem fechadas'
+  ]},
+  {v:'12', data:'04/08/2026', itens:[
+    'Configurações (⚙) com vínculo do WhatsApp por código de 6 dígitos',
+    '"Sair da conta" passou para dentro das Configurações'
+  ]},
+  {v:'11', data:'04/08/2026', itens:[
+    'Confirmações e avisos em janelas no visual do app (sem as caixas cinza do navegador)'
+  ]},
+  {v:'10', data:'04/08/2026', itens:[
+    'Abertura animada e introdução em 3 telas',
+    'Botão de olho para ocultar os valores'
+  ]},
+  {v:'9', data:'03/08/2026', itens:[
+    'Imagens reais dos cartões; cartões personalizáveis (10 cores, banco, titular e bandeira)',
+    'Seções da tela Início começam recolhidas, com o total sempre à vista',
+    'Saudação no topo e cofrinho no resumo',
+    'Novo subtítulo: Assistente Financeiro'
+  ]},
+  {v:'8', data:'01/08/2026', itens:[
+    'Carteira de investimentos de verdade, no lugar de "Reserva & Investimentos"'
+  ]},
+  {v:'7', data:'01/08/2026', itens:[
+    'Cofrinhos: meta e depósito automático'
+  ]},
+  {v:'6', data:'31/07/2026', itens:[
+    'Despesas fixas e parcelamentos viram categorias que você cadastra (dados antigos migrados)'
+  ]},
+  {v:'5', data:'31/07/2026', itens:[
+    'Correção de segurança: os dados de cada conta ficam separados no mesmo aparelho'
+  ]},
+  {v:'4', data:'31/07/2026', itens:[
+    'Login com Google ou e-mail e dados guardados na nuvem'
+  ]},
+  {v:'3', data:'31/07/2026', itens:[
+    'Painel com três tipos de item: sempre ativo, a confirmar e consumo livre'
+  ]},
+  {v:'2', data:'31/07/2026', itens:[
+    'Topo reorganizado: data de hoje à esquerda, mês à direita',
+    'Instalar o app tocando no logo, no topo ou na abertura'
+  ]},
+  {v:'1', data:'31/07/2026', itens:[
+    'Primeira versão publicada'
+  ]}
+];
+
+function abrirNovidades(){
+  var h='';
+  NOVIDADES.forEach(function(n,i){
+    h+='<div class="nov-v'+(i===0?' atual':'')+'"><div class="nov-cab"><b>v'+esc(n.v)+'</b><span>'+esc(n.data)+'</span></div><ul>'+
+      n.itens.map(function(t){ return '<li>'+esc(t)+'</li>'; }).join('')+'</ul></div>';
+  });
+  document.getElementById('novLista').innerHTML=h;
+  document.getElementById('novAtual').textContent='v'+VERSAO;
+  document.getElementById('ovNovidades').classList.add('on');
+}
+
 
 /* Todo lugar que mostra a versão é preenchido daqui, no boot. Antes cada tela
    preenchia a sua na hora de abrir, e a do login nunca chegou a existir. */
