@@ -916,6 +916,171 @@ body::before{
 .pop-n{font-size:.88rem;font-weight:500;}
 .pop-s{font-size:.68rem;color:var(--muted);margin-top:2px;}
 .pop-v{font-family:var(--font-mono);font-size:.88rem;font-weight:700;white-space:nowrap;}
+
+/* ══════ VISUAL PIXEL (v30) ══════
+   Mesmo visual do Vigia Energy e do Vigia Auto: fundo escuro, ciano/amarelo,
+   bordas de 2px, nenhum canto arredondado e fonte pixel SÓ nos títulos (os
+   números e o texto corrido continuam em fonte normal, que é o que se lê).
+   Fica no fim do <style> de propósito: é uma camada por cima das regras
+   antigas, sem mexer no comportamento delas. Ícones e imagens são os mesmos
+   do Financeiro (ícone do app, olhos, fotos dos cartões). */
+@font-face{
+  font-family:'Vigia Pixel';
+  src:url('fontes/vigia-pixel.woff2') format('woff2');
+  font-weight:400; font-style:normal; font-display:swap;
+}
+:root{
+  --bg:#0b0d14;--surf:#12151f;--surf2:#161a26;--border:#1e2535;
+  --green:#39ff7a;--green-d:rgba(57,255,122,.10);
+  --red:#ff4444;--red-d:rgba(255,68,68,.12);
+  --yellow:#ffd700;--yellow-d:rgba(255,215,0,.10);
+  --blue:#3d8bff;--blue-d:rgba(61,139,255,.12);
+  --purple:#b77dff;--purple-d:rgba(183,125,255,.13);
+  --ciano:#00e5ff;--ciano-d:rgba(0,229,255,.10);
+  --text:#e0e0e0;--muted:#7a8194;
+  --pixel:'Vigia Pixel',var(--font-mono);
+  --NAV:88px;
+}
+*,*::before,*::after{border-radius:0!important;}
+body{background:var(--bg);}
+body::before{display:none;}
+.it,.anu,.cv-img-container,.fab,.md{box-shadow:none;}
+.hero-v.pos,.hero-v.neg{text-shadow:none;}
+
+/* Títulos em fonte pixel. Tamanhos em rem: acompanham o "Tamanho do texto". */
+.logo-txt,.sp-nome,#bootNome,.md-t,.cfg-t,.tl-t,.hero-l,.sec-t,.bn,.pag-t,.sb-logo span,
+.cal-tit,.sec-subtitle,.perfil-kicker{
+  font-family:var(--pixel)!important;font-weight:400!important;letter-spacing:.03em;
+  text-transform:uppercase;}   /* a fonte pixel só tem maiúsculas acentuadas */
+.md-t,.pag-t{font-size:.62rem;line-height:1.6;color:var(--ciano);}
+.cfg-t{font-size:.5rem;line-height:1.7;color:var(--amarelo,var(--yellow));}
+.tl-t{font-size:.55rem;line-height:1.6;color:var(--ciano);}
+.hero-l{font-size:.5rem;line-height:1.6;letter-spacing:.06em;}
+.sec-t{font-size:.5rem;line-height:1.7;}
+.sec-subtitle{font-size:.48rem;line-height:1.7;}
+#bootNome,.sp-nome{color:var(--ciano);}
+
+/* Bordas de 2px, como nos outros Vigias */
+.tc,.it,.anu,.md,.wa-status,.perfil-card,.neg-card,.avi,.cbx,.al,.chip,.ba,.tab,.tab-add,
+.mesctrl button,.sessao-timer,.sb-user,.sb-item,.fd input,.fd select,.wa-codigo,.login-email-form input,
+.lp-passo,.lp-perfil,#bannerPend,#dicaConfirmar,.tgl button{border-width:2px;}
+.it{border-left-width:4px;}
+.md{border-color:var(--ciano);}
+.fd input:focus,.fd select:focus{border-color:var(--ciano);}
+.chip.on{background:var(--ciano-d);border-color:var(--ciano);color:var(--ciano);}
+.tab.on{background:var(--ciano-d);border-color:var(--ciano);color:var(--ciano);}
+.bok{background:var(--ciano);color:var(--bg);border:2px solid var(--ciano);
+  font-family:var(--pixel);font-weight:400;font-size:.52rem;line-height:1.6;text-transform:uppercase;letter-spacing:.03em;}
+.bok:active,.ba:active,.fab:active,.cal-nav2:active{transform:translate(2px,2px);}
+.ba{font-family:var(--font-mono);}
+.wa-status.on{border-color:var(--ciano);color:var(--ciano);}
+.cbx b{color:var(--ciano);}
+.nov-v.atual .nov-cab b{color:var(--ciano);}
+.wa-codigo{color:var(--ciano);border:2px dashed var(--ciano);}
+
+/* ── Topo em duas linhas (igual aos outros Vigias) ── */
+.topnav{flex-direction:column;align-items:stretch;justify-content:flex-start;padding:0 12px;
+  border-bottom:2px solid var(--border);}
+.tn1{display:flex;align-items:center;gap:8px;height:46px;min-width:0;}
+.tn2{display:flex;align-items:center;justify-content:space-between;gap:8px;height:40px;min-width:0;}
+.tn2>*{flex:none;}
+.tn2 .topnav-esq{flex:1 1 auto;min-width:0;}
+.logo{color:var(--ciano);min-width:0;}
+.logo img{width:28px;height:28px;}
+.logo-txt{display:inline!important;font-size:.62rem;color:var(--ciano);white-space:nowrap;}
+.logo-txt b{color:var(--yellow);font-weight:400;}
+.tn1 .esp{margin-left:auto;}
+.sync{background:none;border:0;font-size:1rem;line-height:1;padding:4px 6px;cursor:pointer;
+  min-width:30px;color:var(--ciano);-webkit-tap-highlight-color:transparent;}
+.sync.salvando{animation:girar 1s steps(8) infinite;color:var(--muted);}
+.sync.offline{color:var(--muted);}
+.sync.erro{color:var(--red);}
+@keyframes girar{to{transform:rotate(360deg);}}
+@media (prefers-reduced-motion:reduce){ .sync.salvando{animation:none;} }
+.hub-btn{font-family:var(--pixel);font-size:.45rem;color:var(--yellow);border:2px solid var(--yellow);
+  padding:6px 8px;text-decoration:none;white-space:nowrap;line-height:1;}
+.hub-btn:active{background:var(--yellow);color:var(--bg);}
+.data-atual{display:inline-block;color:var(--muted);}
+.mesctrl button{background:var(--bg);border-color:var(--border);}
+.mesctrl .lbl{min-width:0;padding:0 2px;white-space:nowrap;}
+@media (max-width:359px){ .logo-txt{font-size:.5rem;} .logo img{width:24px;height:24px;} .mesctrl{gap:3px;} }
+@media (max-width:430px){ .data-atual{display:none;} }
+
+/* ── Menu inferior: agora com a aba Config ── */
+.botnav{border-top:2px solid var(--border);background:var(--bg);}
+.bn{flex:1 1 0;min-width:0;padding:6px 2px;font-size:.42rem;line-height:1.5;gap:5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bn.active{color:var(--ciano);box-shadow:inset 0 3px 0 var(--ciano);}
+.bn-i{font-family:var(--font-mono);font-size:1.05rem;}
+.fab{background:var(--ciano);color:var(--bg);border:2px solid var(--ciano);font-family:var(--pixel);font-size:1.1rem;}
+.sb-logo{color:var(--ciano);}
+.sb-item.ativo{border-color:var(--ciano);color:var(--ciano);background:var(--ciano-d);}
+/* Perfil vendedor = 6 abas: num celular estreito o nome em fonte pixel não cabe
+   (cortava "HISTÓRICO"); ali os nomes passam para a fonte mono, mais estreita. */
+@media (max-width:400px){
+  .botnav:has(#bnNegocio:not([style*="none"])) .bn{font-family:var(--font-mono)!important;font-size:.5rem;letter-spacing:0;}
+}
+
+/* ── Tela Config (era uma janela por cima; virou aba) ── */
+.cfg-pag{padding:18px 16px 8px;max-width:620px;margin:0 auto;}
+.pag-t{margin-bottom:18px;}
+.conta-card{display:flex;align-items:center;gap:12px;background:var(--surf);border:2px solid var(--border);padding:12px;margin-bottom:10px;}
+.conta-av{width:42px;height:42px;flex:none;display:flex;align-items:center;justify-content:center;
+  background:var(--ciano-d);border:2px solid var(--ciano);color:var(--ciano);font-family:var(--pixel);font-size:.7rem;overflow:hidden;}
+.conta-av img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated;}
+.conta-txt{min-width:0;display:flex;flex-direction:column;gap:3px;}
+.conta-txt b{font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.conta-txt span{font-size:.74rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.conta-nuvem{font-family:var(--font-mono);font-size:.76rem;color:var(--ciano);margin:4px 0 10px;line-height:1.5;}
+.conta-nuvem.erro{color:var(--red);} .conta-nuvem.offline{color:var(--muted);}
+.conta-pend{font-size:.74rem;color:var(--yellow);margin:-4px 0 10px;line-height:1.5;}
+.conta-pend:empty{display:none;}
+.conta-sair{width:100%;margin-top:8px;padding:12px 0;color:var(--red);border-color:var(--red);}
+.conta-sair:active{background:var(--red);color:var(--bg);}
+.btn-hub{display:block;text-align:center;text-decoration:none;width:100%;padding:12px 0;margin-top:8px;}
+
+/* ── Agenda (calendário no estilo do Vigia Energy) ── */
+.ag{padding:14px 12px 0;max-width:620px;margin:0 auto;}
+.ag-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.cal-nav2{width:40px;height:40px;flex:none;background:var(--bg);color:var(--ciano);border:2px solid var(--ciano);
+  font-family:var(--font-mono);font-size:1.1rem;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.cal-tit{flex:1;min-width:0;text-align:center;font-size:.62rem;line-height:1.6;color:var(--ciano);}
+.cal-hoje{display:block;margin:4px auto 0;background:none;border:0;color:var(--yellow);
+  font-family:var(--pixel);font-size:.42rem;cursor:pointer;padding:3px 4px;text-decoration:underline;}
+.ag-resumo{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);text-align:center;margin-bottom:10px;line-height:1.6;}
+.ag-resumo b{font-weight:700;} .ag-resumo .gr{color:var(--green);} .ag-resumo .rd{color:var(--red);} .ag-resumo .yl{color:var(--yellow);}
+.cal2{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}
+.cal2 .dw{font-family:var(--pixel);font-size:.38rem;color:var(--muted);text-align:center;padding:4px 0;}
+.cal2 .dia{aspect-ratio:1;min-height:40px;min-width:0;background:var(--bg);border:2px solid var(--border);color:var(--text);
+  cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:4px 1px;
+  font-family:var(--font-mono);font-size:.8rem;position:relative;-webkit-tap-highlight-color:transparent;}
+.cal2 .dia.fora{visibility:hidden;}
+.cal2 .dia.tem{background:var(--surf);}
+.cal2 .dia.pass{color:var(--muted);}
+.cal2 .dia.hoje{border-color:var(--yellow);color:var(--yellow);}
+.cal2 .dia.sel{background:var(--ciano);border-color:var(--ciano);color:var(--bg);}
+.cal2 .dia.atr::after{content:'';position:absolute;top:2px;right:2px;width:6px;height:6px;background:var(--red);}
+.cal2 .mk{display:flex;gap:2px;justify-content:center;min-height:7px;}
+.cal2 .mk i{width:7px;height:7px;display:block;}
+.cal2 .mk i.oco{background:transparent!important;box-shadow:inset 0 0 0 2px currentColor;}
+@media (max-width:359px){ .cal2{gap:2px;} .cal2 .dia{min-height:34px;font-size:.7rem;} .cal2 .mk i{width:5px;height:5px;} }
+.leg2{display:flex;gap:6px 12px;flex-wrap:wrap;justify-content:center;margin:10px 0 4px;}
+.leg2 span{display:flex;align-items:center;gap:5px;font-size:.68rem;color:var(--muted);}
+.leg2 i{width:8px;height:8px;display:block;}
+.leg2 i.oco{background:transparent!important;box-shadow:inset 0 0 0 2px var(--muted);}
+.leg2 i.atr{background:var(--red);width:6px;height:6px;}
+.ag-painel{border:2px solid var(--ciano);background:var(--bg);padding:12px;margin-top:12px;animation:desliza .18s steps(3);}
+@keyframes desliza{from{transform:translateY(-6px);opacity:0;}to{transform:none;opacity:1;}}
+@media (prefers-reduced-motion:reduce){ .ag-painel{animation:none;} }
+.ag-painel-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
+.ag-painel-top h3{font-family:var(--pixel);font-weight:400;font-size:.5rem;line-height:1.7;color:var(--yellow);}
+.ag-x{background:none;border:2px solid var(--border);color:var(--muted);width:32px;height:32px;cursor:pointer;font-size:.9rem;}
+.ag .tl-t{padding:20px 0 10px;}
+.ag-filtros{margin-bottom:12px;}
+.ag-filtros .chip{padding:6px 10px;font-size:.68rem;}
+.ag .tl-g{margin:0 0 14px;}
+.ag .tl-g.pass{opacity:.55;}
+.tl-d .hj{font-family:var(--pixel);font-size:.4rem;color:var(--bg);background:var(--yellow);padding:3px 5px;letter-spacing:0;}
 </style>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -1002,9 +1167,11 @@ window.Vigia = {
       return snap.exists() ? snap.data() : null;
     }catch(e){ console.warn('[Vigia] Falha ao ler o Firestore, seguindo com o cache local.', e); return undefined; }
   },
+  /* true = a nuvem confirmou; false = recusou (regras, cota…). Sem internet a
+     promessa fica esperando: o Firestore reenvia sozinho ao reconectar. */
   async salvarNuvem(uid,dados){
-    try{ await setDoc(docPrincipal(uid), dados, {merge:false}); }
-    catch(e){ console.warn('[Vigia] Falha ao salvar no Firestore (fica só local por enquanto).', e); }
+    try{ await setDoc(docPrincipal(uid), dados, {merge:false}); return true; }
+    catch(e){ console.warn('[Vigia] Falha ao salvar no Firestore (fica só local por enquanto).', e); return false; }
   },
   assinarNuvem(uid,callback){
     if(unsubSnapshot) unsubSnapshot();
@@ -1463,33 +1630,39 @@ onAuthStateChanged(auth, function(user){
     <button class="sb-item" data-tela="cartoes"   onclick="irDesktop('cartoes')"><span>▤</span>Cartões</button>
     <button class="sb-item" data-tela="negocio"   id="sbNegocio" onclick="irDesktop('negocio')" style="display:none"><span>◎</span>Negócio</button>
     <button class="sb-item" data-tela="historico" onclick="irDesktop('historico')"><span>◈</span>Histórico</button>
+    <button class="sb-item" data-tela="config"    onclick="abrirConfig()"><span>⚙</span>Config</button>
   </nav>
 
   <div class="sb-rodape">
     <button class="sb-item" onclick="abrirLanc()"><span>+</span>Novo lançamento</button>
-    <button class="sb-item" onclick="abrirConfig()"><span>⚙</span>Configurações</button>
+    <a class="sb-item" href="https://mpteixeirarj-glit.github.io/Vigia-energy-/" style="text-decoration:none"><span>⌂</span>HUB dos Vigias</a>
     <div class="sb-versao">Vigia <span id="sbVersao">—</span></div>
   </div>
 </aside>
 
 <div class="topnav">
-  <div class="topnav-esq">
-    <div class="logo" onclick="instalarApp()"><img src="icon-192.png" onerror="this.style.display='none'" alt=""><span class="logo-txt">VIGIA</span></div>
-    <button class="data-atual" id="dataAtual" onclick="voltarHoje()">—</button>
-    <button class="sessao-timer" id="sessaoTimer" onclick="continuarSessao()"
-      title="Tempo restante da sessão. Clique para renovar.">—</button>
+  <div class="tn1">
+    <div class="logo" onclick="instalarApp()" title="Instalar o app"><img src="icon-192.png" onerror="this.style.display='none'" alt=""><span class="logo-txt">VIGIA <b>FINANCEIRO</b></span></div>
+    <button type="button" class="sync esp" id="syncStatus" onclick="abrirConfig()" title="Nuvem">☁</button>
+    <a class="hub-btn" href="https://mpteixeirarj-glit.github.io/Vigia-energy-/" title="Voltar ao hub dos apps Vigia">HUB</a>
   </div>
-  <div class="mesctrl">
-    <button onclick="navMes(-1)">‹</button>
-    <div class="lbl" id="mesLbl">—</div>
-    <button onclick="navMes(1)">›</button>
-    <button id="btnAvisos" onclick="abrirAvisos()" title="Avisos de teto e meta">
-      🔔<span class="sino-badge" id="sinoBadge">0</span>
-    </button>
-    <button id="btnOlho" onclick="toggleValores()" title="Ocultar valores">
-      <img id="icoOlho" src="olho-aberto.png" alt="Ocultar valores">
-    </button>
-    <button class="btn-sair" onclick="abrirConfig()" title="Configurações">⚙</button>
+  <div class="tn2">
+    <div class="topnav-esq">
+      <button class="data-atual" id="dataAtual" onclick="voltarHoje()">—</button>
+      <button class="sessao-timer" id="sessaoTimer" onclick="continuarSessao()"
+        title="Tempo restante da sessão. Clique para renovar.">—</button>
+    </div>
+    <div class="mesctrl">
+      <button onclick="navMes(-1)" aria-label="Mês anterior">‹</button>
+      <div class="lbl" id="mesLbl">—</div>
+      <button onclick="navMes(1)" aria-label="Próximo mês">›</button>
+      <button id="btnAvisos" onclick="abrirAvisos()" title="Avisos de teto e meta">
+        🔔<span class="sino-badge" id="sinoBadge">0</span>
+      </button>
+      <button id="btnOlho" onclick="toggleValores()" title="Ocultar valores">
+        <img id="icoOlho" src="olho-aberto.png" alt="Ocultar valores">
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1604,26 +1777,28 @@ onAuthStateChanged(auth, function(user){
 
 <!-- ═══ AGENDA ═══ -->
 <div class="tela" id="t-agenda">
-  <div class="cal-h">
-    <div class="cal-m" id="calM">—</div>
-    <div class="cal-nav">
-      <button onclick="navMes(-1)">‹</button>
-      <button onclick="navMes(1)">›</button>
+  <div class="ag">
+    <div class="ag-top">
+      <button type="button" class="cal-nav2" onclick="navMes(-1)" aria-label="Mês anterior">‹</button>
+      <div class="cal-tit"><span id="calM">—</span><button type="button" class="cal-hoje" id="calHoje" onclick="voltarHoje()">VOLTAR A HOJE</button></div>
+      <button type="button" class="cal-nav2" onclick="navMes(1)" aria-label="Próximo mês">›</button>
     </div>
+    <div class="ag-resumo" id="agResumo"></div>
+    <div class="cal2" id="calGrade"></div>
+    <div class="leg2">
+      <span><i style="background:var(--green)"></i>Receita</span>
+      <span><i style="background:var(--red)"></i>Despesa</span>
+      <span><i style="background:var(--yellow)"></i>Parcela</span>
+      <span><i style="background:var(--blue)"></i>Reserva</span>
+      <span><i style="background:var(--purple)"></i>Cofrinho</span>
+      <span><i class="oco"></i>A confirmar</span>
+      <span><i class="atr"></i>Atrasado</span>
+    </div>
+    <div id="agPainel"></div>
+    <div class="tl-t">Vencimentos do mês</div>
+    <div class="chips ag-filtros" id="agFiltros"></div>
+    <div id="tline"></div>
   </div>
-  <div class="leg">
-    <div class="leg-i"><div class="leg-d" style="background:var(--green)"></div>Receita</div>
-    <div class="leg-i"><div class="leg-d" style="background:var(--red)"></div>Despesa</div>
-    <div class="leg-i"><div class="leg-d" style="background:var(--yellow)"></div>Parcelamento</div>
-    <div class="leg-i"><div class="leg-d" style="background:var(--blue)"></div>Reserva</div>
-    <div class="leg-i"><div class="leg-d" style="background:var(--purple)"></div>Cofrinho</div>
-  </div>
-  <div class="cal-w">
-    <div class="cal-g" id="calDw"></div>
-    <div class="cal-g" id="calDs"></div>
-  </div>
-  <div class="tl-t">Vencimentos do mês</div>
-  <div id="tline"></div>
 </div>
 
 <!-- ═══ CARTÕES ═══ -->
@@ -1801,6 +1976,7 @@ onAuthStateChanged(auth, function(user){
   <button class="bn" onclick="ir('cartoes',this)"><span class="bn-i">▤</span>cartões</button>
   <button class="bn" id="bnNegocio" onclick="ir('negocio',this)" style="display:none"><span class="bn-i">◎</span>negócio</button>
   <button class="bn" onclick="ir('historico',this)"><span class="bn-i">◈</span>histórico</button>
+  <button class="bn" id="bnConfig" onclick="abrirConfig()"><span class="bn-i">⚙</span>config</button>
 </div>
 
 <!-- MODAL LANÇAMENTO -->
@@ -2199,9 +2375,23 @@ onAuthStateChanged(auth, function(user){
 </div>
 
 <!-- MODAL CONFIGURAÇÕES -->
-<div class="ov" id="ovConfig" onclick="fecharFora(event,'ovConfig')">
-  <div class="md" onclick="event.stopPropagation()">
-    <div class="md-t">Configurações<button class="md-x" onclick="fechar('ovConfig')">✕</button></div>
+<!-- ═══ CONFIG (aba do menu inferior desde a v30; antes era uma janela) ═══ -->
+<div class="tela" id="t-config">
+  <div class="cfg-pag">
+    <div class="pag-t">Configurações</div>
+
+    <div class="cfg-sec">
+      <div class="cfg-t">Conta e nuvem</div>
+      <div class="conta-card">
+        <div class="conta-av" id="contaAv">—</div>
+        <div class="conta-txt"><b id="contaNome">—</b><span id="contaEmail">—</span></div>
+      </div>
+      <div class="conta-nuvem" id="contaNuvem">—</div>
+      <div class="conta-pend" id="contaPend"></div>
+      <button class="bok" onclick="sincronizarAgora()">⟳ Sincronizar agora</button>
+      <button class="ba del conta-sair" onclick="confirmarSair()">⏻ Sair da conta</button>
+      <a class="ba btn-hub" href="https://mpteixeirarj-glit.github.io/Vigia-energy-/">⌂ Voltar ao HUB dos Vigias</a>
+    </div>
 
     <div class="cfg-sec">
       <div class="cfg-t">Tamanho do texto</div>
@@ -2279,8 +2469,7 @@ onAuthStateChanged(auth, function(user){
       <div class="cfg-t">Aplicativo</div>
       <div class="wa-status" style="margin-bottom:10px">Vigia <b id="cfgVersao">—</b></div>
       <button class="ba" style="width:100%;margin-bottom:8px;" onclick="abrirNovidades()">📋 Novidades e versões</button>
-      <button class="ba" style="width:100%;margin-bottom:8px;" onclick="instalarApp()">⬇ Instalar app</button>
-      <button class="ba del" style="width:100%;" onclick="confirmarSair()">⏻ Sair da conta</button>
+      <button class="ba" style="width:100%;" onclick="instalarApp()">⬇ Instalar app</button>
     </div>
   </div>
 </div>
@@ -2743,9 +2932,146 @@ function getD(){
 }
 function salvarLocal(d){ try{ localStorage.setItem(chaveLocal(uidAtual),JSON.stringify(d)); }catch(e){} }
 function salvar(d){
+  if(uidAtual){ d._salvoEm=Date.now(); d._salvoPor=idAparelho(); }
   salvarLocal(d);
-  if(uidAtual && window.Vigia) window.Vigia.salvarNuvem(uidAtual,d);
+  if(uidAtual) enviarNuvem(d);
 }
+
+/* ══════ NUVEM: indicador ☁, "Sincronizar agora" e mudanças feitas sem internet (v30) ══════
+   dados/principal continua sendo gravado INTEIRO (regra 2.1). O que muda:
+   · cada salvamento leva _salvoEm (quando) e _salvoPor (qual aparelho);
+   · enquanto a nuvem não confirma, este aparelho guarda "pendente desde" em
+     vigia_pendente_<uid>. Antes, quem lançava sem internet e fechava o app
+     perdia o lançamento: na abertura seguinte a cópia da nuvem sobrescrevia
+     a deste aparelho sem perguntar. */
+var NUVEM={estado:'ok',ultimo:0,seq:0,emVoo:0};
+var usuarioAtual=null;
+var URL_HUB='https://mpteixeirarj-glit.github.io/Vigia-energy-/';
+function idAparelho(){
+  try{
+    var a=localStorage.getItem('vigia_aparelho');
+    if(!a){ a=Math.random().toString(36).slice(2,10)+Date.now().toString(36); localStorage.setItem('vigia_aparelho',a); }
+    return a;
+  }catch(e){ return 'sem-id'; }
+}
+function chavePendente(uid){ return 'vigia_pendente_'+uid; }
+function lerPendente(uid){ try{ return Number(localStorage.getItem(chavePendente(uid)))||0; }catch(e){ return 0; } }
+function marcarPendente(uid){ try{ if(!lerPendente(uid)) localStorage.setItem(chavePendente(uid),String(Date.now())); }catch(e){} }
+function limparPendente(uid){ try{ localStorage.removeItem(chavePendente(uid)); }catch(e){} }
+function temLocal(uid){ try{ return localStorage.getItem(chaveLocal(uid))!==null; }catch(e){ return false; } }
+function horaCurta(ts){ var d=new Date(ts); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function dataHoraCurta(ts){ var d=new Date(ts); return d.toLocaleDateString('pt-BR')+' às '+horaCurta(ts); }
+
+/* Envia o objeto inteiro. Resolve true quando a nuvem confirmou. Sem internet
+   o Firestore segura a promessa até reconectar (e reenvia sozinho). */
+function enviarNuvem(d){
+  var uid=uidAtual;
+  if(!uid) return Promise.resolve(false);
+  marcarPendente(uid);
+  if(!window.Vigia){ pintarNuvem('offline'); return Promise.resolve(false); }
+  var seq=++NUVEM.seq;
+  NUVEM.emVoo++;
+  pintarNuvem(navigator.onLine===false?'offline':'salvando');
+  return window.Vigia.salvarNuvem(uid,d).then(function(ok){
+    NUVEM.emVoo=Math.max(0,NUVEM.emVoo-1);
+    if(uid!==uidAtual || seq!==NUVEM.seq) return ok;   // já existe um envio mais novo
+    if(ok){ limparPendente(uid); NUVEM.ultimo=Date.now(); pintarNuvem('ok'); }
+    else pintarNuvem('erro');
+    return ok;
+  });
+}
+
+function textoNuvem(){
+  var e=NUVEM.estado;
+  if(e==='salvando') return ['⟳','Salvando na nuvem…'];
+  if(e==='offline') return ['📵','Sem internet: fica salvo neste aparelho e vai para a nuvem ao reconectar'];
+  if(e==='erro') return ['⚠','A nuvem recusou o último envio. Toque em Sincronizar agora.'];
+  return ['☁',NUVEM.ultimo?'Sincronizado às '+horaCurta(NUVEM.ultimo):'Conectado à nuvem'];
+}
+function pintarNuvem(estado){
+  if(estado) NUVEM.estado=estado;
+  var t=textoNuvem();
+  var el=document.getElementById('syncStatus');
+  if(el){ el.textContent=t[0]; el.title=t[1]; el.setAttribute('aria-label',t[1]); el.className='sync '+NUVEM.estado; }
+  var c=document.getElementById('contaNuvem');
+  if(c){ c.textContent=t[0]+' '+t[1]; c.className='conta-nuvem '+NUVEM.estado; }
+  var p=document.getElementById('contaPend');
+  if(p){
+    var desde=uidAtual?lerPendente(uidAtual):0;
+    p.textContent=desde&&NUVEM.estado!=='salvando'?'Há mudanças deste aparelho esperando para subir (desde '+dataHoraCurta(desde)+').':'';
+  }
+}
+window.addEventListener('online',function(){
+  if(!uidAtual) return;
+  if(lerPendente(uidAtual) && NUVEM.emVoo===0) sincronizarAgora(true);
+  else pintarNuvem(NUVEM.emVoo?'salvando':'ok');
+});
+window.addEventListener('offline',function(){ if(uidAtual) pintarNuvem('offline'); });
+
+function comPrazo(promessa,ms){
+  return Promise.race([promessa,new Promise(function(r){ setTimeout(function(){ r('prazo'); },ms); })]);
+}
+/* Com mudança pendente: envia a cópia deste aparelho. Sem pendência: baixa a
+   da nuvem (traz o que outro aparelho lançou). */
+async function sincronizarAgora(silencioso){
+  var uid=uidAtual;
+  if(!uid) return;
+  function aviso(m){ if(!silencioso) mostrarToast(m); }
+  if(!window.Vigia){ pintarNuvem('offline'); aviso('Sem conexão com a nuvem. Abra o app de novo com internet.'); return; }
+  if(lerPendente(uid)){
+    var r=await comPrazo(enviarNuvem(getD()),12000);
+    if(r==='prazo') aviso('Sem resposta da nuvem. Fica salvo aqui e sobe ao reconectar.');
+    else aviso(r?'Dados deste aparelho enviados ✓':'A nuvem recusou o envio. Tente de novo.');
+    return;
+  }
+  pintarNuvem('salvando');
+  var remoto=await comPrazo(window.Vigia.carregarNuvem(uid),12000);
+  if(uid!==uidAtual) return;
+  if(remoto==='prazo'||remoto===undefined){
+    pintarNuvem(navigator.onLine===false?'offline':'erro');
+    aviso('Não foi possível falar com a nuvem agora.'); return;
+  }
+  if(remoto && !lerPendente(uid)){ salvarLocal(remoto); renderTudo(); }
+  else if(remoto===null && temLocal(uid)){ enviarNuvem(getD()); }
+  NUVEM.ultimo=Date.now(); pintarNuvem('ok'); renderConta();
+  aviso('Sincronizado ✓');
+}
+
+/* Chegou versão nova da nuvem (outro aparelho salvou). */
+function aoMudarNuvem(remoto){
+  var uid=uidAtual;
+  if(!uid||!remoto) return;
+  if(lerPendente(uid)){
+    var local=getD();
+    if(remoto._salvoEm && remoto._salvoEm===local._salvoEm) return;   // é o que nós mesmos enviamos
+    if(NUVEM.emVoo>0) return;          // nosso envio ainda em curso vai prevalecer
+    enviarNuvem(local);                // mudança feita sem internet sobe agora
+    return;
+  }
+  salvarLocal(remoto);
+  NUVEM.ultimo=Date.now(); pintarNuvem('ok');
+  renderTudo();
+}
+
+/* ══════ CONTA E NUVEM (aba Config) ══════ */
+function renderConta(){
+  var u=usuarioAtual||{}, d=getD();
+  var email=u.email||'';
+  var nome=(u.displayName||d.nome||email.split('@')[0]||'Minha conta').trim();
+  var av=document.getElementById('contaAv');
+  if(!av) return;
+  document.getElementById('contaNome').textContent=nome;
+  document.getElementById('contaEmail').textContent=email||(uidAtual?'conta sem e-mail':'modo offline');
+  if(u.photoURL){
+    av.textContent='';
+    var img=document.createElement('img');
+    img.alt=''; img.referrerPolicy='no-referrer'; img.src=u.photoURL;
+    img.onerror=function(){ av.textContent=nome.charAt(0).toUpperCase(); };
+    av.appendChild(img);
+  } else av.textContent=nome.charAt(0).toUpperCase();
+  pintarNuvem();
+}
+
 
 function chaveM(m,a){ return a+'-'+String(m+1).padStart(2,'0'); }
 function getMes(d,m,a){
@@ -3841,7 +4167,9 @@ function faturaMes(cartao,m,a){
 /* ══════ AGENDA ══════ */
 function eventosMes(m,a){
   var d=getD(), mm=getMes(d,m,a), ev={}, conf=mm.confirmacoes;
-  function add(dia,o){ if(!dia)dia=30; if(!ev[dia])ev[dia]=[]; ev[dia].push(o); }
+  var fimMes=new Date(a,m+1,0).getDate();
+  /* dia 29–31 em mês mais curto vence no último dia (antes sumia da grade) */
+  function add(dia,o){ if(!dia)dia=30; if(dia>fimMes)dia=fimMes; if(!ev[dia])ev[dia]=[]; ev[dia].push(o); }
   function addTipo2(lista,tipo){
     lista.forEach(function(item){
       var c=conf[item.id], confirmado=!!(c&&c.confirmado);
@@ -3894,64 +4222,127 @@ var COR={rec:'var(--green)',desp:'var(--red)',prest:'var(--yellow)',res:'var(--b
 var CLS={rec:'gr',desp:'rd',prest:'yl',res:'bl',cof:'pp',fonte:''};
 var LBL={rec:'RECEITA',desp:'DESPESA',prest:'PARCELAMENTO',res:'RESERVA',cof:'COFRINHO',fonte:'FONTE'};
 
+/* ══════ AGENDA (v30: no estilo do calendário do Vigia Energy) ══════
+   Grade de quadradinhos com marcas por tipo (cheia = confirmado, vazada = a
+   confirmar), ponto vermelho em dia que já passou com algo a confirmar, painel
+   do dia aberto ali mesmo, resumo do mês e filtro da lista de vencimentos. */
+var agSel=null, agFiltro='todos';
+var AG_ORDEM=['rec','desp','prest','res','cof','fonte'];
+var AG_FILTROS=[['todos','Tudo'],['rec','Receitas'],['desp','Despesas'],['prest','Parcelas'],
+  ['res','Reserva'],['cof','Cofrinho'],['pend','A confirmar']];
+function agPassa(x){
+  if(agFiltro==='todos') return true;
+  if(agFiltro==='pend') return !!x.pend;
+  if(agFiltro==='desp') return x.t==='desp'||x.t==='fonte';
+  return x.t===agFiltro;
+}
+function agChave(dd){ return curA+'-'+curM+'-'+dd; }
+function agDia(dd){
+  agSel=agSel===agChave(dd)?null:agChave(dd);
+  renderAgenda();
+  if(agSel){ var p=document.getElementById('agPainel'); if(p&&p.scrollIntoView) p.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+}
+function agFechar(){ agSel=null; renderAgenda(); }
+function agSetFiltro(f){ agFiltro=f; renderAgenda(); }
+
+function htmlDia(lista){
+  if(!lista.length) return '<div class="vazio">Nenhum pagamento neste dia.</div>';
+  var h='', tRec=0, tDesp=0;
+  lista.forEach(function(x){
+    if(!x.pend && !x.semSaldo){ if(x.t==='rec') tRec+=x.v; else tDesp+=x.v; }
+    var tagExtra=x.pend?'<span class="tg cat" style="color:var(--muted)">A CONFIRMAR</span>':'';
+    h+='<div class="pop-i" style="opacity:'+(x.pend?.55:1)+'"><div><div class="pop-n"><span class="tg cat">'+LBL[x.t]+
+      '</span>'+esc(x.n)+tagExtra+'</div><div class="pop-s">'+esc(x.s)+'</div></div>'+
+      '<div class="pop-v '+CLS[x.t]+'" style="color:'+(x.pend?'var(--muted)':COR[x.t])+'">'+fmt(x.v)+'</div></div>';
+  });
+  h+='<div class="cbx" style="margin:12px 0 0">'+
+    (tRec>0?'Entra: <b>'+fmt(tRec)+'</b><br>':'')+
+    (tDesp>0?'Sai: <b style="color:var(--red)">'+fmt(tDesp)+'</b><br>':'')+
+    'Líquido do dia: <b>'+fmt(tRec-tDesp)+'</b></div>';
+  return h;
+}
+
 function renderAgenda(){
   var ev=eventosMes(curM,curA);
   var dow=new Date(curA,curM,1).getDay();
   var tot=new Date(curA,curM+1,0).getDate();
-  var ehHoje=curM===HOJE.getMonth()&&curA===HOJE.getFullYear();
-  document.getElementById('calM').innerHTML=MESL[curM]+
-    '<span>'+(ehHoje?DOWL[HOJE.getDay()]+' ':'')+curA+'</span>';
-  document.getElementById('calDw').innerHTML=DOW.map(function(x){
-    return '<div class="cal-dw">'+x+'</div>';}).join('');
-  var h='';
-  for(var i=0;i<dow;i++) h+='<div class="cal-d vz"></div>';
-  for(var dd=1;dd<=tot;dd++){
-    var isH=ehHoje&&dd===HOJE.getDate();
-    var lista=ev[dd]||[];
-    var cores=[];
-    lista.forEach(function(x){ var c=x.pend?'var(--muted)':COR[x.t]; if(cores.indexOf(c)<0) cores.push(c); });
-    var dots=cores.slice(0,4).map(function(c){
-      return '<i style="background:'+c+'"></i>';}).join('');
-    h+='<div class="cal-d'+(isH?' hj':'')+'" onclick="abrirDia('+dd+')">'+
-      '<div class="dn">'+dd+'</div><div class="dd">'+dots+'</div></div>';
-  }
-  document.getElementById('calDs').innerHTML=h;
+  var ehMes=curM===HOJE.getMonth()&&curA===HOJE.getFullYear();
+  var mesPassado=curA<HOJE.getFullYear()||(curA===HOJE.getFullYear()&&curM<HOJE.getMonth());
+  var hj=HOJE.getDate();
+  function jaPassou(dd){ return mesPassado||(ehMes&&dd<hj); }
 
+  document.getElementById('calM').textContent=MESF[curM].toUpperCase()+' '+curA;
+  document.getElementById('calHoje').style.visibility=ehMes?'hidden':'visible';
+
+  /* resumo do mês: mesma conta do painel do dia (confirmado entra no saldo) */
+  var tRec=0,tDesp=0,nPend=0;
+  Object.keys(ev).forEach(function(k){ ev[k].forEach(function(x){
+    if(x.pend){ nPend++; return; }
+    if(x.semSaldo) return;
+    if(x.t==='rec') tRec+=x.v; else tDesp+=x.v;
+  }); });
+  document.getElementById('agResumo').innerHTML='Entra <b class="gr">'+fmt(tRec)+'</b> · Sai <b class="rd">'+fmt(tDesp)+'</b>'+
+    (nPend?'<br><b class="yl">'+nPend+'</b> '+(nPend===1?'item':'itens')+' a confirmar':'');
+
+  var h=DOW.map(function(x){ return '<div class="dw">'+x.replace('.','')+'</div>'; }).join('');
+  for(var i=0;i<dow;i++) h+='<div class="dia fora" aria-hidden="true"></div>';
+  for(var dd=1;dd<=tot;dd++){
+    var lista=ev[dd]||[], tipos={}, atr=false;
+    lista.forEach(function(x){
+      var t=tipos[x.t]||(tipos[x.t]={n:0,pend:0});
+      t.n++; if(x.pend) t.pend++;
+      if(x.pend && jaPassou(dd)) atr=true;
+    });
+    var mk=AG_ORDEM.filter(function(t){ return tipos[t]; }).slice(0,4).map(function(t){
+      var todosPend=tipos[t].pend===tipos[t].n;
+      return '<i class="'+(todosPend?'oco':'')+'" style="background:'+COR[t]+';color:'+COR[t]+'"></i>';
+    }).join('');
+    var cls='dia'+(lista.length?' tem':'')+(ehMes&&dd===hj?' hoje':'')+(agSel===agChave(dd)?' sel':'')+
+      (jaPassou(dd)?' pass':'')+(atr?' atr':'');
+    h+='<button type="button" class="'+cls+'" onclick="agDia('+dd+')" aria-label="Dia '+dd+': '+lista.length+
+      ' '+(lista.length===1?'item':'itens')+(atr?', com item atrasado':'')+'"><span>'+dd+'</span><span class="mk">'+mk+'</span></button>';
+  }
+  document.getElementById('calGrade').innerHTML=h;
+
+  /* painel do dia selecionado */
+  var painel=document.getElementById('agPainel');
+  var selDia=null;
+  if(agSel){ var p=agSel.split('-'); if(+p[0]===curA&&+p[1]===curM) selDia=+p[2]; }
+  if(selDia){
+    var dt=new Date(curA,curM,selDia);
+    painel.innerHTML='<div class="ag-painel"><div class="ag-painel-top"><h3>'+DOWL[dt.getDay()].replace('.','').toUpperCase()+', '+
+      String(selDia).padStart(2,'0')+'/'+String(curM+1).padStart(2,'0')+'/'+curA+'</h3>'+
+      '<button type="button" class="ag-x" onclick="agFechar()" aria-label="Fechar">✕</button></div>'+htmlDia(ev[selDia]||[])+'</div>';
+  } else painel.innerHTML='';
+
+  /* filtros + lista do mês */
+  document.getElementById('agFiltros').innerHTML=AG_FILTROS.map(function(f){
+    return '<div class="chip'+(agFiltro===f[0]?' on':'')+'" onclick="agSetFiltro(\''+f[0]+'\')">'+f[1]+'</div>';
+  }).join('');
   var dias=Object.keys(ev).map(Number).sort(function(a,b){return a-b;});
   var tl='';
   dias.forEach(function(dd){
-    tl+='<div class="tl-g"><div class="tl-d">DIA '+String(dd).padStart(2,'0')+'</div>';
-    ev[dd].forEach(function(x){
-      tl+='<div class="it '+CLS[x.t]+'" style="opacity:'+(x.pend?.5:1)+'"><div class="it-t"><div class="it-n">'+
-        '<span class="tg cat">'+LBL[x.t]+'</span>'+esc(x.n)+(x.pend?'<span class="tg cat">PENDENTE</span>':'')+'</div>'+
+    var itens=ev[dd].filter(agPassa);
+    if(!itens.length) return;
+    var dt=new Date(curA,curM,dd);
+    tl+='<div class="tl-g'+(jaPassou(dd)?' pass':'')+'"><div class="tl-d">DIA '+String(dd).padStart(2,'0')+' · '+
+      DOW[dt.getDay()].replace('.','')+(ehMes&&dd===hj?' <span class="hj">HOJE</span>':'')+'</div>';
+    itens.forEach(function(x){
+      tl+='<div class="it '+CLS[x.t]+'" style="opacity:'+(x.pend?.55:1)+'"><div class="it-t"><div class="it-n">'+
+        '<span class="tg cat">'+LBL[x.t]+'</span>'+esc(x.n)+(x.pend?'<span class="tg cat">A CONFIRMAR</span>':'')+'</div>'+
         '<div class="it-v '+CLS[x.t]+'" style="color:'+(x.pend?'var(--muted)':'')+'">'+fmt(x.v)+'</div></div>'+
         '<div class="it-m">'+esc(x.s)+'</div></div>';
     });
     tl+='</div>';
   });
-  document.getElementById('tline').innerHTML=tl||'<div class="vazio">Nenhum vencimento neste mês.</div>';
+  document.getElementById('tline').innerHTML=tl||'<div class="vazio">'+
+    (agFiltro==='todos'?'Nenhum vencimento neste mês.':'Nada neste filtro neste mês.')+'</div>';
 }
 
 function abrirDia(dd){
-  var ev=eventosMes(curM,curA), lista=ev[dd]||[];
+  var ev=eventosMes(curM,curA);
   document.getElementById('dTit').textContent='Dia '+dd+' · '+MES[curM]+'/'+curA;
-  var h='';
-  if(lista.length===0) h='<div class="vazio">Nenhum pagamento neste dia.</div>';
-  else {
-    var tRec=0,tDesp=0;
-    lista.forEach(function(x){
-      if(!x.pend && !x.semSaldo){ if(x.t==='rec') tRec+=x.v; else tDesp+=x.v; }
-      var tagExtra=x.pend?'<span class="tg cat" style="color:var(--muted)">PENDENTE</span>':'';
-      h+='<div class="pop-i" style="opacity:'+(x.pend?.5:1)+'"><div><div class="pop-n"><span class="tg cat">'+LBL[x.t]+
-        '</span>'+esc(x.n)+tagExtra+'</div><div class="pop-s">'+esc(x.s)+'</div></div>'+
-        '<div class="pop-v '+CLS[x.t]+'" style="color:'+(x.pend?'var(--muted)':COR[x.t])+'">'+fmt(x.v)+'</div></div>';
-    });
-    h+='<div class="cbx" style="margin-top:14px">'+
-      (tRec>0?'Entra: <b>'+fmt(tRec)+'</b><br>':'')+
-      (tDesp>0?'Sai: <b style="color:var(--red)">'+fmt(tDesp)+'</b><br>':'')+
-      'Líquido do dia: <b>'+fmt(tRec-tDesp)+'</b></div>';
-  }
-  document.getElementById('dBody').innerHTML=h;
+  document.getElementById('dBody').innerHTML=htmlDia(ev[dd]||[]);
   document.getElementById('ovD').classList.add('on');
 }
 
@@ -4901,7 +5292,6 @@ function mostrarSelecaoPerfil(){
   });
   var atual={clt:'pcClt',autonomo:'pcAut',misto:'pcMis',vendedor:'pcVen'}[d.perfil];
   if(atual) document.getElementById(atual).classList.add('selecionado');
-  fechar('ovConfig');
   document.getElementById('telaPerfil').style.display='block';
   window.scrollTo(0,0);
 }
@@ -5530,7 +5920,7 @@ function textoPlano(a){
 }
 
 function abrirConfig(){
-  document.getElementById('ovConfig').classList.add('on');
+  if(telaAtual!=='config') ir('config',document.getElementById('bnConfig'));
   renderFonteUI();
   esconderCodigo();
   carregarStatusWhatsApp();
@@ -5807,6 +6197,7 @@ function renderTudo(){
   else if(telaAtual==='cartoes') renderCartoes();
   else if(telaAtual==='negocio') renderNegocio();
   else if(telaAtual==='historico') renderHist();
+  else if(telaAtual==='config') renderConta();
   aplicarFechadas();
 }
 
@@ -5825,13 +6216,22 @@ function atualizarDataAtual(){
    os dois iguais é de propósito: eram dois números para lembrar e o do sw já
    ficou para trás uma vez, o que deixa o usuário preso na versão velha.
    Subiu a versão aqui, sobe em sw.js — os dois na mesma linha de raciocínio. */
-var VERSAO='29.1';
+var VERSAO='30.0';
 /* Histórico de versões, mostrado em Configurações → Aplicativo → Novidades e versões.
    A CADA mudança: suba VERSAO (e o CACHE do sw.js) e acrescente uma entrada NO TOPO,
    em linguagem simples, um item por mudança que quem usa consegue perceber.
    Até a v27 o número existia só no cache do app (vigia-v2 … vigia-v27); as entradas
    antigas foram reconstruídas do histórico do git em 27/11/2026. */
 var NOVIDADES=[
+  {v:'30.0', data:'27/11/2026', itens:[
+    'Visual pixel, igual ao Vigia Energy e ao Vigia Auto: fundo escuro, ciano e amarelo, cantos retos e títulos em fonte pixel',
+    'Topo com "VIGIA FINANCEIRO", ícone da nuvem (☁ sincronizado, ⟳ salvando, 📵 sem internet, ⚠ erro) e botão HUB para voltar à escolha dos Vigias',
+    'Configurações viraram a aba ⚙ Config no menu de baixo',
+    'Conta e nuvem: mostra a conta conectada, a hora da última sincronização, "Sincronizar agora" e "Sair da conta"',
+    'Lançamentos feitos sem internet não se perdem mais ao reabrir o app: sobem para a nuvem quando a conexão volta',
+    'Agenda nova: calendário em quadrados com marca por tipo, ponto vermelho no que está atrasado, painel do dia, resumo do mês e filtro dos vencimentos',
+    'Correção: contas do dia 29, 30 ou 31 apareciam fora da grade em meses mais curtos; agora vencem no último dia do mês'
+  ]},
   {v:'29.1', data:'27/11/2026', itens:[
     'Correção: ao atualizar, o Vigia não apaga mais o modo offline do Vigia Energy e do Vigia Auto'
   ]},
@@ -6013,6 +6413,7 @@ function jaUsouNesteAparelho(){
    computador e monta o menu lateral. A classe .logado é o que faz o CSS
    trocar a navegação de baixo pela lateral. */
 function entrarModoApp(user){
+  usuarioAtual=user;
   fecharLanding();
   document.body.classList.add('logado');
   renderSidebar(user);
@@ -6197,17 +6598,42 @@ function iniciarApp(){
 
 function finalizarEntrada(user){
   entrarModoApp(user);
+  if(telaAtual==='config') ir('inicio',document.querySelector('.bn'));
   iniciarApp();
-  window.Vigia.assinarNuvem(user.uid, function(dadosRemotos){
-    salvarLocal(dadosRemotos);
-    renderTudo();
-  });
+  pintarNuvem();
+  window.Vigia.assinarNuvem(user.uid, aoMudarNuvem);
 }
 async function iniciarComNuvem(user){
   var remoto=await window.Vigia.carregarNuvem(user.uid);
+  var pend=lerPendente(user.uid), local=temLocal(user.uid);
+  if(remoto===undefined) pintarNuvem(navigator.onLine===false?'offline':'erro');
+  else { NUVEM.ultimo=Date.now(); NUVEM.estado='ok'; }
+  /* Mudanças feitas neste aparelho sem internet e que não subiram: antes a
+     cópia da nuvem passava por cima delas sem perguntar. */
+  if(pend && local && remoto!==undefined){
+    var manterLocal=true;
+    var outro=remoto && remoto._salvoPor && remoto._salvoPor!==idAparelho() && (remoto._salvoEm||0)>pend;
+    if(outro){
+      fecharSplashSeAberta();
+      manterLocal=await vConfirm('Este aparelho tem mudanças feitas sem internet ('+dataHoraCurta(pend)+
+        ') que não chegaram à nuvem, e outro aparelho salvou depois ('+dataHoraCurta(remoto._salvoEm)+
+        '). Só dá para ficar com uma das duas versões.','Dados diferentes na nuvem','var(--ciano)',
+        'Manter deste aparelho','Usar os da nuvem');
+    }
+    if(manterLocal){
+      finalizarEntrada(user);
+      enviarNuvem(getD());
+      mostrarToast('Mudanças feitas sem internet enviadas para a nuvem');
+      return;
+    }
+    limparPendente(user.uid);
+  }
   if(remoto===null){ abrirOnboarding(user); return; }
   if(remoto) salvarLocal(remoto);
   finalizarEntrada(user);
+}
+function fecharSplashSeAberta(){
+  ['bootSplash','splash'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.display='none'; });
 }
 
 var ULTIMO_UID_KEY='vigia_ultimo_uid';
@@ -6242,7 +6668,8 @@ function mostrarLogin(){
   document.getElementById('loginForm').classList.add('on');
   document.getElementById('login').style.display='flex';
   document.getElementById('fab').style.display='none';
-  ['ovConfig','ovAvisos','ovL','ovD'].forEach(function(id){
+  usuarioAtual=null;
+  ['ovAvisos','ovL','ovD'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.classList.remove('on');
   });
 }

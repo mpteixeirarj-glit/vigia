@@ -96,7 +96,7 @@ Formato **UNIDADE.DÉCIMO**:
 | pequena — correção, ajuste visual, texto | o décimo | `28.1` → `28.2` |
 | grande — recurso novo, tela nova | a unidade, zerando o décimo | `28.2` → `29.0` |
 
-**Está em `28.1`.**
+**Está em `30.0`.**
 
 O número vive em `var VERSAO` (index.html) e o cache do service worker usa
 **exatamente o mesmo**: `const CACHE = 'vigia-v' + VERSAO`, escrito à mão em

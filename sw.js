@@ -1,5 +1,5 @@
 /* Mesmo número da constante VERSAO em index.html — ver a nota lá. */
-const CACHE = 'vigia-v29.1';
+const CACHE = 'vigia-v30.0';
 
 /* O app não pode depender da rede para desenhar o próprio logo. Estes são os
    arquivos sem os quais a primeira tela já aparece quebrada — foi o que
@@ -18,7 +18,7 @@ const FILES = [
      de terceiro é `cors` e o handler abaixo não a guarda, então offline o app
      trocaria de tipografia. */
   './fontes/space-grotesk.woff2',
-  './fontes/jetbrains-mono.woff2',
+  './fontes/jetbrains-mono.woff2','./fontes/vigia-pixel.woff2',
 ];
 
 self.addEventListener('install', e => {
