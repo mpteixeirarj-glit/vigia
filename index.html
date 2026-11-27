@@ -5825,13 +5825,16 @@ function atualizarDataAtual(){
    os dois iguais é de propósito: eram dois números para lembrar e o do sw já
    ficou para trás uma vez, o que deixa o usuário preso na versão velha.
    Subiu a versão aqui, sobe em sw.js — os dois na mesma linha de raciocínio. */
-var VERSAO='29.0';
+var VERSAO='29.1';
 /* Histórico de versões, mostrado em Configurações → Aplicativo → Novidades e versões.
    A CADA mudança: suba VERSAO (e o CACHE do sw.js) e acrescente uma entrada NO TOPO,
    em linguagem simples, um item por mudança que quem usa consegue perceber.
    Até a v27 o número existia só no cache do app (vigia-v2 … vigia-v27); as entradas
    antigas foram reconstruídas do histórico do git em 27/11/2026. */
 var NOVIDADES=[
+  {v:'29.1', data:'27/11/2026', itens:[
+    'Correção: ao atualizar, o Vigia não apaga mais o modo offline do Vigia Energy e do Vigia Auto'
+  ]},
   {v:'29.0', data:'27/11/2026', itens:[
     'Novidades e versões: o histórico completo do app em Configurações → Aplicativo'
   ]},

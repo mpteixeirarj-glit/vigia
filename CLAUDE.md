@@ -26,7 +26,6 @@ existia só no cache: vigia-v2 … vigia-v27).
 - Mesma origem dos outros Vigias (`mpteixeirarj-glit.github.io`: Vigia Energy em `/Vigia-energy-/`,
   Vigia Auto em `/AUTO-VIGIA-/`). Chaves do localStorage deste app: prefixo `vigia_`.
   Nunca usar `localStorage.clear()`.
-- **Pendência conhecida:** o `sw.js` deste app apaga, ao ativar, TODOS os caches que não são o
-  dele — inclusive os do Energy (`ve-*`) e do Auto (`av-*`), que ficam sem modo offline até a
-  próxima abertura online. Correção: filtrar só caches com prefixo `vigia-v`.
+- O `sw.js` só apaga caches com prefixo `vigia-v` (corrigido na v29.1): os do Energy (`ve-*`)
+  e do Auto (`av-*`) ficam no mesmo Cache Storage e não podem ser apagados por este app.
 - Projeto Firebase deste app: `vigia-56137` (o Energy e o Auto têm projetos próprios).
