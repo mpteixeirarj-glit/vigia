@@ -1645,7 +1645,7 @@ onAuthStateChanged(auth, function(user){
 
   <div class="sb-rodape">
     <button class="sb-item" onclick="abrirLanc()"><span>+</span>Novo lançamento</button>
-    <a class="sb-item" href="https://mpteixeirarj-glit.github.io/Vigia-energy-/" style="text-decoration:none"><span>⌂</span>HUB dos Vigias</a>
+    <a class="sb-item" href="https://mpteixeirarj-glit.github.io/hub/" style="text-decoration:none"><span>⌂</span>HUB dos Vigias</a>
     <div class="sb-versao">Vigia <span id="sbVersao">—</span></div>
   </div>
 </aside>
@@ -1668,7 +1668,7 @@ onAuthStateChanged(auth, function(user){
       </g></svg>
     </span>
     <h1 class="tn-tit">VIGIA <b>FINANCEIRO</b></h1>
-    <a class="hbtn esp" href="https://mpteixeirarj-glit.github.io/Vigia-energy-/" title="Voltar ao hub dos apps Vigia">HUB</a>
+    <a class="hbtn esp" href="https://mpteixeirarj-glit.github.io/hub/" title="Voltar ao hub dos apps Vigia">HUB</a>
   </div>
   <div class="tn2">
     <span class="ver" id="topoVersao">—</span>
@@ -2418,7 +2418,7 @@ onAuthStateChanged(auth, function(user){
       <div class="conta-pend" id="contaPend"></div>
       <button class="bok" onclick="sincronizarAgora()">⟳ Sincronizar agora</button>
       <button class="ba del conta-sair" onclick="confirmarSair()">⏻ Sair da conta</button>
-      <a class="ba btn-hub" href="https://mpteixeirarj-glit.github.io/Vigia-energy-/">⌂ Voltar ao HUB dos Vigias</a>
+      <a class="ba btn-hub" href="https://mpteixeirarj-glit.github.io/hub/">⌂ Voltar ao HUB dos Vigias</a>
     </div>
 
     <div class="cfg-sec">
@@ -2974,7 +2974,7 @@ function salvar(d){
      a deste aparelho sem perguntar. */
 var NUVEM={estado:'ok',ultimo:0,seq:0,emVoo:0};
 var usuarioAtual=null;
-var URL_HUB='https://mpteixeirarj-glit.github.io/Vigia-energy-/';
+var URL_HUB='https://mpteixeirarj-glit.github.io/hub/';
 function idAparelho(){
   try{
     var a=localStorage.getItem('vigia_aparelho');
@@ -6249,13 +6249,16 @@ function atualizarDataAtual(){
    os dois iguais é de propósito: eram dois números para lembrar e o do sw já
    ficou para trás uma vez, o que deixa o usuário preso na versão velha.
    Subiu a versão aqui, sobe em sw.js — os dois na mesma linha de raciocínio. */
-var VERSAO='30.1';
+var VERSAO='30.2';
 /* Histórico de versões, mostrado em Configurações → Aplicativo → Novidades e versões.
    A CADA mudança: suba VERSAO (e o CACHE do sw.js) e acrescente uma entrada NO TOPO,
    em linguagem simples, um item por mudança que quem usa consegue perceber.
    Até a v27 o número existia só no cache do app (vigia-v2 … vigia-v27); as entradas
    antigas foram reconstruídas do histórico do git em 27/11/2026. */
 var NOVIDADES=[
+  {v:'30.2', data:'27/11/2026', itens:[
+    'Botão HUB leva ao novo HUB central do Vigia (mpteixeirarj-glit.github.io), não mais ao do Vigia Energy'
+  ]},
   {v:'30.1', data:'27/11/2026', itens:[
     'Topo igual ao do Vigia Energy e do Vigia Auto: olho piscando, "VIGIA FINANCEIRO", HUB, versão, nuvem, data e relógio',
     'Mês, avisos e ocultar valores ficam numa linha própria logo abaixo',
