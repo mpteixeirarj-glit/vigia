@@ -1,3 +1,9 @@
+> **⚠ Este app mudou de endereço (27/11/2026).** O Vigia Financeiro agora mora na pasta `financeiro/` do repositório
+> [mpteixeirarj-glit.github.io](https://github.com/mpteixeirarj-glit/mpteixeirarj-glit.github.io)
+> → https://mpteixeirarj-glit.github.io/financeiro/ — com todo o histórico de commits.
+> Aqui ficaram só páginas que redirecionam o endereço antigo (e um service worker que remove o antigo).
+> **O bot do WhatsApp continua AQUI** (`bot/`, publicado pelo Railway a partir deste repositório).
+
 # Vigia Financeiro — instruções para o Claude
 
 Leia também `docs/REFERENCIA.md`, em especial a seção **2. Regras da casa** (armadilhas que já
